@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -260,11 +261,19 @@ func (c *Controller) IsValidDoubleSigner(rootChainId, rootHeight uint64, address
 
 const socketDir = "/tmp/plugin"
 const socketFile = "plugin.sock"
+const windowsPluginAddr = "127.0.0.1:50004"
 
 // runPluginCtl() executes a plugin control script action and returns the command output
 func (c *Controller) runPluginCtl(plugin, action string) ([]byte, lib.ErrorI) {
 	if plugin == "" || strings.Contains(plugin, "..") || strings.ContainsRune(plugin, os.PathSeparator) {
 		return nil, lib.NewError(lib.NoCode, lib.MainModule, fmt.Sprintf("invalid plugin name %q", plugin))
+	}
+	if runtime.GOOS == "windows" && plugin == "typescript" {
+		output, err := runWindowsTypeScriptPlugin(action)
+		if err != nil {
+			return nil, lib.NewError(lib.NoCode, lib.MainModule, fmt.Sprintf("failed to execute plugin %s (%s): %v, output: %s", plugin, action, err, string(output)))
+		}
+		return output, nil
 	}
 	// resolve the control script path
 	cmdPath, err := resolvePluginCtlPath(plugin)
@@ -279,6 +288,108 @@ func (c *Controller) runPluginCtl(plugin, action string) ([]byte, lib.ErrorI) {
 		return nil, lib.NewError(lib.NoCode, lib.MainModule, fmt.Sprintf("failed to execute plugin %s (%s): %v, output: %s", plugin, action, err, string(output)))
 	}
 	return output, nil
+}
+
+func runWindowsTypeScriptPlugin(action string) ([]byte, error) {
+	ctlPath, err := resolvePluginCtlPath("typescript")
+	if err != nil {
+		return nil, err
+	}
+	ctlPath, err = filepath.Abs(ctlPath)
+	if err != nil {
+		return nil, err
+	}
+	pluginDir := filepath.Dir(ctlPath)
+	nodeScript := filepath.Join(pluginDir, "dist", "main.js")
+	if _, err := os.Stat(nodeScript); err != nil {
+		return nil, fmt.Errorf("Node.js script not found at %s; run npm run build in plugin/typescript", nodeScript)
+	}
+	if err := os.MkdirAll(socketDir, 0777); err != nil {
+		return nil, err
+	}
+	pidFile := filepath.Join(socketDir, "typescript-plugin.pid")
+	logFile := filepath.Join(socketDir, "typescript-plugin.log")
+
+	switch action {
+	case "start":
+		if pid, ok := readPluginPID(pidFile); ok && windowsProcessRunning(pid) {
+			return []byte(fmt.Sprintf("TypeScript plugin is already running (PID: %d)", pid)), nil
+		}
+		_ = os.Remove(pidFile)
+		nodePath, err := exec.LookPath("node")
+		if err != nil {
+			return nil, fmt.Errorf("node executable not found in PATH")
+		}
+		logHandle, err := os.OpenFile(logFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+		if err != nil {
+			return nil, err
+		}
+		defer logHandle.Close()
+		cmd := exec.Command(nodePath, nodeScript)
+		cmd.Dir = pluginDir
+		cmd.Env = append(os.Environ(), "CANOPY_PLUGIN_ADDR="+windowsPluginAddr)
+		cmd.Stdout = logHandle
+		cmd.Stderr = logHandle
+		if err := cmd.Start(); err != nil {
+			return nil, err
+		}
+		pid := cmd.Process.Pid
+		if err := os.WriteFile(pidFile, []byte(strconv.Itoa(pid)), 0666); err != nil {
+			_ = cmd.Process.Kill()
+			return nil, err
+		}
+		if err := cmd.Process.Release(); err != nil {
+			return nil, err
+		}
+		time.Sleep(time.Second)
+		if !windowsProcessRunning(pid) {
+			_ = os.Remove(pidFile)
+			return nil, fmt.Errorf("TypeScript plugin failed to start; see %s", logFile)
+		}
+		return []byte(fmt.Sprintf("TypeScript plugin started successfully (PID: %d)\nLog file: %s", pid, logFile)), nil
+	case "stop":
+		pid, ok := readPluginPID(pidFile)
+		if !ok || !windowsProcessRunning(pid) {
+			_ = os.Remove(pidFile)
+			return []byte("TypeScript plugin is not running"), nil
+		}
+		output, err := exec.Command("taskkill", "/PID", strconv.Itoa(pid), "/T", "/F").CombinedOutput()
+		_ = os.Remove(pidFile)
+		if err != nil {
+			return output, err
+		}
+		return []byte(fmt.Sprintf("TypeScript plugin stopped successfully (PID: %d)", pid)), nil
+	case "status":
+		if pid, ok := readPluginPID(pidFile); ok && windowsProcessRunning(pid) {
+			return []byte(fmt.Sprintf("TypeScript plugin is running (PID: %d)", pid)), nil
+		}
+		_ = os.Remove(pidFile)
+		return []byte("TypeScript plugin is not running"), nil
+	case "restart":
+		if _, err := runWindowsTypeScriptPlugin("stop"); err != nil {
+			return nil, err
+		}
+		return runWindowsTypeScriptPlugin("start")
+	default:
+		return nil, fmt.Errorf("usage: pluginctl {start|stop|status|restart}")
+	}
+}
+
+func readPluginPID(pidFile string) (int, bool) {
+	bz, err := os.ReadFile(pidFile)
+	if err != nil {
+		return 0, false
+	}
+	pid, err := strconv.Atoi(strings.TrimSpace(string(bz)))
+	if err != nil || pid <= 0 {
+		return 0, false
+	}
+	return pid, true
+}
+
+func windowsProcessRunning(pid int) bool {
+	output, err := exec.Command("tasklist", "/FI", fmt.Sprintf("PID eq %d", pid)).CombinedOutput()
+	return err == nil && strings.Contains(string(output), strconv.Itoa(pid))
 }
 
 // PluginExecute() executes the plugin control script to start the plugin process
@@ -303,6 +414,21 @@ func (c *Controller) PluginStop(plugin string) lib.ErrorI {
 
 // PluginConnectSync() blocking: enables a unix socket file where plugins can interact with the Canopy FSM
 func (c *Controller) PluginConnectSync() {
+	if runtime.GOOS == "windows" {
+		l, err := net.Listen("tcp", windowsPluginAddr)
+		if err != nil {
+			c.log.Fatalf("Failed to listen on plugin TCP address %s: %v", windowsPluginAddr, err)
+		}
+		defer l.Close()
+		c.log.Infof("Plugin service listening on TCP address: %s", windowsPluginAddr)
+		conn, e := l.Accept()
+		if e != nil {
+			c.log.Fatalf("Failed to accept plugin connection: %v", e)
+		}
+		c.Plugin = lib.NewPlugin(conn, c.log, time.Duration(c.Config.PluginTimeoutMS)*time.Millisecond)
+		c.FSM.Plugin, c.Mempool.FSM.Plugin = c.Plugin, c.Plugin
+		return
+	}
 	sockPath := filepath.Join(socketDir, socketFile)
 	// make the path
 	if err := os.MkdirAll(socketDir, 0777); err != nil {

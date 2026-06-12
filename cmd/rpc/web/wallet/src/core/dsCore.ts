@@ -166,10 +166,24 @@ export async function fetchDsOnce<T=any>(chain: ChainLike, key: string, ctx?: Re
     if (!leaf) throw new Error(`DS key not found: ${key}`)
     const { url, init } = buildRequest(chain, leaf, ctx)
     if (!url) throw new Error(`Invalid DS url for key ${key}`)
-    const res = await fetch(url, init)
-    if (!res.ok) throw new Error(`RPC ${res.status}`)
-    const parsed = await parseResponse(res, leaf)
-    return parsed as T
+    const controller = new AbortController()
+    const timeout = window.setTimeout(() => controller.abort(), 10_000)
+    try {
+        const res = await fetch(url, { ...init, signal: controller.signal })
+        if (!res.ok) throw new Error(`RPC ${res.status}`)
+        const parsed = await parseResponse(res, leaf)
+        return parsed as T
+    } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') {
+            throw new Error(`RPC request timed out for ${key}`)
+        }
+        if (error instanceof TypeError) {
+            throw new Error(`RPC offline for ${key}: ${error.message}`)
+        }
+        throw error
+    } finally {
+        window.clearTimeout(timeout)
+    }
 }
 
 export type PageRuntime = { page?: number; perPage?: number; cursor?: string | undefined; limit?: number }

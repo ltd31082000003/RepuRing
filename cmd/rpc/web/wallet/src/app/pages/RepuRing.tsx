@@ -112,130 +112,325 @@ export default function RepuRing(): JSX.Element {
     await refreshState();
   }
 
+  const profileRole = role?.role || roleForReputation(profile?.reputation || 0);
+  const rpcTone = status.toLowerCase().includes('failed') ? 'danger' : status.toLowerCase().includes('submitting') ? 'warning' : 'success';
+
   return (
-    <div className="mx-auto max-w-6xl space-y-5 p-4 lg:p-6">
-      <header className="space-y-2">
-        <p className="text-sm font-medium text-primary">RepuRing Social-Fi</p>
-        <h1 className="text-3xl font-semibold text-white">Onchain trust circles, reputation, and roles</h1>
-        <p className="max-w-3xl text-sm text-zinc-400">
-          Submit real RepuRing plugin transactions to Canopy RPC and read committed Social-Fi state from the local chain.
-        </p>
-      </header>
-
-      <section id="dashboard" className="grid gap-3 rounded-lg border border-zinc-800 bg-bg-secondary p-4 md:grid-cols-4">
-        <Stat label="Current account" value={currentAddress || 'No signing account selected'} />
-        <Stat label="Profile" value={profile ? `${profile.username}: ${profile.bio || 'no bio'}` : 'No onchain profile'} />
-        <Stat label="Reputation" value={profile ? String(profile.reputation) : '0'} />
-        <Stat label="Role" value={role ? `${role.role}${role.claimedRole ? '' : ' (claimable)'}` : 'No role'} />
-        <label className="md:col-span-3">
-          <span className="mb-1 block text-sm text-zinc-400">Signing key password</span>
-          <input className="input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-        </label>
-        <Button onClick={refreshState}>Refresh state</Button>
-        <div className="md:col-span-4 rounded-md border border-zinc-800 bg-black/20 p-3 text-sm text-zinc-300">{status}</div>
-        <div className="md:col-span-4 break-all rounded-md border border-zinc-800 bg-black/20 p-3 text-xs text-zinc-500">Last tx: {lastTx || 'none'}</div>
-      </section>
-
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Panel id="profile" title="Create Profile">
-          <Input label="Username" value={profileForm.username} onChange={(username) => setProfileForm({ ...profileForm, username })} />
-          <Input label="Bio" value={profileForm.bio} onChange={(bio) => setProfileForm({ ...profileForm, bio })} />
-          <Input label="Avatar URL" value={profileForm.avatarUrl} onChange={(avatarUrl) => setProfileForm({ ...profileForm, avatarUrl })} />
-          <Button onClick={() => submit('createProfile', profileForm)}>Submit CreateProfileTx</Button>
-        </Panel>
-
-        <Panel id="circles" title="Circles">
-          <Input label="Circle ID" value={circleId} onChange={setCircleId} />
-          <Input label="Name" value={circleForm.name} onChange={(name) => setCircleForm({ ...circleForm, name })} />
-          <Input label="Description" value={circleForm.description} onChange={(description) => setCircleForm({ ...circleForm, description })} />
-          <div className="flex flex-wrap gap-2">
-            <Button onClick={() => submit('createCircle', { circleId, ...circleForm })}>CreateCircleTx</Button>
-            <Button onClick={() => submit('joinCircle', { circleId })}>JoinCircleTx</Button>
-          </div>
-          <div className="rounded-md border border-zinc-800 bg-black/20 p-3 text-sm text-zinc-300">
-            <div className="font-semibold text-white">{circle?.name || 'Circle not found'}</div>
-            <div className="text-zinc-400">{circle?.description || 'Create or query a circle to load members.'}</div>
-            <AddressList values={circle?.members || []} />
-          </div>
-        </Panel>
-
-        <Panel id="endorse" title="Endorse">
-          <Input label="Circle ID" value={circleId} onChange={setCircleId} />
-          <Input label="Target address" value={targetAddress} onChange={setTargetAddress} />
-          <label>
-            <span className="mb-1 block text-sm text-zinc-400">Tag</span>
-            <select className="input" value={endorse.tag} onChange={(e) => setEndorse({ ...endorse, tag: e.target.value })}>
-              {['builder', 'helper', 'creator', 'leader', 'trusted'].map((tag) => <option key={tag}>{tag}</option>)}
-            </select>
-          </label>
-          <Input label="Message" value={endorse.message} onChange={(message) => setEndorse({ ...endorse, message })} />
-          <Button onClick={() => submit('endorseUser', { circleId, targetAddress, ...endorse })}>Submit EndorseUserTx</Button>
-        </Panel>
-
-        <Panel id="admin" title="Roles and Admin Slash">
-          <Input label="Circle ID" value={circleId} onChange={setCircleId} />
-          <Button onClick={() => submit('claimRole', { circleId })}>ClaimRoleTx</Button>
-          <Input label="Endorsement ID" value={endorsementId} onChange={setEndorsementId} />
-          <Input label="Slash reason" value={slashReason} onChange={setSlashReason} />
-          <Button onClick={() => submit('slashEndorsement', { endorsementId, reason: slashReason })}>SlashEndorsementTx</Button>
-        </Panel>
+    <div className="min-h-screen overflow-hidden bg-[#070b14] text-zinc-100">
+      <div className="pointer-events-none fixed inset-0 -z-10">
+        <div className="absolute left-[-10%] top-[-12%] h-80 w-80 rounded-full bg-emerald-500/20 blur-3xl" />
+        <div className="absolute right-[-8%] top-[18%] h-96 w-96 rounded-full bg-cyan-500/10 blur-3xl" />
+        <div className="absolute bottom-[-20%] left-[28%] h-96 w-96 rounded-full bg-violet-500/10 blur-3xl" />
       </div>
 
-      <Panel id="leaderboard" title="Leaderboard">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="text-xs uppercase text-zinc-500">
-              <tr><th className="py-2">Rank</th><th>User</th><th>Reputation</th><th>Role</th><th>Address</th></tr>
-            </thead>
-            <tbody>
-              {leaderboard.length === 0 ? (
-                <tr><td className="py-3 text-zinc-500" colSpan={5}>No leaderboard state found for this circle.</td></tr>
-              ) : leaderboard.map((row, index) => (
-                <tr key={row.address} className="border-t border-zinc-800">
-                  <td className="py-2 text-zinc-400">{index + 1}</td>
-                  <td className="font-medium text-white">{row.username}</td>
-                  <td>{row.reputation}</td>
-                  <td>{row.role}</td>
-                  <td className="break-all font-mono text-xs text-zinc-500">{row.address}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <div className="mt-3 space-y-2">
-          <div className="text-sm font-semibold text-white">Endorsements for current account</div>
-          {endorsements.length === 0 ? <div className="text-sm text-zinc-500">No endorsements found.</div> : endorsements.map((item) => (
-            <div key={item.endorsementId} className="rounded-md border border-zinc-800 bg-black/20 p-3 text-sm">
-              <div className="break-all font-mono text-xs text-zinc-500">{item.endorsementId}</div>
-              <div className="text-zinc-300">{item.tag}: {item.message}</div>
-              {item.slashed && <div className="text-red-400">Slashed: {item.slashReason}</div>}
+      <main className="mx-auto max-w-7xl space-y-6 p-4 lg:p-8">
+        <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04] p-6 shadow-2xl shadow-black/40 backdrop-blur-xl lg:p-8">
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-400/10 via-transparent to-cyan-400/10" />
+          <div className="relative grid gap-8 lg:grid-cols-[1.25fr_0.75fr] lg:items-center">
+            <div className="space-y-6">
+              <div className="flex flex-wrap gap-2">
+                <Badge>Social-Fi</Badge>
+                <Badge>Custom Canopy TXs</Badge>
+                <Badge>RPC 50002/50003</Badge>
+              </div>
+              <div className="space-y-3">
+                <p className="text-sm font-semibold uppercase tracking-[0.28em] text-emerald-300">RepuRing</p>
+                <h1 className="max-w-4xl text-4xl font-semibold tracking-tight text-white md:text-6xl">
+                  Onchain trust circles for builders, communities, and reputation.
+                </h1>
+                <p className="max-w-2xl text-base leading-7 text-zinc-300">
+                  Every profile, circle, endorsement, slash, and role claim is a signed custom transaction submitted to the local Canopy chain, then read back from committed RPC state.
+                </p>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                {[
+                  ['01', 'Create profile', 'Register your builder identity onchain.'],
+                  ['02', 'Join circle', 'Enter a trusted Social-Fi community.'],
+                  ['03', 'Endorse trust', 'Give verifiable reputation to members.'],
+                  ['04', 'Claim role', 'Unlock status from onchain score.'],
+                ].map(([step, title, copy]) => (
+                  <div key={step} className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                    <div className="text-xs font-semibold text-emerald-300">{step}</div>
+                    <div className="mt-2 font-semibold text-white">{title}</div>
+                    <div className="mt-1 text-xs leading-5 text-zinc-400">{copy}</div>
+                  </div>
+                ))}
+              </div>
             </div>
-          ))}
+            <div className="rounded-3xl border border-emerald-300/20 bg-black/30 p-5 shadow-xl shadow-emerald-950/30">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-zinc-400">Live demo circle</p>
+                  <h2 className="text-2xl font-semibold text-white">{circle?.name || circleForm.name}</h2>
+                </div>
+                <StatusPill tone={rpcTone}>{rpcTone === 'danger' ? 'RPC issue' : rpcTone === 'warning' ? 'Submitting' : 'RPC ready'}</StatusPill>
+              </div>
+              <div className="mt-6 grid grid-cols-2 gap-3">
+                <Metric label="Members" value={String(circle?.members?.length || 0)} />
+                <Metric label="Reputation" value={String(profile?.reputation || 0)} />
+                <Metric label="Role" value={roleBadge(profileRole)} />
+                <Metric label="Tx mode" value="Signed" />
+              </div>
+              <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">Last transaction</p>
+                <p className="mt-2 break-all font-mono text-xs text-zinc-300">{lastTx || 'No transaction submitted yet'}</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="dashboard" className="grid gap-4 lg:grid-cols-[1fr_1fr_1fr_1.2fr]">
+          <StatCard label="Current account" value={shortAddress(currentAddress) || 'No account'} detail={currentAddress || 'Select a wallet account before signing.'} />
+          <StatCard label="Profile" value={profile?.username || 'Not created'} detail={profile?.bio || 'CreateProfileTx will initialize reputation at 0.'} />
+          <StatCard label="Reputation score" value={String(profile?.reputation || 0)} detail="Earned from member endorsements." />
+          <Panel className="space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">Role badge</p>
+                <p className="mt-1 text-xl font-semibold text-white">{roleBadge(profileRole)}</p>
+              </div>
+              <StatusPill tone={role?.claimedRole ? 'success' : 'warning'}>{role?.claimedRole ? 'Claimed' : 'Claimable'}</StatusPill>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Metric label="Circle members" value={String(circle?.members?.length || 0)} />
+              <Metric label="RPC status" value={rpcTone === 'danger' ? 'Issue' : 'Live'} />
+            </div>
+          </Panel>
+        </section>
+
+        <Panel className="grid gap-4 md:grid-cols-[1fr_auto] md:items-end">
+          <Input label="Signing key password" type="password" value={password} onChange={setPassword} placeholder="Required for keystore-get and BLS signing" />
+          <Button onClick={refreshState}>Refresh chain state</Button>
+          <div className="md:col-span-2 rounded-2xl border border-white/10 bg-black/30 p-4 text-sm text-zinc-300">{status}</div>
+        </Panel>
+
+        <div className="grid gap-5 xl:grid-cols-2">
+          <Panel id="profile" title="Create Profile" eyebrow="CreateProfileTx">
+            <Input label="Username" value={profileForm.username} onChange={(username) => setProfileForm({ ...profileForm, username })} placeholder="alice_builder" />
+            <Input label="Bio" value={profileForm.bio} onChange={(bio) => setProfileForm({ ...profileForm, bio })} placeholder="Canopy community builder" multiline />
+            <Input label="Avatar URL" value={profileForm.avatarUrl} onChange={(avatarUrl) => setProfileForm({ ...profileForm, avatarUrl })} placeholder="https://..." />
+            <Button onClick={() => submit('createProfile', profileForm)}>Submit CreateProfileTx</Button>
+          </Panel>
+
+          <Panel id="circles" title="Circles" eyebrow="CreateCircleTx + JoinCircleTx">
+            <Input label="Circle ID" value={circleId} onChange={setCircleId} />
+            <Input label="Name" value={circleForm.name} onChange={(name) => setCircleForm({ ...circleForm, name })} />
+            <Input label="Description" value={circleForm.description} onChange={(description) => setCircleForm({ ...circleForm, description })} multiline />
+            <div className="flex flex-wrap gap-3">
+              <Button onClick={() => submit('createCircle', { circleId, ...circleForm })}>CreateCircleTx</Button>
+              <Button variant="secondary" onClick={() => submit('joinCircle', { circleId })}>JoinCircleTx</Button>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className="font-semibold text-white">{circle?.name || 'Circle not found'}</div>
+                  <div className="mt-1 text-sm text-zinc-400">{circle?.description || 'Create or query a circle to load members.'}</div>
+                </div>
+                <Badge>{circle?.members?.length || 0} members</Badge>
+              </div>
+              <AddressList values={circle?.members || []} />
+            </div>
+          </Panel>
+
+          <Panel id="endorse" title="Endorse Member" eyebrow="EndorseUserTx">
+            <Input label="Circle ID" value={circleId} onChange={setCircleId} />
+            <Input label="Target address" value={targetAddress} onChange={setTargetAddress} placeholder="Hex address of another circle member" />
+            <label className="block">
+              <span className="mb-2 block text-sm font-medium text-zinc-300">Tag</span>
+              <select className="w-full rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-sm text-white outline-none transition focus:border-emerald-300/60 focus:ring-2 focus:ring-emerald-400/20" value={endorse.tag} onChange={(e) => setEndorse({ ...endorse, tag: e.target.value })}>
+                {['builder', 'helper', 'creator', 'leader', 'trusted'].map((tag) => <option key={tag}>{tag}</option>)}
+              </select>
+            </label>
+            <Input label="Message" value={endorse.message} onChange={(message) => setEndorse({ ...endorse, message })} multiline />
+            <Button onClick={() => submit('endorseUser', { circleId, targetAddress, ...endorse })}>Submit EndorseUserTx</Button>
+          </Panel>
+
+          <Panel id="admin" title="Roles and Admin Slash" eyebrow="ClaimRoleTx + SlashEndorsementTx">
+            <Input label="Circle ID" value={circleId} onChange={setCircleId} />
+            <Button onClick={() => submit('claimRole', { circleId })}>ClaimRoleTx</Button>
+            <div className="h-px bg-white/10" />
+            <Input label="Endorsement ID" value={endorsementId} onChange={setEndorsementId} placeholder="Paste endorsement ID to slash" />
+            <Input label="Slash reason" value={slashReason} onChange={setSlashReason} multiline />
+            <Button variant="danger" onClick={() => submit('slashEndorsement', { endorsementId, reason: slashReason })}>SlashEndorsementTx</Button>
+          </Panel>
         </div>
-      </Panel>
+
+        <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
+          <Panel id="leaderboard" title="Leaderboard" eyebrow="Circle reputation ranking">
+            <div className="overflow-hidden rounded-2xl border border-white/10">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-white/[0.04] text-xs uppercase tracking-[0.18em] text-zinc-500">
+                  <tr>
+                    <th className="px-4 py-3">Rank</th>
+                    <th className="px-4 py-3">Username</th>
+                    <th className="px-4 py-3">Reputation</th>
+                    <th className="px-4 py-3">Role</th>
+                    <th className="px-4 py-3">Address</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {leaderboard.length === 0 ? (
+                    <tr><td className="px-4 py-8" colSpan={5}><EmptyState title="No leaderboard yet" copy="Create or join a circle, endorse members, then refresh committed chain state." /></td></tr>
+                  ) : leaderboard.map((row, index) => (
+                    <tr key={row.address} className="border-t border-white/10 bg-black/10">
+                      <td className="px-4 py-4 font-mono text-zinc-400">#{index + 1}</td>
+                      <td className="px-4 py-4 font-semibold text-white">{row.username || 'Unnamed'}</td>
+                      <td className="px-4 py-4"><Badge>{row.reputation} rep</Badge></td>
+                      <td className="px-4 py-4"><Badge tone="cyan">{roleBadge(row.role || roleForReputation(row.reputation))}</Badge></td>
+                      <td className="px-4 py-4 font-mono text-xs text-zinc-500">{shortAddress(row.address)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Panel>
+
+          <Panel title="Endorsements" eyebrow="For current account">
+            {endorsements.length === 0 ? (
+              <EmptyState title="No endorsements found" copy="Endorsements targeting the selected account will appear here after they are committed onchain." />
+            ) : (
+              <div className="grid gap-3">
+                {endorsements.map((item) => (
+                  <div key={item.endorsementId} className="rounded-2xl border border-white/10 bg-black/25 p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <Badge tone="emerald">{item.tag}</Badge>
+                      <StatusPill tone={item.slashed ? 'danger' : 'success'}>{item.slashed ? 'Slashed' : 'Active'}</StatusPill>
+                    </div>
+                    <p className="mt-3 text-sm leading-6 text-zinc-300">{item.message || 'No message'}</p>
+                    <div className="mt-4 grid gap-2 text-xs text-zinc-500">
+                      <div>From <span className="font-mono text-zinc-300">{shortAddress(item.fromAddress)}</span></div>
+                      <div>ID <span className="font-mono text-zinc-300">{item.endorsementId}</span></div>
+                      {item.slashed && <div className="text-red-300">Reason: {item.slashReason || 'not provided'}</div>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Panel>
+        </div>
+      </main>
     </div>
   );
 }
 
-function Panel({ id, title, children }: { id?: string; title: string; children: React.ReactNode }) {
-  return <section id={id} className="scroll-mt-20 space-y-3 rounded-lg border border-zinc-800 bg-bg-secondary p-4"><h2 className="text-lg font-semibold text-white">{title}</h2>{children}</section>;
+function Panel({ id, title, eyebrow, className = '', children }: { id?: string; title?: string; eyebrow?: string; className?: string; children: React.ReactNode }) {
+  return (
+    <section id={id} className={`scroll-mt-20 rounded-3xl border border-white/10 bg-white/[0.045] p-5 shadow-xl shadow-black/20 backdrop-blur-xl ${className}`}>
+      {(title || eyebrow) && (
+        <div className="mb-4">
+          {eyebrow && <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-300">{eyebrow}</p>}
+          {title && <h2 className="mt-1 text-xl font-semibold text-white">{title}</h2>}
+        </div>
+      )}
+      <div className="space-y-4">{children}</div>
+    </section>
+  );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
-  return <div><div className="text-xs uppercase text-zinc-500">{label}</div><div className="break-all font-mono text-sm text-zinc-100">{value}</div></div>;
+function StatCard({ label, value, detail }: { label: string; value: string; detail: string }) {
+  return (
+    <Panel>
+      <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">{label}</p>
+      <p className="mt-2 break-all text-2xl font-semibold text-white">{value}</p>
+      <p className="mt-2 line-clamp-2 break-all text-sm text-zinc-400">{detail}</p>
+    </Panel>
+  );
 }
 
-function Input({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
-  return <label><span className="mb-1 block text-sm text-zinc-400">{label}</span><input className="input" value={value} onChange={(e) => onChange(e.target.value)} /></label>;
+function Metric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-4">
+      <p className="text-xs text-zinc-500">{label}</p>
+      <p className="mt-1 break-all text-lg font-semibold text-white">{value}</p>
+    </div>
+  );
 }
 
-function Button({ children, onClick }: { children: React.ReactNode; onClick: () => Promise<void> | void }) {
-  return <button className="rounded-md bg-primary px-3 py-2 text-sm font-semibold text-black hover:brightness-110" onClick={() => void Promise.resolve(onClick()).catch((e) => alert(e.message || String(e)))}>{children}</button>;
+function Badge({ children, tone = 'emerald' }: { children: React.ReactNode; tone?: 'emerald' | 'cyan' | 'zinc' }) {
+  const tones = {
+    emerald: 'border-emerald-300/25 bg-emerald-300/10 text-emerald-200',
+    cyan: 'border-cyan-300/25 bg-cyan-300/10 text-cyan-200',
+    zinc: 'border-white/10 bg-white/5 text-zinc-300',
+  };
+  return <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${tones[tone]}`}>{children}</span>;
+}
+
+function StatusPill({ children, tone }: { children: React.ReactNode; tone: 'success' | 'warning' | 'danger' }) {
+  const tones = {
+    success: 'border-emerald-300/30 bg-emerald-400/10 text-emerald-200',
+    warning: 'border-amber-300/30 bg-amber-400/10 text-amber-200',
+    danger: 'border-red-300/30 bg-red-400/10 text-red-200',
+  };
+  return <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${tones[tone]}`}>{children}</span>;
+}
+
+function EmptyState({ title, copy }: { title: string; copy: string }) {
+  return (
+    <div className="rounded-2xl border border-dashed border-white/10 bg-black/20 p-6 text-center">
+      <p className="font-semibold text-white">{title}</p>
+      <p className="mt-2 text-sm text-zinc-500">{copy}</p>
+    </div>
+  );
+}
+
+function Input({ label, value, onChange, type = 'text', placeholder, multiline = false }: { label: string; value: string; onChange: (v: string) => void; type?: string; placeholder?: string; multiline?: boolean }) {
+  const inputClass = 'w-full rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:border-emerald-300/60 focus:ring-2 focus:ring-emerald-400/20';
+  return (
+    <label className="block">
+      <span className="mb-2 block text-sm font-medium text-zinc-300">{label}</span>
+      {multiline ? (
+        <textarea className={`${inputClass} min-h-24 resize-y`} value={value} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} />
+      ) : (
+        <input className={inputClass} type={type} value={value} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} />
+      )}
+    </label>
+  );
+}
+
+function Button({ children, onClick, variant = 'primary' }: { children: React.ReactNode; onClick: () => Promise<void> | void; variant?: 'primary' | 'secondary' | 'danger' }) {
+  const variants = {
+    primary: 'border-emerald-300/30 bg-gradient-to-r from-emerald-300 to-cyan-300 text-slate-950 hover:shadow-emerald-500/20',
+    secondary: 'border-white/10 bg-white/8 text-white hover:bg-white/12',
+    danger: 'border-red-300/30 bg-red-500/15 text-red-100 hover:bg-red-500/25',
+  };
+  return (
+    <button className={`rounded-2xl border px-5 py-3 text-sm font-semibold shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl ${variants[variant]}`} onClick={() => void Promise.resolve(onClick()).catch((e) => alert(e.message || String(e)))}>
+      {children}
+    </button>
+  );
 }
 
 function AddressList({ values }: { values: string[] }) {
-  if (values.length === 0) return <div className="pt-2 text-sm text-zinc-500">No members loaded.</div>;
-  return <div className="mt-2 space-y-1">{values.map((value) => <div className="break-all font-mono text-xs text-zinc-500" key={value}>{value}</div>)}</div>;
+  if (values.length === 0) return <EmptyState title="No members loaded" copy="Circle members will appear after CreateCircleTx or JoinCircleTx is committed." />;
+  return (
+    <div className="mt-4 grid gap-2">
+      {values.map((value) => (
+        <div className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-xs" key={value}>
+          <span className="font-mono text-zinc-300">{shortAddress(value)}</span>
+          <span className="font-mono text-zinc-600">{value.slice(-8)}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function shortAddress(value: string) {
+  const clean = cleanHex(value);
+  if (!clean) return '';
+  return clean.length <= 14 ? clean : `${clean.slice(0, 6)}...${clean.slice(-6)}`;
+}
+
+function roleForReputation(reputation: number) {
+  if (reputation >= 30) return 'Circle Leader';
+  if (reputation >= 15) return 'Core Member';
+  if (reputation >= 5) return 'Trusted';
+  return 'Newbie';
+}
+
+function roleBadge(roleName: string) {
+  const role = roleName || 'Newbie';
+  const icon = role === 'Circle Leader' ? '👑' : role === 'Core Member' ? '🛠' : role === 'Trusted' ? '🔰' : '🌱';
+  return `${icon} ${role}`;
 }
 
 async function queryMaybe<T>(path: string, body: unknown): Promise<T | null> {

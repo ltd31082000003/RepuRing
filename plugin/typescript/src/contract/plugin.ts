@@ -329,12 +329,18 @@ export class Plugin {
 // StartPlugin() creates and starts a plugin
 export function StartPlugin(c: Config): void {
     const sockPath = path.join(c.DataDirPath, socketPath);
+    const tcpAddress = process.env.CANOPY_PLUGIN_ADDR;
 
     const tryConnect = (): void => {
-        const conn = net.createConnection(sockPath);
+        const conn = tcpAddress
+            ? net.createConnection({
+                  host: tcpAddress.split(':')[0],
+                  port: Number(tcpAddress.split(':')[1])
+              })
+            : net.createConnection(sockPath);
 
         conn.on('connect', () => {
-            console.log('Connected to plugin socket');
+            console.log(`Connected to plugin ${tcpAddress ? `TCP address ${tcpAddress}` : `socket ${sockPath}`}`);
             const p = new Plugin(c, conn, ContractConfigValue);
             p.ListenForInbound();
             p.Handshake().then((err) => {
