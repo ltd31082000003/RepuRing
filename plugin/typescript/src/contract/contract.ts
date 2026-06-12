@@ -1,35 +1,45 @@
-/* This file contains the base contract implementation that overrides the basic 'transfer' functionality */
+/* RepuRing Social-Fi contract for the Canopy TypeScript plugin. */
 
+import { createHash } from 'crypto';
 import Long from 'long';
 
 import { types } from '../proto/types.js';
 
-import {
-    IPluginError,
-    ErrInsufficientFunds,
-    ErrInvalidAddress,
-    ErrInvalidAmount,
-    ErrInvalidMessageCast,
-    ErrTxFeeBelowStateLimit
-} from './error.js';
-
+import { IPluginError, ErrInvalidAddress, ErrInvalidMessageCast, NewError } from './error.js';
 import type { Plugin, Config } from './plugin.js';
 import { JoinLenPrefix, FromAny, Unmarshal } from './plugin.js';
 import { fileDescriptorProtos } from '../proto/descriptors.js';
 
-// ContractConfig: the configuration of the contract
+const moduleName = 'repuring';
+const validTags = new Set(['builder', 'helper', 'creator', 'leader', 'trusted']);
+
+// ContractConfig registers every custom RepuRing transaction with Canopy.
+// The order must match supportedTransactions <-> transactionTypeUrls.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const ContractConfig: any = {
-    name: 'go_plugin_contract',
+    name: 'repuring_social_fi',
     id: 1,
     version: 1,
-    supportedTransactions: ['send'],
-    transactionTypeUrls: ['type.googleapis.com/types.MessageSend'],
+    supportedTransactions: [
+        'createProfile',
+        'createCircle',
+        'joinCircle',
+        'endorseUser',
+        'slashEndorsement',
+        'claimRole'
+    ],
+    transactionTypeUrls: [
+        'type.googleapis.com/types.MessageCreateProfile',
+        'type.googleapis.com/types.MessageCreateCircle',
+        'type.googleapis.com/types.MessageJoinCircle',
+        'type.googleapis.com/types.MessageEndorseUser',
+        'type.googleapis.com/types.MessageSlashEndorsement',
+        'type.googleapis.com/types.MessageClaimRole'
+    ],
     eventTypeUrls: [],
     fileDescriptorProtos
 };
 
-// Contract() defines the smart contract that implements the extended logic of the nested chain
 export class Contract {
     Config: Config;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -45,296 +55,504 @@ export class Contract {
         this.fsmId = fsmId;
     }
 
-    // Genesis() implements logic to import a json file to create the state at height 0 and export the state at any height
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
     Genesis(_request: any): any {
-        return {}; // TODO map out original token holders
+        return {};
     }
 
-    // BeginBlock() is code that is executed at the start of `applying` the block
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
     BeginBlock(_request: any): any {
         return {};
     }
 
-    // EndBlock() is code that is executed at the end of 'applying' a block
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
     EndBlock(_request: any): any {
         return {};
     }
 
-    // CheckMessageSend() statelessly validates a 'send' message
+    // Stateless validation returns the address that must sign the transaction.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    CheckMessageSend(msg: any): any {
-        // check sender address
-        if (!msg.fromAddress || msg.fromAddress.length !== 20) {
+    CheckMessageCreateProfile(msg: any): any {
+        if (!isAddress(msg.senderAddress)) return { error: ErrInvalidAddress() };
+        if (!clean(msg.username)) return { error: ErrRepuRing('username must not be empty') };
+        return signerResponse(msg.senderAddress);
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    CheckMessageCreateCircle(msg: any): any {
+        if (!isAddress(msg.senderAddress)) return { error: ErrInvalidAddress() };
+        if (!clean(msg.circleId)) return { error: ErrRepuRing('circle_id must not be empty') };
+        if (!clean(msg.name)) return { error: ErrRepuRing('circle name must not be empty') };
+        return signerResponse(msg.senderAddress);
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    CheckMessageJoinCircle(msg: any): any {
+        if (!isAddress(msg.senderAddress)) return { error: ErrInvalidAddress() };
+        if (!clean(msg.circleId)) return { error: ErrRepuRing('circle_id must not be empty') };
+        return signerResponse(msg.senderAddress);
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    CheckMessageEndorseUser(msg: any): any {
+        if (!isAddress(msg.senderAddress) || !isAddress(msg.targetAddress)) {
             return { error: ErrInvalidAddress() };
         }
-        // check recipient address
-        if (!msg.toAddress || msg.toAddress.length !== 20) {
-            return { error: ErrInvalidAddress() };
+        if (bytesEqual(msg.senderAddress, msg.targetAddress)) {
+            return { error: ErrRepuRing('sender cannot endorse self') };
         }
-        // check amount
-        const amount = msg.amount as Long | number | undefined;
-        if (!amount || (Long.isLong(amount) ? amount.isZero() : amount === 0)) {
-            return { error: ErrInvalidAmount() };
+        if (!clean(msg.circleId)) return { error: ErrRepuRing('circle_id must not be empty') };
+        if (!validTags.has(clean(msg.tag))) return { error: ErrRepuRing('tag is not allowed') };
+        return signerResponse(msg.senderAddress, msg.targetAddress);
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    CheckMessageSlashEndorsement(msg: any): any {
+        if (!isAddress(msg.senderAddress)) return { error: ErrInvalidAddress() };
+        if (!clean(msg.endorsementId)) {
+            return { error: ErrRepuRing('endorsement_id must not be empty') };
         }
-        // return the authorized signers
-        return {
-            recipient: msg.toAddress,
-            authorizedSigners: [msg.fromAddress]
-        };
+        if (!clean(msg.reason)) return { error: ErrRepuRing('slash reason must not be empty') };
+        return signerResponse(msg.senderAddress);
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    CheckMessageClaimRole(msg: any): any {
+        if (!isAddress(msg.senderAddress)) return { error: ErrInvalidAddress() };
+        if (!clean(msg.circleId)) return { error: ErrRepuRing('circle_id must not be empty') };
+        return signerResponse(msg.senderAddress);
     }
 }
 
-// Async versions of contract methods for proper state handling
 export class ContractAsync {
-    // CheckTx() is code that is executed to statelessly validate a transaction
+    // CheckTx performs stateless validation and signer authorization.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     static async CheckTx(contract: Contract, request: any): Promise<any> {
-        // validate fee
-        const [resp, err] = await contract.plugin.StateRead(contract, {
-            keys: [
-                {
-                    queryId: Long.fromNumber(Math.floor(Math.random() * Number.MAX_SAFE_INTEGER)),
-                    key: KeyForFeeParams()
-                }
-            ]
-        });
-
-        if (err) {
-            return { error: err };
-        }
-        if (resp?.error) {
-            return { error: resp.error };
-        }
-
-        // convert bytes into fee parameters
-        const feeParamsBytes = resp?.results?.[0]?.entries?.[0]?.value;
-        if (feeParamsBytes && feeParamsBytes.length > 0) {
-            const [minFees, unmarshalErr] = Unmarshal(feeParamsBytes, types.FeeParams);
-            if (unmarshalErr) {
-                return { error: unmarshalErr };
-            }
-            // check for the minimum fee
-            const txFee = request.tx?.fee as Long | number | undefined;
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const sendFee = (minFees as any)?.sendFee as Long | number | undefined;
-            if (txFee !== undefined && sendFee !== undefined) {
-                const txFeeNum = Long.isLong(txFee) ? txFee.toNumber() : txFee;
-                const sendFeeNum = Long.isLong(sendFee) ? sendFee.toNumber() : sendFee;
-                if (txFeeNum < sendFeeNum) {
-                    return { error: ErrTxFeeBelowStateLimit() };
-                }
-            }
-        }
-
-        // get the message and its type
         const [msg, msgType, msgErr] = FromAny(request.tx?.msg);
-        if (msgErr) {
-            return { error: msgErr };
+        if (msgErr) return { error: msgErr };
+        if (!msg) return { error: ErrInvalidMessageCast() };
+
+        switch (msgType) {
+            case 'MessageCreateProfile':
+                return contract.CheckMessageCreateProfile(msg);
+            case 'MessageCreateCircle':
+                return contract.CheckMessageCreateCircle(msg);
+            case 'MessageJoinCircle':
+                return contract.CheckMessageJoinCircle(msg);
+            case 'MessageEndorseUser':
+                return contract.CheckMessageEndorseUser(msg);
+            case 'MessageSlashEndorsement':
+                return contract.CheckMessageSlashEndorsement(msg);
+            case 'MessageClaimRole':
+                return contract.CheckMessageClaimRole(msg);
+            default:
+                return { error: ErrInvalidMessageCast() };
         }
-        // handle the message based on type
-        if (msg) {
-            switch (msgType) {
-                case 'MessageSend':
-                    return contract.CheckMessageSend(msg);
-                default:
-                    return { error: ErrInvalidMessageCast() };
-            }
-        }
-        return { error: ErrInvalidMessageCast() };
     }
 
-    // DeliverTx() is code that is executed to apply a transaction
+    // DeliverTx performs stateful validation and deterministic state transitions.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     static async DeliverTx(contract: Contract, request: any): Promise<any> {
-        // get the message and its type
         const [msg, msgType, err] = FromAny(request.tx?.msg);
-        if (err) {
-            return { error: err };
+        if (err) return { error: err };
+        if (!msg) return { error: ErrInvalidMessageCast() };
+
+        switch (msgType) {
+            case 'MessageCreateProfile':
+                return ContractAsync.DeliverMessageCreateProfile(contract, msg);
+            case 'MessageCreateCircle':
+                return ContractAsync.DeliverMessageCreateCircle(contract, msg);
+            case 'MessageJoinCircle':
+                return ContractAsync.DeliverMessageJoinCircle(contract, msg);
+            case 'MessageEndorseUser':
+                return ContractAsync.DeliverMessageEndorseUser(contract, msg);
+            case 'MessageSlashEndorsement':
+                return ContractAsync.DeliverMessageSlashEndorsement(contract, msg);
+            case 'MessageClaimRole':
+                return ContractAsync.DeliverMessageClaimRole(contract, msg);
+            default:
+                return { error: ErrInvalidMessageCast() };
         }
-        // handle the message based on type
-        if (msg) {
-            switch (msgType) {
-                case 'MessageSend':
-                    return ContractAsync.DeliverMessageSend(contract, msg, request.tx?.fee as Long);
-                default:
-                    return { error: ErrInvalidMessageCast() };
-            }
-        }
-        return { error: ErrInvalidMessageCast() };
     }
 
-    // DeliverMessageSend() handles a 'send' message
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    static async DeliverMessageSend(
-        contract: Contract,
-        msg: any,
-        fee: Long | number | undefined
-    ): Promise<any> {
-        const fromQueryId = Long.fromNumber(Math.floor(Math.random() * Number.MAX_SAFE_INTEGER));
-        const toQueryId = Long.fromNumber(Math.floor(Math.random() * Number.MAX_SAFE_INTEGER));
-        const feeQueryId = Long.fromNumber(Math.floor(Math.random() * Number.MAX_SAFE_INTEGER));
+    static async DeliverMessageCreateProfile(contract: Contract, msg: any): Promise<any> {
+        const sender = msg.senderAddress as Uint8Array;
+        const username = clean(msg.username);
+        const profileKey = KeyForProfile(sender);
+        const usernameKey = KeyForUsername(username);
+        const [reads, err] = await readMany(contract, [
+            [profileKey, types.Profile],
+            [usernameKey, null]
+        ]);
+        if (err) return { error: err };
+        const [profile, usernameTaken] = reads;
+        if (profile[0]) return { error: ErrRepuRing('address already has a profile') };
+        if (usernameTaken[1]) return { error: ErrRepuRing('username already exists') };
 
-        // calculate the from key and to key
-        const fromKey = KeyForAccount(msg.fromAddress!);
-        const toKey = KeyForAccount(msg.toAddress!);
-        const feePoolKey = KeyForFeePool(Long.fromNumber(contract.Config.ChainId));
+        const profileBytes = types.Profile.encode(
+            types.Profile.create({
+                address: sender,
+                username,
+                bio: clean(msg.bio),
+                avatarUrl: clean(msg.avatarUrl),
+                reputation: Long.ZERO
+            })
+        ).finish();
+        return write(contract, [
+            { key: profileKey, value: profileBytes },
+            { key: usernameKey, value: sender }
+        ]);
+    }
 
-        // get the from and to account
-        const [response, readErr] = await contract.plugin.StateRead(contract, {
-            keys: [
-                { queryId: feeQueryId, key: feePoolKey },
-                { queryId: fromQueryId, key: fromKey },
-                { queryId: toQueryId, key: toKey }
-            ]
-        });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    static async DeliverMessageCreateCircle(contract: Contract, msg: any): Promise<any> {
+        const sender = msg.senderAddress as Uint8Array;
+        const circleId = clean(msg.circleId);
+        const [reads, err] = await readMany(contract, [
+            [KeyForProfile(sender), types.Profile],
+            [KeyForCircle(circleId), types.Circle]
+        ]);
+        if (err) return { error: err };
+        const [profile, circle] = reads;
+        if (!profile[0]) return { error: ErrRepuRing('sender must create a profile first') };
+        if (circle[0]) return { error: ErrRepuRing('circle_id already exists') };
 
-        // check for internal error
-        if (readErr) {
-            return { error: readErr };
+        const circleBytes = types.Circle.encode(
+            types.Circle.create({
+                circleId,
+                name: clean(msg.name),
+                description: clean(msg.description),
+                creatorAddress: sender,
+                members: [sender]
+            })
+        ).finish();
+        return write(contract, [
+            { key: KeyForCircle(circleId), value: circleBytes },
+            { key: KeyForMember(circleId, sender), value: oneByte() }
+        ]);
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    static async DeliverMessageJoinCircle(contract: Contract, msg: any): Promise<any> {
+        const sender = msg.senderAddress as Uint8Array;
+        const circleId = clean(msg.circleId);
+        const [reads, err] = await readMany(contract, [
+            [KeyForProfile(sender), types.Profile],
+            [KeyForCircle(circleId), types.Circle],
+            [KeyForMember(circleId, sender), null]
+        ]);
+        if (err) return { error: err };
+        const [profile, circle, member] = reads;
+        if (!profile[0]) return { error: ErrRepuRing('sender must create a profile first') };
+        const circleData = circle[0] as any | null;
+        if (!circleData) return { error: ErrRepuRing('circle does not exist') };
+        if (member[1]) return { error: ErrRepuRing('sender is already a circle member') };
+
+        const members = [...(circleData.members || []), sender].sort(compareBytes);
+        const updatedCircle = types.Circle.encode(
+            types.Circle.create({ ...circleData, members })
+        ).finish();
+        return write(contract, [
+            { key: KeyForCircle(circleId), value: updatedCircle },
+            { key: KeyForMember(circleId, sender), value: oneByte() }
+        ]);
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    static async DeliverMessageEndorseUser(contract: Contract, msg: any): Promise<any> {
+        const sender = msg.senderAddress as Uint8Array;
+        const target = msg.targetAddress as Uint8Array;
+        const circleId = clean(msg.circleId);
+        const endorsementId = makeEndorsementId(circleId, sender, target);
+        const [reads, err] = await readMany(contract, [
+                [KeyForProfile(sender), types.Profile],
+                [KeyForProfile(target), types.Profile],
+                [KeyForCircle(circleId), types.Circle],
+                [KeyForMember(circleId, sender), null],
+                [KeyForMember(circleId, target), null],
+                [KeyForPairEndorsement(circleId, sender, target), null]
+            ]);
+        if (err) return { error: err };
+        const [senderProfile, targetProfile, circle, senderMember, targetMember, previous] = reads;
+        if (!senderProfile[0]) return { error: ErrRepuRing('sender must create a profile first') };
+        const targetProfileData = targetProfile[0] as any | null;
+        if (!targetProfileData) return { error: ErrRepuRing('target must have a profile') };
+        if (!circle[0]) return { error: ErrRepuRing('circle does not exist') };
+        if (!senderMember[1] || !targetMember[1]) {
+            return { error: ErrRepuRing('sender and target must both be circle members') };
         }
-        // ensure no error fsm error
-        if (response?.error) {
-            return { error: response.error };
-        }
-
-        // get the from bytes and to bytes
-        let fromBytes: Uint8Array | null = null;
-        let toBytes: Uint8Array | null = null;
-        let feePoolBytes: Uint8Array | null = null;
-
-        for (const resp of response?.results || []) {
-            const qid = resp.queryId as Long;
-            if (qid.equals(fromQueryId)) {
-                fromBytes = resp.entries?.[0]?.value || null;
-            } else if (qid.equals(toQueryId)) {
-                toBytes = resp.entries?.[0]?.value || null;
-            } else if (qid.equals(feeQueryId)) {
-                feePoolBytes = resp.entries?.[0]?.value || null;
-            }
-        }
-
-        // convert the bytes to account structures
-        const [fromRaw, fromErr] = Unmarshal(fromBytes || new Uint8Array(), types.Account);
-        if (fromErr) {
-            return { error: fromErr };
-        }
-        const [toRaw, toErr] = Unmarshal(toBytes || new Uint8Array(), types.Account);
-        if (toErr) {
-            return { error: toErr };
-        }
-        const [feePoolRaw, feePoolErr] = Unmarshal(feePoolBytes || new Uint8Array(), types.Pool);
-        if (feePoolErr) {
-            return { error: feePoolErr };
-        }
-
-        // Cast to any for property access
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const from = fromRaw as any;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const to = toRaw as any;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const feePool = feePoolRaw as any;
-
-        // add fee to 'amount to deduct'
-        const msgAmount = Long.isLong(msg.amount)
-            ? msg.amount
-            : Long.fromNumber((msg.amount as number) || 0);
-        const feeAmount = Long.isLong(fee) ? fee : Long.fromNumber((fee as number) || 0);
-        const amountToDeduct = msgAmount.add(feeAmount);
-
-        // get from amount
-        const fromAmount = Long.isLong(from?.amount)
-            ? from.amount
-            : Long.fromNumber((from?.amount as number) || 0);
-
-        // if the account amount is less than the amount to subtract; return insufficient funds
-        if (fromAmount.lessThan(amountToDeduct)) {
-            return { error: ErrInsufficientFunds() };
-        }
-
-        // for self-transfer, use same account data
-        const isSelfTransfer = Buffer.from(fromKey).equals(Buffer.from(toKey));
-        const toAccount = isSelfTransfer ? from : to;
-
-        // get amounts as Long
-        const newFromAmount = fromAmount.subtract(amountToDeduct);
-        const toAmount = Long.isLong(toAccount?.amount)
-            ? toAccount.amount
-            : Long.fromNumber((toAccount?.amount as number) || 0);
-        const newToAmount = toAmount.add(msgAmount);
-        const poolAmount = Long.isLong(feePool?.amount)
-            ? feePool.amount
-            : Long.fromNumber((feePool?.amount as number) || 0);
-        const newPoolAmount = poolAmount.add(feeAmount);
-
-        // Update the accounts
-        const updatedFrom = types.Account.create({ address: from?.address, amount: newFromAmount });
-        const updatedTo = types.Account.create({
-            address: toAccount?.address,
-            amount: newToAmount
-        });
-        const updatedPool = types.Pool.create({ id: feePool?.id, amount: newPoolAmount });
-
-        // convert the accounts to bytes
-        const newFromBytes = types.Account.encode(updatedFrom).finish();
-        const newToBytes = types.Account.encode(updatedTo).finish();
-        const newFeePoolBytes = types.Pool.encode(updatedPool).finish();
-
-        // execute writes to the database
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        let writeResp: any;
-        let writeErr: IPluginError | null;
-
-        // if the from account is drained - delete the from account
-        if (newFromAmount.isZero()) {
-            [writeResp, writeErr] = await contract.plugin.StateWrite(contract, {
-                sets: [
-                    { key: feePoolKey, value: newFeePoolBytes },
-                    { key: toKey, value: newToBytes }
-                ],
-                deletes: [{ key: fromKey }]
-            });
-        } else {
-            [writeResp, writeErr] = await contract.plugin.StateWrite(contract, {
-                sets: [
-                    { key: feePoolKey, value: newFeePoolBytes },
-                    { key: toKey, value: newToBytes },
-                    { key: fromKey, value: newFromBytes }
-                ]
-            });
+        if (previous[1]) {
+            return { error: ErrRepuRing('sender already endorsed this target in the circle') };
         }
 
-        if (writeErr) {
-            return { error: writeErr };
-        }
-        if (writeResp?.error) {
-            return { error: writeResp.error };
-        }
+        const reputation = toLong(targetProfileData.reputation).add(1);
+        const updatedProfile = types.Profile.encode(
+            types.Profile.create({ ...targetProfileData, reputation })
+        ).finish();
+        const endorsement = types.Endorsement.encode(
+            types.Endorsement.create({
+                endorsementId,
+                circleId,
+                fromAddress: sender,
+                targetAddress: target,
+                tag: clean(msg.tag),
+                message: clean(msg.message),
+                slashed: false
+            })
+        ).finish();
+        return write(contract, [
+            { key: KeyForProfile(target), value: updatedProfile },
+            { key: KeyForEndorsement(endorsementId), value: endorsement },
+            { key: KeyForCircleEndorsement(circleId, endorsementId), value: oneByte() },
+            { key: KeyForUserEndorsement(target, endorsementId), value: oneByte() },
+            { key: KeyForPairEndorsement(circleId, sender, target), value: Buffer.from(endorsementId) }
+        ]);
+    }
 
-        return {};
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    static async DeliverMessageSlashEndorsement(contract: Contract, msg: any): Promise<any> {
+        const sender = msg.senderAddress as Uint8Array;
+        const endorsementId = clean(msg.endorsementId);
+        const [endorsementResult, err1] = await readOne(
+            contract,
+            KeyForEndorsement(endorsementId),
+            types.Endorsement
+        );
+        if (err1) return { error: err1 };
+        const endorsement = endorsementResult as any | null;
+        if (!endorsement) return { error: ErrRepuRing('endorsement does not exist') };
+        if (endorsement.slashed) return { error: ErrRepuRing('endorsement already slashed') };
+
+        const [reads, err2] = await readMany(contract, [
+            [KeyForCircle(endorsement.circleId), types.Circle],
+            [KeyForProfile(endorsement.targetAddress), types.Profile]
+        ]);
+        if (err2) return { error: err2 };
+        const [circleResult, profileResult] = reads;
+        const circle = circleResult[0] as any | null;
+        const profile = profileResult[0] as any | null;
+        if (!circle) return { error: ErrRepuRing('circle does not exist') };
+        if (!bytesEqual(circle.creatorAddress, sender)) {
+            return { error: ErrRepuRing('only circle creator/admin can slash endorsement') };
+        }
+        if (!profile) return { error: ErrRepuRing('target profile does not exist') };
+
+        const reputation = toLong(profile.reputation).lessThan(2)
+            ? Long.ZERO
+            : toLong(profile.reputation).subtract(2);
+        const updatedEndorsement = types.Endorsement.encode(
+            types.Endorsement.create({
+                ...endorsement,
+                slashed: true,
+                slashReason: clean(msg.reason)
+            })
+        ).finish();
+        const updatedProfile = types.Profile.encode(
+            types.Profile.create({ ...profile, reputation })
+        ).finish();
+        return write(contract, [
+            { key: KeyForEndorsement(endorsementId), value: updatedEndorsement },
+            { key: KeyForProfile(endorsement.targetAddress), value: updatedProfile }
+        ]);
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    static async DeliverMessageClaimRole(contract: Contract, msg: any): Promise<any> {
+        const sender = msg.senderAddress as Uint8Array;
+        const circleId = clean(msg.circleId);
+        const [reads, err] = await readMany(contract, [
+            [KeyForProfile(sender), types.Profile],
+            [KeyForMember(circleId, sender), null]
+        ]);
+        if (err) return { error: err };
+        const [profileResult, memberResult] = reads;
+        const profile = profileResult[0] as any | null;
+        if (!profile) return { error: ErrRepuRing('sender must create a profile first') };
+        if (!memberResult[1]) return { error: ErrRepuRing('sender is not a circle member') };
+
+        const reputation = toLong(profile.reputation);
+        const role = roleForReputation(reputation);
+        const roleBytes = types.Role.encode(
+            types.Role.create({ circleId, address: sender, role, reputation })
+        ).finish();
+        return write(contract, [{ key: KeyForRole(circleId, sender), value: roleBytes }]);
     }
 }
 
-const accountPrefix = Buffer.from([1]); // store key prefix for accounts
-const poolPrefix = Buffer.from([2]); // store key prefix for pools
-const paramsPrefix = Buffer.from([7]); // store key prefix for governance parameters
+const accountPrefix = Buffer.from([1]);
+const poolPrefix = Buffer.from([2]);
+const paramsPrefix = Buffer.from([7]);
+const profilePrefix = Buffer.from([80]);
+const usernamePrefix = Buffer.from([81]);
+const circlePrefix = Buffer.from([82]);
+const memberPrefix = Buffer.from([83]);
+const rolePrefix = Buffer.from([84]);
+const endorsementPrefix = Buffer.from([85]);
+const circleEndorsementPrefix = Buffer.from([86]);
+const userEndorsementPrefix = Buffer.from([87]);
+const pairEndorsementPrefix = Buffer.from([88]);
 
-// KeyForAccount() returns the state database key for an account
 export function KeyForAccount(addr: Uint8Array): Uint8Array {
     return JoinLenPrefix(accountPrefix, Buffer.from(addr));
 }
 
-// KeyForFeeParams() returns the state database key for governance controlled 'fee parameters'
 export function KeyForFeeParams(): Uint8Array {
     return JoinLenPrefix(paramsPrefix, Buffer.from('/f/'));
 }
 
-// KeyForFeePool() returns the state database key for governance controlled 'fee parameters'
 export function KeyForFeePool(chainId: Long): Uint8Array {
     return JoinLenPrefix(poolPrefix, formatUint64(chainId));
+}
+
+export function KeyForProfile(addr: Uint8Array): Uint8Array {
+    return JoinLenPrefix(profilePrefix, Buffer.from(addr));
+}
+
+export function KeyForUsername(username: string): Uint8Array {
+    return JoinLenPrefix(usernamePrefix, Buffer.from(username.toLowerCase()));
+}
+
+export function KeyForCircle(circleId: string): Uint8Array {
+    return JoinLenPrefix(circlePrefix, Buffer.from(circleId));
+}
+
+export function KeyForMember(circleId: string, addr: Uint8Array): Uint8Array {
+    return JoinLenPrefix(memberPrefix, Buffer.from(circleId), Buffer.from(addr));
+}
+
+export function KeyForRole(circleId: string, addr: Uint8Array): Uint8Array {
+    return JoinLenPrefix(rolePrefix, Buffer.from(circleId), Buffer.from(addr));
+}
+
+export function KeyForEndorsement(endorsementId: string): Uint8Array {
+    return JoinLenPrefix(endorsementPrefix, Buffer.from(endorsementId));
+}
+
+export function KeyForCircleEndorsement(circleId: string, endorsementId: string): Uint8Array {
+    return JoinLenPrefix(circleEndorsementPrefix, Buffer.from(circleId), Buffer.from(endorsementId));
+}
+
+export function KeyForUserEndorsement(addr: Uint8Array, endorsementId: string): Uint8Array {
+    return JoinLenPrefix(userEndorsementPrefix, Buffer.from(addr), Buffer.from(endorsementId));
+}
+
+export function KeyForPairEndorsement(
+    circleId: string,
+    sender: Uint8Array,
+    target: Uint8Array
+): Uint8Array {
+    return JoinLenPrefix(
+        pairEndorsementPrefix,
+        Buffer.from(circleId),
+        Buffer.from(sender),
+        Buffer.from(target)
+    );
+}
+
+function ErrRepuRing(message: string): IPluginError {
+    return NewError(100, moduleName, message);
+}
+
+function signerResponse(signer: Uint8Array, recipient?: Uint8Array): any {
+    return {
+        recipient,
+        authorizedSigners: [signer]
+    };
+}
+
+function isAddress(addr: Uint8Array | undefined | null): boolean {
+    return !!addr && addr.length === 20;
+}
+
+function clean(v: unknown): string {
+    return String(v ?? '').trim();
+}
+
+function oneByte(): Uint8Array {
+    return Buffer.from([1]);
+}
+
+function bytesEqual(a?: Uint8Array | null, b?: Uint8Array | null): boolean {
+    return !!a && !!b && Buffer.from(a).equals(Buffer.from(b));
+}
+
+function compareBytes(a: Uint8Array, b: Uint8Array): number {
+    return Buffer.compare(Buffer.from(a), Buffer.from(b));
+}
+
+function makeEndorsementId(circleId: string, sender: Uint8Array, target: Uint8Array): string {
+    return createHash('sha256')
+        .update(circleId)
+        .update(Buffer.from([0]))
+        .update(Buffer.from(sender))
+        .update(Buffer.from([0]))
+        .update(Buffer.from(target))
+        .digest('hex')
+        .slice(0, 32);
+}
+
+function roleForReputation(reputation: Long): string {
+    if (reputation.greaterThanOrEqual(30)) return 'Circle Leader';
+    if (reputation.greaterThanOrEqual(15)) return 'Core Member';
+    if (reputation.greaterThanOrEqual(5)) return 'Trusted';
+    return 'Newbie';
+}
+
+function toLong(value: Long | number | undefined | null): Long {
+    if (Long.isLong(value)) return value;
+    return Long.fromNumber(Number(value || 0), true);
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function readOne(contract: Contract, key: Uint8Array, decoder: any): Promise<[any, IPluginError | null]> {
+    const [result, err] = await readMany(contract, [[key, decoder]]);
+    return [result[0]?.[0] || null, err];
+}
+
+async function readMany(
+    contract: Contract,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    entries: [Uint8Array, any | null][]
+): Promise<[Array<[any | null, Uint8Array | null]>, IPluginError | null]> {
+    const queries = entries.map(([key], i) => ({
+        queryId: Long.fromNumber(i + 1),
+        key
+    }));
+    const [response, readErr] = await contract.plugin.StateRead(contract, { keys: queries });
+    if (readErr) return [[], readErr];
+    if (response?.error) return [[], response.error];
+
+    const values = new Map<string, Uint8Array>();
+    for (const resp of response?.results || []) {
+        const qid = resp.queryId as Long;
+        const value = resp.entries?.[0]?.value || null;
+        if (value) values.set(qid.toString(), value);
+    }
+
+    const decoded: Array<[any | null, Uint8Array | null]> = [];
+    for (let i = 0; i < entries.length; i++) {
+        const decoder = entries[i][1];
+        const value = values.get(String(i + 1)) || null;
+        if (!value || !decoder) {
+            decoded.push([null, value]);
+            continue;
+        }
+        const [obj, err] = Unmarshal(value, decoder);
+        if (err) return [[], err];
+        decoded.push([obj, value]);
+    }
+    return [decoded, null];
+}
+
+async function write(
+    contract: Contract,
+    sets: Array<{ key: Uint8Array; value: Uint8Array }>
+): Promise<any> {
+    const [writeResp, writeErr] = await contract.plugin.StateWrite(contract, { sets });
+    if (writeErr) return { error: writeErr };
+    if (writeResp?.error) return { error: writeResp.error };
+    return {};
 }
 
 function formatUint64(u: Long): Buffer {

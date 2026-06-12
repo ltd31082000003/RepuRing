@@ -2,13 +2,12 @@ import React, { useState } from 'react';
 import { NavLink, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-    LayoutDashboard,
-    Wallet,
-    TrendingUp,
-    Vote,
-    ShoppingCart,
-    Activity,
     KeyRound,
+    BadgeCheck,
+    Users,
+    HeartHandshake,
+    Trophy,
+    ShieldCheck,
     ChevronLeft,
     ChevronRight,
     Menu,
@@ -16,12 +15,11 @@ import {
 } from 'lucide-react';
 
 const navItems = [
-    { name: 'Dashboard', path: '/', icon: LayoutDashboard },
-    { name: 'Accounts', path: '/accounts', icon: Wallet },
-    { name: 'Staking', path: '/staking', icon: TrendingUp },
-    { name: 'Governance', path: '/governance', icon: Vote },
-    { name: 'Orders', path: '/orders', icon: ShoppingCart },
-    { name: 'Monitoring', path: '/monitoring', icon: Activity },
+    { name: 'RepuRing', path: '/', icon: BadgeCheck },
+    { name: 'Circles', path: '/#circles', icon: Users },
+    { name: 'Endorse', path: '/#endorse', icon: HeartHandshake },
+    { name: 'Leaderboard', path: '/#leaderboard', icon: Trophy },
+    { name: 'Admin', path: '/#admin', icon: ShieldCheck },
     { name: 'Keys', path: '/key-management', icon: KeyRound },
 ];
 
@@ -72,27 +70,33 @@ export const AppSidebar = (): JSX.Element => {
                     >
                         <AnimatePresence mode="wait" initial={false}>
                             {collapsed ? (
-                                <motion.img
+                                <motion.div
                                     key="symbol"
-                                    src="/canopy-symbol.png"
-                                    alt="Canopy"
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     exit={{ opacity: 0 }}
                                     transition={{ duration: 0.18 }}
-                                    className="h-8 w-8 flex-shrink-0 object-contain drop-shadow-[0_0_4px_rgba(34,197,94,0.22)]"
-                                />
+                                    className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary"
+                                >
+                                    <BadgeCheck className="h-5 w-5" />
+                                </motion.div>
                             ) : (
-                                <motion.img
+                                <motion.div
                                     key="logo"
-                                    src="/canopy-wallet-logo.svg"
-                                    alt="Canopy Wallet"
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     exit={{ opacity: 0 }}
                                     transition={{ duration: 0.18 }}
-                                    className="h-[22px] w-auto flex-shrink-0 object-contain"
-                                />
+                                    className="flex min-w-0 items-center gap-2"
+                                >
+                                    <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
+                                        <BadgeCheck className="h-5 w-5" />
+                                    </span>
+                                    <span className="min-w-0">
+                                        <span className="block truncate text-lg font-semibold leading-tight text-white">RepuRing</span>
+                                        <span className="block truncate text-[11px] font-medium uppercase tracking-[0.16em] text-primary">Social-Fi</span>
+                                    </span>
+                                </motion.div>
                             )}
                         </AnimatePresence>
                     </Link>
@@ -165,7 +169,10 @@ export const AppSidebar = (): JSX.Element => {
                         <Menu className="h-5 w-5" />
                     </button>
                     <Link to="/" className="flex items-center px-1 py-1">
-                        <img src="/canopy-wallet-logo.svg" alt="Canopy Wallet" className="h-[18px] w-auto object-contain" />
+                        <span className="flex items-center gap-2 text-base font-semibold text-white">
+                            <BadgeCheck className="h-5 w-5 text-primary" />
+                            RepuRing
+                        </span>
                     </Link>
                     <div className="w-9" />
                 </header>
@@ -197,7 +204,10 @@ export const AppSidebar = (): JSX.Element => {
                                             onClick={() => setMobileOpen(false)}
                                             className="flex items-center px-1 py-1"
                                         >
-                                            <img src="/canopy-wallet-logo.svg" alt="Canopy Wallet" className="h-[18px] w-auto object-contain" />
+                                            <span className="flex items-center gap-2 text-base font-semibold text-white">
+                                                <BadgeCheck className="h-5 w-5 text-primary" />
+                                                RepuRing
+                                            </span>
                                         </Link>
                                         <button
                                             type="button"

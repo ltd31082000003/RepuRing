@@ -405,10 +405,24 @@ export function FromAny(any: any): [any | null, string | null, IPluginError | nu
     const typeUrl = any.typeUrl || any.type_url || '';
 
     try {
-        if (typeUrl.includes('MessageSend')) {
-            return [types.MessageSend.decode(any.value), 'MessageSend', null];
+        if (typeUrl.includes('MessageCreateProfile')) {
+            return [types.MessageCreateProfile.decode(any.value), 'MessageCreateProfile', null];
         }
-        // NOTE: To add new message types, see TUTORIAL.md
+        if (typeUrl.includes('MessageCreateCircle')) {
+            return [types.MessageCreateCircle.decode(any.value), 'MessageCreateCircle', null];
+        }
+        if (typeUrl.includes('MessageJoinCircle')) {
+            return [types.MessageJoinCircle.decode(any.value), 'MessageJoinCircle', null];
+        }
+        if (typeUrl.includes('MessageEndorseUser')) {
+            return [types.MessageEndorseUser.decode(any.value), 'MessageEndorseUser', null];
+        }
+        if (typeUrl.includes('MessageSlashEndorsement')) {
+            return [types.MessageSlashEndorsement.decode(any.value), 'MessageSlashEndorsement', null];
+        }
+        if (typeUrl.includes('MessageClaimRole')) {
+            return [types.MessageClaimRole.decode(any.value), 'MessageClaimRole', null];
+        }
         return [null, null, ErrInvalidMessageCast()];
     } catch (err) {
         return [null, null, ErrFromAny(err as Error)];

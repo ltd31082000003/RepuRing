@@ -8544,26 +8544,27 @@ $root.types = (function() {
         return Transaction;
     })();
 
-    types.MessageSend = (function() {
+    types.MessageCreateProfile = (function() {
 
         /**
-         * Properties of a MessageSend.
+         * Properties of a MessageCreateProfile.
          * @memberof types
-         * @interface IMessageSend
-         * @property {Uint8Array|null} [fromAddress] MessageSend fromAddress
-         * @property {Uint8Array|null} [toAddress] MessageSend toAddress
-         * @property {number|Long|null} [amount] MessageSend amount
+         * @interface IMessageCreateProfile
+         * @property {Uint8Array|null} [senderAddress] MessageCreateProfile senderAddress
+         * @property {string|null} [username] MessageCreateProfile username
+         * @property {string|null} [bio] MessageCreateProfile bio
+         * @property {string|null} [avatarUrl] MessageCreateProfile avatarUrl
          */
 
         /**
-         * Constructs a new MessageSend.
+         * Constructs a new MessageCreateProfile.
          * @memberof types
-         * @classdesc Represents a MessageSend.
-         * @implements IMessageSend
+         * @classdesc Represents a MessageCreateProfile.
+         * @implements IMessageCreateProfile
          * @constructor
-         * @param {types.IMessageSend=} [properties] Properties to set
+         * @param {types.IMessageCreateProfile=} [properties] Properties to set
          */
-        function MessageSend(properties) {
+        function MessageCreateProfile(properties) {
             if (properties)
                 for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                     if (properties[keys[i]] != null)
@@ -8571,105 +8572,119 @@ $root.types = (function() {
         }
 
         /**
-         * MessageSend fromAddress.
-         * @member {Uint8Array} fromAddress
-         * @memberof types.MessageSend
+         * MessageCreateProfile senderAddress.
+         * @member {Uint8Array} senderAddress
+         * @memberof types.MessageCreateProfile
          * @instance
          */
-        MessageSend.prototype.fromAddress = $util.newBuffer([]);
+        MessageCreateProfile.prototype.senderAddress = $util.newBuffer([]);
 
         /**
-         * MessageSend toAddress.
-         * @member {Uint8Array} toAddress
-         * @memberof types.MessageSend
+         * MessageCreateProfile username.
+         * @member {string} username
+         * @memberof types.MessageCreateProfile
          * @instance
          */
-        MessageSend.prototype.toAddress = $util.newBuffer([]);
+        MessageCreateProfile.prototype.username = "";
 
         /**
-         * MessageSend amount.
-         * @member {number|Long} amount
-         * @memberof types.MessageSend
+         * MessageCreateProfile bio.
+         * @member {string} bio
+         * @memberof types.MessageCreateProfile
          * @instance
          */
-        MessageSend.prototype.amount = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
+        MessageCreateProfile.prototype.bio = "";
 
         /**
-         * Creates a new MessageSend instance using the specified properties.
+         * MessageCreateProfile avatarUrl.
+         * @member {string} avatarUrl
+         * @memberof types.MessageCreateProfile
+         * @instance
+         */
+        MessageCreateProfile.prototype.avatarUrl = "";
+
+        /**
+         * Creates a new MessageCreateProfile instance using the specified properties.
          * @function create
-         * @memberof types.MessageSend
+         * @memberof types.MessageCreateProfile
          * @static
-         * @param {types.IMessageSend=} [properties] Properties to set
-         * @returns {types.MessageSend} MessageSend instance
+         * @param {types.IMessageCreateProfile=} [properties] Properties to set
+         * @returns {types.MessageCreateProfile} MessageCreateProfile instance
          */
-        MessageSend.create = function create(properties) {
-            return new MessageSend(properties);
+        MessageCreateProfile.create = function create(properties) {
+            return new MessageCreateProfile(properties);
         };
 
         /**
-         * Encodes the specified MessageSend message. Does not implicitly {@link types.MessageSend.verify|verify} messages.
+         * Encodes the specified MessageCreateProfile message. Does not implicitly {@link types.MessageCreateProfile.verify|verify} messages.
          * @function encode
-         * @memberof types.MessageSend
+         * @memberof types.MessageCreateProfile
          * @static
-         * @param {types.IMessageSend} message MessageSend message or plain object to encode
+         * @param {types.IMessageCreateProfile} message MessageCreateProfile message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
-        MessageSend.encode = function encode(message, writer) {
+        MessageCreateProfile.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.fromAddress != null && Object.hasOwnProperty.call(message, "fromAddress"))
-                writer.uint32(/* id 1, wireType 2 =*/10).bytes(message.fromAddress);
-            if (message.toAddress != null && Object.hasOwnProperty.call(message, "toAddress"))
-                writer.uint32(/* id 2, wireType 2 =*/18).bytes(message.toAddress);
-            if (message.amount != null && Object.hasOwnProperty.call(message, "amount"))
-                writer.uint32(/* id 3, wireType 0 =*/24).uint64(message.amount);
+            if (message.senderAddress != null && Object.hasOwnProperty.call(message, "senderAddress"))
+                writer.uint32(/* id 1, wireType 2 =*/10).bytes(message.senderAddress);
+            if (message.username != null && Object.hasOwnProperty.call(message, "username"))
+                writer.uint32(/* id 2, wireType 2 =*/18).string(message.username);
+            if (message.bio != null && Object.hasOwnProperty.call(message, "bio"))
+                writer.uint32(/* id 3, wireType 2 =*/26).string(message.bio);
+            if (message.avatarUrl != null && Object.hasOwnProperty.call(message, "avatarUrl"))
+                writer.uint32(/* id 4, wireType 2 =*/34).string(message.avatarUrl);
             return writer;
         };
 
         /**
-         * Encodes the specified MessageSend message, length delimited. Does not implicitly {@link types.MessageSend.verify|verify} messages.
+         * Encodes the specified MessageCreateProfile message, length delimited. Does not implicitly {@link types.MessageCreateProfile.verify|verify} messages.
          * @function encodeDelimited
-         * @memberof types.MessageSend
+         * @memberof types.MessageCreateProfile
          * @static
-         * @param {types.IMessageSend} message MessageSend message or plain object to encode
+         * @param {types.IMessageCreateProfile} message MessageCreateProfile message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
-        MessageSend.encodeDelimited = function encodeDelimited(message, writer) {
+        MessageCreateProfile.encodeDelimited = function encodeDelimited(message, writer) {
             return this.encode(message, writer).ldelim();
         };
 
         /**
-         * Decodes a MessageSend message from the specified reader or buffer.
+         * Decodes a MessageCreateProfile message from the specified reader or buffer.
          * @function decode
-         * @memberof types.MessageSend
+         * @memberof types.MessageCreateProfile
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
          * @param {number} [length] Message length if known beforehand
-         * @returns {types.MessageSend} MessageSend
+         * @returns {types.MessageCreateProfile} MessageCreateProfile
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        MessageSend.decode = function decode(reader, length, error) {
+        MessageCreateProfile.decode = function decode(reader, length, error) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.types.MessageSend();
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.types.MessageCreateProfile();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 if (tag === error)
                     break;
                 switch (tag >>> 3) {
                 case 1: {
-                        message.fromAddress = reader.bytes();
+                        message.senderAddress = reader.bytes();
                         break;
                     }
                 case 2: {
-                        message.toAddress = reader.bytes();
+                        message.username = reader.string();
                         break;
                     }
                 case 3: {
-                        message.amount = reader.uint64();
+                        message.bio = reader.string();
+                        break;
+                    }
+                case 4: {
+                        message.avatarUrl = reader.string();
                         break;
                     }
                 default:
@@ -8681,92 +8696,2441 @@ $root.types = (function() {
         };
 
         /**
-         * Decodes a MessageSend message from the specified reader or buffer, length delimited.
+         * Decodes a MessageCreateProfile message from the specified reader or buffer, length delimited.
          * @function decodeDelimited
-         * @memberof types.MessageSend
+         * @memberof types.MessageCreateProfile
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @returns {types.MessageSend} MessageSend
+         * @returns {types.MessageCreateProfile} MessageCreateProfile
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        MessageSend.decodeDelimited = function decodeDelimited(reader) {
+        MessageCreateProfile.decodeDelimited = function decodeDelimited(reader) {
             if (!(reader instanceof $Reader))
                 reader = new $Reader(reader);
             return this.decode(reader, reader.uint32());
         };
 
         /**
-         * Verifies a MessageSend message.
+         * Verifies a MessageCreateProfile message.
          * @function verify
-         * @memberof types.MessageSend
+         * @memberof types.MessageCreateProfile
          * @static
          * @param {Object.<string,*>} message Plain object to verify
          * @returns {string|null} `null` if valid, otherwise the reason why it is not
          */
-        MessageSend.verify = function verify(message) {
+        MessageCreateProfile.verify = function verify(message) {
             if (typeof message !== "object" || message === null)
                 return "object expected";
-            if (message.fromAddress != null && message.hasOwnProperty("fromAddress"))
-                if (!(message.fromAddress && typeof message.fromAddress.length === "number" || $util.isString(message.fromAddress)))
-                    return "fromAddress: buffer expected";
-            if (message.toAddress != null && message.hasOwnProperty("toAddress"))
-                if (!(message.toAddress && typeof message.toAddress.length === "number" || $util.isString(message.toAddress)))
-                    return "toAddress: buffer expected";
-            if (message.amount != null && message.hasOwnProperty("amount"))
-                if (!$util.isInteger(message.amount) && !(message.amount && $util.isInteger(message.amount.low) && $util.isInteger(message.amount.high)))
-                    return "amount: integer|Long expected";
+            if (message.senderAddress != null && message.hasOwnProperty("senderAddress"))
+                if (!(message.senderAddress && typeof message.senderAddress.length === "number" || $util.isString(message.senderAddress)))
+                    return "senderAddress: buffer expected";
+            if (message.username != null && message.hasOwnProperty("username"))
+                if (!$util.isString(message.username))
+                    return "username: string expected";
+            if (message.bio != null && message.hasOwnProperty("bio"))
+                if (!$util.isString(message.bio))
+                    return "bio: string expected";
+            if (message.avatarUrl != null && message.hasOwnProperty("avatarUrl"))
+                if (!$util.isString(message.avatarUrl))
+                    return "avatarUrl: string expected";
             return null;
         };
 
         /**
-         * Creates a MessageSend message from a plain object. Also converts values to their respective internal types.
+         * Creates a MessageCreateProfile message from a plain object. Also converts values to their respective internal types.
          * @function fromObject
-         * @memberof types.MessageSend
+         * @memberof types.MessageCreateProfile
          * @static
          * @param {Object.<string,*>} object Plain object
-         * @returns {types.MessageSend} MessageSend
+         * @returns {types.MessageCreateProfile} MessageCreateProfile
          */
-        MessageSend.fromObject = function fromObject(object) {
-            if (object instanceof $root.types.MessageSend)
+        MessageCreateProfile.fromObject = function fromObject(object) {
+            if (object instanceof $root.types.MessageCreateProfile)
                 return object;
-            var message = new $root.types.MessageSend();
+            var message = new $root.types.MessageCreateProfile();
+            if (object.senderAddress != null)
+                if (typeof object.senderAddress === "string")
+                    $util.base64.decode(object.senderAddress, message.senderAddress = $util.newBuffer($util.base64.length(object.senderAddress)), 0);
+                else if (object.senderAddress.length >= 0)
+                    message.senderAddress = object.senderAddress;
+            if (object.username != null)
+                message.username = String(object.username);
+            if (object.bio != null)
+                message.bio = String(object.bio);
+            if (object.avatarUrl != null)
+                message.avatarUrl = String(object.avatarUrl);
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a MessageCreateProfile message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof types.MessageCreateProfile
+         * @static
+         * @param {types.MessageCreateProfile} message MessageCreateProfile
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        MessageCreateProfile.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            var object = {};
+            if (options.defaults) {
+                if (options.bytes === String)
+                    object.senderAddress = "";
+                else {
+                    object.senderAddress = [];
+                    if (options.bytes !== Array)
+                        object.senderAddress = $util.newBuffer(object.senderAddress);
+                }
+                object.username = "";
+                object.bio = "";
+                object.avatarUrl = "";
+            }
+            if (message.senderAddress != null && message.hasOwnProperty("senderAddress"))
+                object.senderAddress = options.bytes === String ? $util.base64.encode(message.senderAddress, 0, message.senderAddress.length) : options.bytes === Array ? Array.prototype.slice.call(message.senderAddress) : message.senderAddress;
+            if (message.username != null && message.hasOwnProperty("username"))
+                object.username = message.username;
+            if (message.bio != null && message.hasOwnProperty("bio"))
+                object.bio = message.bio;
+            if (message.avatarUrl != null && message.hasOwnProperty("avatarUrl"))
+                object.avatarUrl = message.avatarUrl;
+            return object;
+        };
+
+        /**
+         * Converts this MessageCreateProfile to JSON.
+         * @function toJSON
+         * @memberof types.MessageCreateProfile
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        MessageCreateProfile.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for MessageCreateProfile
+         * @function getTypeUrl
+         * @memberof types.MessageCreateProfile
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        MessageCreateProfile.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/types.MessageCreateProfile";
+        };
+
+        return MessageCreateProfile;
+    })();
+
+    types.MessageCreateCircle = (function() {
+
+        /**
+         * Properties of a MessageCreateCircle.
+         * @memberof types
+         * @interface IMessageCreateCircle
+         * @property {Uint8Array|null} [senderAddress] MessageCreateCircle senderAddress
+         * @property {string|null} [circleId] MessageCreateCircle circleId
+         * @property {string|null} [name] MessageCreateCircle name
+         * @property {string|null} [description] MessageCreateCircle description
+         */
+
+        /**
+         * Constructs a new MessageCreateCircle.
+         * @memberof types
+         * @classdesc Represents a MessageCreateCircle.
+         * @implements IMessageCreateCircle
+         * @constructor
+         * @param {types.IMessageCreateCircle=} [properties] Properties to set
+         */
+        function MessageCreateCircle(properties) {
+            if (properties)
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * MessageCreateCircle senderAddress.
+         * @member {Uint8Array} senderAddress
+         * @memberof types.MessageCreateCircle
+         * @instance
+         */
+        MessageCreateCircle.prototype.senderAddress = $util.newBuffer([]);
+
+        /**
+         * MessageCreateCircle circleId.
+         * @member {string} circleId
+         * @memberof types.MessageCreateCircle
+         * @instance
+         */
+        MessageCreateCircle.prototype.circleId = "";
+
+        /**
+         * MessageCreateCircle name.
+         * @member {string} name
+         * @memberof types.MessageCreateCircle
+         * @instance
+         */
+        MessageCreateCircle.prototype.name = "";
+
+        /**
+         * MessageCreateCircle description.
+         * @member {string} description
+         * @memberof types.MessageCreateCircle
+         * @instance
+         */
+        MessageCreateCircle.prototype.description = "";
+
+        /**
+         * Creates a new MessageCreateCircle instance using the specified properties.
+         * @function create
+         * @memberof types.MessageCreateCircle
+         * @static
+         * @param {types.IMessageCreateCircle=} [properties] Properties to set
+         * @returns {types.MessageCreateCircle} MessageCreateCircle instance
+         */
+        MessageCreateCircle.create = function create(properties) {
+            return new MessageCreateCircle(properties);
+        };
+
+        /**
+         * Encodes the specified MessageCreateCircle message. Does not implicitly {@link types.MessageCreateCircle.verify|verify} messages.
+         * @function encode
+         * @memberof types.MessageCreateCircle
+         * @static
+         * @param {types.IMessageCreateCircle} message MessageCreateCircle message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        MessageCreateCircle.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.senderAddress != null && Object.hasOwnProperty.call(message, "senderAddress"))
+                writer.uint32(/* id 1, wireType 2 =*/10).bytes(message.senderAddress);
+            if (message.circleId != null && Object.hasOwnProperty.call(message, "circleId"))
+                writer.uint32(/* id 2, wireType 2 =*/18).string(message.circleId);
+            if (message.name != null && Object.hasOwnProperty.call(message, "name"))
+                writer.uint32(/* id 3, wireType 2 =*/26).string(message.name);
+            if (message.description != null && Object.hasOwnProperty.call(message, "description"))
+                writer.uint32(/* id 4, wireType 2 =*/34).string(message.description);
+            return writer;
+        };
+
+        /**
+         * Encodes the specified MessageCreateCircle message, length delimited. Does not implicitly {@link types.MessageCreateCircle.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof types.MessageCreateCircle
+         * @static
+         * @param {types.IMessageCreateCircle} message MessageCreateCircle message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        MessageCreateCircle.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a MessageCreateCircle message from the specified reader or buffer.
+         * @function decode
+         * @memberof types.MessageCreateCircle
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {types.MessageCreateCircle} MessageCreateCircle
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        MessageCreateCircle.decode = function decode(reader, length, error) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.types.MessageCreateCircle();
+            while (reader.pos < end) {
+                var tag = reader.uint32();
+                if (tag === error)
+                    break;
+                switch (tag >>> 3) {
+                case 1: {
+                        message.senderAddress = reader.bytes();
+                        break;
+                    }
+                case 2: {
+                        message.circleId = reader.string();
+                        break;
+                    }
+                case 3: {
+                        message.name = reader.string();
+                        break;
+                    }
+                case 4: {
+                        message.description = reader.string();
+                        break;
+                    }
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a MessageCreateCircle message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof types.MessageCreateCircle
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {types.MessageCreateCircle} MessageCreateCircle
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        MessageCreateCircle.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a MessageCreateCircle message.
+         * @function verify
+         * @memberof types.MessageCreateCircle
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        MessageCreateCircle.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.senderAddress != null && message.hasOwnProperty("senderAddress"))
+                if (!(message.senderAddress && typeof message.senderAddress.length === "number" || $util.isString(message.senderAddress)))
+                    return "senderAddress: buffer expected";
+            if (message.circleId != null && message.hasOwnProperty("circleId"))
+                if (!$util.isString(message.circleId))
+                    return "circleId: string expected";
+            if (message.name != null && message.hasOwnProperty("name"))
+                if (!$util.isString(message.name))
+                    return "name: string expected";
+            if (message.description != null && message.hasOwnProperty("description"))
+                if (!$util.isString(message.description))
+                    return "description: string expected";
+            return null;
+        };
+
+        /**
+         * Creates a MessageCreateCircle message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof types.MessageCreateCircle
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {types.MessageCreateCircle} MessageCreateCircle
+         */
+        MessageCreateCircle.fromObject = function fromObject(object) {
+            if (object instanceof $root.types.MessageCreateCircle)
+                return object;
+            var message = new $root.types.MessageCreateCircle();
+            if (object.senderAddress != null)
+                if (typeof object.senderAddress === "string")
+                    $util.base64.decode(object.senderAddress, message.senderAddress = $util.newBuffer($util.base64.length(object.senderAddress)), 0);
+                else if (object.senderAddress.length >= 0)
+                    message.senderAddress = object.senderAddress;
+            if (object.circleId != null)
+                message.circleId = String(object.circleId);
+            if (object.name != null)
+                message.name = String(object.name);
+            if (object.description != null)
+                message.description = String(object.description);
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a MessageCreateCircle message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof types.MessageCreateCircle
+         * @static
+         * @param {types.MessageCreateCircle} message MessageCreateCircle
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        MessageCreateCircle.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            var object = {};
+            if (options.defaults) {
+                if (options.bytes === String)
+                    object.senderAddress = "";
+                else {
+                    object.senderAddress = [];
+                    if (options.bytes !== Array)
+                        object.senderAddress = $util.newBuffer(object.senderAddress);
+                }
+                object.circleId = "";
+                object.name = "";
+                object.description = "";
+            }
+            if (message.senderAddress != null && message.hasOwnProperty("senderAddress"))
+                object.senderAddress = options.bytes === String ? $util.base64.encode(message.senderAddress, 0, message.senderAddress.length) : options.bytes === Array ? Array.prototype.slice.call(message.senderAddress) : message.senderAddress;
+            if (message.circleId != null && message.hasOwnProperty("circleId"))
+                object.circleId = message.circleId;
+            if (message.name != null && message.hasOwnProperty("name"))
+                object.name = message.name;
+            if (message.description != null && message.hasOwnProperty("description"))
+                object.description = message.description;
+            return object;
+        };
+
+        /**
+         * Converts this MessageCreateCircle to JSON.
+         * @function toJSON
+         * @memberof types.MessageCreateCircle
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        MessageCreateCircle.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for MessageCreateCircle
+         * @function getTypeUrl
+         * @memberof types.MessageCreateCircle
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        MessageCreateCircle.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/types.MessageCreateCircle";
+        };
+
+        return MessageCreateCircle;
+    })();
+
+    types.MessageJoinCircle = (function() {
+
+        /**
+         * Properties of a MessageJoinCircle.
+         * @memberof types
+         * @interface IMessageJoinCircle
+         * @property {Uint8Array|null} [senderAddress] MessageJoinCircle senderAddress
+         * @property {string|null} [circleId] MessageJoinCircle circleId
+         */
+
+        /**
+         * Constructs a new MessageJoinCircle.
+         * @memberof types
+         * @classdesc Represents a MessageJoinCircle.
+         * @implements IMessageJoinCircle
+         * @constructor
+         * @param {types.IMessageJoinCircle=} [properties] Properties to set
+         */
+        function MessageJoinCircle(properties) {
+            if (properties)
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * MessageJoinCircle senderAddress.
+         * @member {Uint8Array} senderAddress
+         * @memberof types.MessageJoinCircle
+         * @instance
+         */
+        MessageJoinCircle.prototype.senderAddress = $util.newBuffer([]);
+
+        /**
+         * MessageJoinCircle circleId.
+         * @member {string} circleId
+         * @memberof types.MessageJoinCircle
+         * @instance
+         */
+        MessageJoinCircle.prototype.circleId = "";
+
+        /**
+         * Creates a new MessageJoinCircle instance using the specified properties.
+         * @function create
+         * @memberof types.MessageJoinCircle
+         * @static
+         * @param {types.IMessageJoinCircle=} [properties] Properties to set
+         * @returns {types.MessageJoinCircle} MessageJoinCircle instance
+         */
+        MessageJoinCircle.create = function create(properties) {
+            return new MessageJoinCircle(properties);
+        };
+
+        /**
+         * Encodes the specified MessageJoinCircle message. Does not implicitly {@link types.MessageJoinCircle.verify|verify} messages.
+         * @function encode
+         * @memberof types.MessageJoinCircle
+         * @static
+         * @param {types.IMessageJoinCircle} message MessageJoinCircle message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        MessageJoinCircle.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.senderAddress != null && Object.hasOwnProperty.call(message, "senderAddress"))
+                writer.uint32(/* id 1, wireType 2 =*/10).bytes(message.senderAddress);
+            if (message.circleId != null && Object.hasOwnProperty.call(message, "circleId"))
+                writer.uint32(/* id 2, wireType 2 =*/18).string(message.circleId);
+            return writer;
+        };
+
+        /**
+         * Encodes the specified MessageJoinCircle message, length delimited. Does not implicitly {@link types.MessageJoinCircle.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof types.MessageJoinCircle
+         * @static
+         * @param {types.IMessageJoinCircle} message MessageJoinCircle message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        MessageJoinCircle.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a MessageJoinCircle message from the specified reader or buffer.
+         * @function decode
+         * @memberof types.MessageJoinCircle
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {types.MessageJoinCircle} MessageJoinCircle
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        MessageJoinCircle.decode = function decode(reader, length, error) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.types.MessageJoinCircle();
+            while (reader.pos < end) {
+                var tag = reader.uint32();
+                if (tag === error)
+                    break;
+                switch (tag >>> 3) {
+                case 1: {
+                        message.senderAddress = reader.bytes();
+                        break;
+                    }
+                case 2: {
+                        message.circleId = reader.string();
+                        break;
+                    }
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a MessageJoinCircle message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof types.MessageJoinCircle
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {types.MessageJoinCircle} MessageJoinCircle
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        MessageJoinCircle.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a MessageJoinCircle message.
+         * @function verify
+         * @memberof types.MessageJoinCircle
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        MessageJoinCircle.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.senderAddress != null && message.hasOwnProperty("senderAddress"))
+                if (!(message.senderAddress && typeof message.senderAddress.length === "number" || $util.isString(message.senderAddress)))
+                    return "senderAddress: buffer expected";
+            if (message.circleId != null && message.hasOwnProperty("circleId"))
+                if (!$util.isString(message.circleId))
+                    return "circleId: string expected";
+            return null;
+        };
+
+        /**
+         * Creates a MessageJoinCircle message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof types.MessageJoinCircle
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {types.MessageJoinCircle} MessageJoinCircle
+         */
+        MessageJoinCircle.fromObject = function fromObject(object) {
+            if (object instanceof $root.types.MessageJoinCircle)
+                return object;
+            var message = new $root.types.MessageJoinCircle();
+            if (object.senderAddress != null)
+                if (typeof object.senderAddress === "string")
+                    $util.base64.decode(object.senderAddress, message.senderAddress = $util.newBuffer($util.base64.length(object.senderAddress)), 0);
+                else if (object.senderAddress.length >= 0)
+                    message.senderAddress = object.senderAddress;
+            if (object.circleId != null)
+                message.circleId = String(object.circleId);
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a MessageJoinCircle message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof types.MessageJoinCircle
+         * @static
+         * @param {types.MessageJoinCircle} message MessageJoinCircle
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        MessageJoinCircle.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            var object = {};
+            if (options.defaults) {
+                if (options.bytes === String)
+                    object.senderAddress = "";
+                else {
+                    object.senderAddress = [];
+                    if (options.bytes !== Array)
+                        object.senderAddress = $util.newBuffer(object.senderAddress);
+                }
+                object.circleId = "";
+            }
+            if (message.senderAddress != null && message.hasOwnProperty("senderAddress"))
+                object.senderAddress = options.bytes === String ? $util.base64.encode(message.senderAddress, 0, message.senderAddress.length) : options.bytes === Array ? Array.prototype.slice.call(message.senderAddress) : message.senderAddress;
+            if (message.circleId != null && message.hasOwnProperty("circleId"))
+                object.circleId = message.circleId;
+            return object;
+        };
+
+        /**
+         * Converts this MessageJoinCircle to JSON.
+         * @function toJSON
+         * @memberof types.MessageJoinCircle
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        MessageJoinCircle.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for MessageJoinCircle
+         * @function getTypeUrl
+         * @memberof types.MessageJoinCircle
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        MessageJoinCircle.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/types.MessageJoinCircle";
+        };
+
+        return MessageJoinCircle;
+    })();
+
+    types.MessageEndorseUser = (function() {
+
+        /**
+         * Properties of a MessageEndorseUser.
+         * @memberof types
+         * @interface IMessageEndorseUser
+         * @property {Uint8Array|null} [senderAddress] MessageEndorseUser senderAddress
+         * @property {string|null} [circleId] MessageEndorseUser circleId
+         * @property {Uint8Array|null} [targetAddress] MessageEndorseUser targetAddress
+         * @property {string|null} [tag] MessageEndorseUser tag
+         * @property {string|null} [message] MessageEndorseUser message
+         */
+
+        /**
+         * Constructs a new MessageEndorseUser.
+         * @memberof types
+         * @classdesc Represents a MessageEndorseUser.
+         * @implements IMessageEndorseUser
+         * @constructor
+         * @param {types.IMessageEndorseUser=} [properties] Properties to set
+         */
+        function MessageEndorseUser(properties) {
+            if (properties)
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * MessageEndorseUser senderAddress.
+         * @member {Uint8Array} senderAddress
+         * @memberof types.MessageEndorseUser
+         * @instance
+         */
+        MessageEndorseUser.prototype.senderAddress = $util.newBuffer([]);
+
+        /**
+         * MessageEndorseUser circleId.
+         * @member {string} circleId
+         * @memberof types.MessageEndorseUser
+         * @instance
+         */
+        MessageEndorseUser.prototype.circleId = "";
+
+        /**
+         * MessageEndorseUser targetAddress.
+         * @member {Uint8Array} targetAddress
+         * @memberof types.MessageEndorseUser
+         * @instance
+         */
+        MessageEndorseUser.prototype.targetAddress = $util.newBuffer([]);
+
+        /**
+         * MessageEndorseUser tag.
+         * @member {string} tag
+         * @memberof types.MessageEndorseUser
+         * @instance
+         */
+        MessageEndorseUser.prototype.tag = "";
+
+        /**
+         * MessageEndorseUser message.
+         * @member {string} message
+         * @memberof types.MessageEndorseUser
+         * @instance
+         */
+        MessageEndorseUser.prototype.message = "";
+
+        /**
+         * Creates a new MessageEndorseUser instance using the specified properties.
+         * @function create
+         * @memberof types.MessageEndorseUser
+         * @static
+         * @param {types.IMessageEndorseUser=} [properties] Properties to set
+         * @returns {types.MessageEndorseUser} MessageEndorseUser instance
+         */
+        MessageEndorseUser.create = function create(properties) {
+            return new MessageEndorseUser(properties);
+        };
+
+        /**
+         * Encodes the specified MessageEndorseUser message. Does not implicitly {@link types.MessageEndorseUser.verify|verify} messages.
+         * @function encode
+         * @memberof types.MessageEndorseUser
+         * @static
+         * @param {types.IMessageEndorseUser} message MessageEndorseUser message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        MessageEndorseUser.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.senderAddress != null && Object.hasOwnProperty.call(message, "senderAddress"))
+                writer.uint32(/* id 1, wireType 2 =*/10).bytes(message.senderAddress);
+            if (message.circleId != null && Object.hasOwnProperty.call(message, "circleId"))
+                writer.uint32(/* id 2, wireType 2 =*/18).string(message.circleId);
+            if (message.targetAddress != null && Object.hasOwnProperty.call(message, "targetAddress"))
+                writer.uint32(/* id 3, wireType 2 =*/26).bytes(message.targetAddress);
+            if (message.tag != null && Object.hasOwnProperty.call(message, "tag"))
+                writer.uint32(/* id 4, wireType 2 =*/34).string(message.tag);
+            if (message.message != null && Object.hasOwnProperty.call(message, "message"))
+                writer.uint32(/* id 5, wireType 2 =*/42).string(message.message);
+            return writer;
+        };
+
+        /**
+         * Encodes the specified MessageEndorseUser message, length delimited. Does not implicitly {@link types.MessageEndorseUser.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof types.MessageEndorseUser
+         * @static
+         * @param {types.IMessageEndorseUser} message MessageEndorseUser message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        MessageEndorseUser.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a MessageEndorseUser message from the specified reader or buffer.
+         * @function decode
+         * @memberof types.MessageEndorseUser
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {types.MessageEndorseUser} MessageEndorseUser
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        MessageEndorseUser.decode = function decode(reader, length, error) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.types.MessageEndorseUser();
+            while (reader.pos < end) {
+                var tag = reader.uint32();
+                if (tag === error)
+                    break;
+                switch (tag >>> 3) {
+                case 1: {
+                        message.senderAddress = reader.bytes();
+                        break;
+                    }
+                case 2: {
+                        message.circleId = reader.string();
+                        break;
+                    }
+                case 3: {
+                        message.targetAddress = reader.bytes();
+                        break;
+                    }
+                case 4: {
+                        message.tag = reader.string();
+                        break;
+                    }
+                case 5: {
+                        message.message = reader.string();
+                        break;
+                    }
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a MessageEndorseUser message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof types.MessageEndorseUser
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {types.MessageEndorseUser} MessageEndorseUser
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        MessageEndorseUser.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a MessageEndorseUser message.
+         * @function verify
+         * @memberof types.MessageEndorseUser
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        MessageEndorseUser.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.senderAddress != null && message.hasOwnProperty("senderAddress"))
+                if (!(message.senderAddress && typeof message.senderAddress.length === "number" || $util.isString(message.senderAddress)))
+                    return "senderAddress: buffer expected";
+            if (message.circleId != null && message.hasOwnProperty("circleId"))
+                if (!$util.isString(message.circleId))
+                    return "circleId: string expected";
+            if (message.targetAddress != null && message.hasOwnProperty("targetAddress"))
+                if (!(message.targetAddress && typeof message.targetAddress.length === "number" || $util.isString(message.targetAddress)))
+                    return "targetAddress: buffer expected";
+            if (message.tag != null && message.hasOwnProperty("tag"))
+                if (!$util.isString(message.tag))
+                    return "tag: string expected";
+            if (message.message != null && message.hasOwnProperty("message"))
+                if (!$util.isString(message.message))
+                    return "message: string expected";
+            return null;
+        };
+
+        /**
+         * Creates a MessageEndorseUser message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof types.MessageEndorseUser
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {types.MessageEndorseUser} MessageEndorseUser
+         */
+        MessageEndorseUser.fromObject = function fromObject(object) {
+            if (object instanceof $root.types.MessageEndorseUser)
+                return object;
+            var message = new $root.types.MessageEndorseUser();
+            if (object.senderAddress != null)
+                if (typeof object.senderAddress === "string")
+                    $util.base64.decode(object.senderAddress, message.senderAddress = $util.newBuffer($util.base64.length(object.senderAddress)), 0);
+                else if (object.senderAddress.length >= 0)
+                    message.senderAddress = object.senderAddress;
+            if (object.circleId != null)
+                message.circleId = String(object.circleId);
+            if (object.targetAddress != null)
+                if (typeof object.targetAddress === "string")
+                    $util.base64.decode(object.targetAddress, message.targetAddress = $util.newBuffer($util.base64.length(object.targetAddress)), 0);
+                else if (object.targetAddress.length >= 0)
+                    message.targetAddress = object.targetAddress;
+            if (object.tag != null)
+                message.tag = String(object.tag);
+            if (object.message != null)
+                message.message = String(object.message);
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a MessageEndorseUser message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof types.MessageEndorseUser
+         * @static
+         * @param {types.MessageEndorseUser} message MessageEndorseUser
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        MessageEndorseUser.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            var object = {};
+            if (options.defaults) {
+                if (options.bytes === String)
+                    object.senderAddress = "";
+                else {
+                    object.senderAddress = [];
+                    if (options.bytes !== Array)
+                        object.senderAddress = $util.newBuffer(object.senderAddress);
+                }
+                object.circleId = "";
+                if (options.bytes === String)
+                    object.targetAddress = "";
+                else {
+                    object.targetAddress = [];
+                    if (options.bytes !== Array)
+                        object.targetAddress = $util.newBuffer(object.targetAddress);
+                }
+                object.tag = "";
+                object.message = "";
+            }
+            if (message.senderAddress != null && message.hasOwnProperty("senderAddress"))
+                object.senderAddress = options.bytes === String ? $util.base64.encode(message.senderAddress, 0, message.senderAddress.length) : options.bytes === Array ? Array.prototype.slice.call(message.senderAddress) : message.senderAddress;
+            if (message.circleId != null && message.hasOwnProperty("circleId"))
+                object.circleId = message.circleId;
+            if (message.targetAddress != null && message.hasOwnProperty("targetAddress"))
+                object.targetAddress = options.bytes === String ? $util.base64.encode(message.targetAddress, 0, message.targetAddress.length) : options.bytes === Array ? Array.prototype.slice.call(message.targetAddress) : message.targetAddress;
+            if (message.tag != null && message.hasOwnProperty("tag"))
+                object.tag = message.tag;
+            if (message.message != null && message.hasOwnProperty("message"))
+                object.message = message.message;
+            return object;
+        };
+
+        /**
+         * Converts this MessageEndorseUser to JSON.
+         * @function toJSON
+         * @memberof types.MessageEndorseUser
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        MessageEndorseUser.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for MessageEndorseUser
+         * @function getTypeUrl
+         * @memberof types.MessageEndorseUser
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        MessageEndorseUser.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/types.MessageEndorseUser";
+        };
+
+        return MessageEndorseUser;
+    })();
+
+    types.MessageSlashEndorsement = (function() {
+
+        /**
+         * Properties of a MessageSlashEndorsement.
+         * @memberof types
+         * @interface IMessageSlashEndorsement
+         * @property {Uint8Array|null} [senderAddress] MessageSlashEndorsement senderAddress
+         * @property {string|null} [endorsementId] MessageSlashEndorsement endorsementId
+         * @property {string|null} [reason] MessageSlashEndorsement reason
+         */
+
+        /**
+         * Constructs a new MessageSlashEndorsement.
+         * @memberof types
+         * @classdesc Represents a MessageSlashEndorsement.
+         * @implements IMessageSlashEndorsement
+         * @constructor
+         * @param {types.IMessageSlashEndorsement=} [properties] Properties to set
+         */
+        function MessageSlashEndorsement(properties) {
+            if (properties)
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * MessageSlashEndorsement senderAddress.
+         * @member {Uint8Array} senderAddress
+         * @memberof types.MessageSlashEndorsement
+         * @instance
+         */
+        MessageSlashEndorsement.prototype.senderAddress = $util.newBuffer([]);
+
+        /**
+         * MessageSlashEndorsement endorsementId.
+         * @member {string} endorsementId
+         * @memberof types.MessageSlashEndorsement
+         * @instance
+         */
+        MessageSlashEndorsement.prototype.endorsementId = "";
+
+        /**
+         * MessageSlashEndorsement reason.
+         * @member {string} reason
+         * @memberof types.MessageSlashEndorsement
+         * @instance
+         */
+        MessageSlashEndorsement.prototype.reason = "";
+
+        /**
+         * Creates a new MessageSlashEndorsement instance using the specified properties.
+         * @function create
+         * @memberof types.MessageSlashEndorsement
+         * @static
+         * @param {types.IMessageSlashEndorsement=} [properties] Properties to set
+         * @returns {types.MessageSlashEndorsement} MessageSlashEndorsement instance
+         */
+        MessageSlashEndorsement.create = function create(properties) {
+            return new MessageSlashEndorsement(properties);
+        };
+
+        /**
+         * Encodes the specified MessageSlashEndorsement message. Does not implicitly {@link types.MessageSlashEndorsement.verify|verify} messages.
+         * @function encode
+         * @memberof types.MessageSlashEndorsement
+         * @static
+         * @param {types.IMessageSlashEndorsement} message MessageSlashEndorsement message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        MessageSlashEndorsement.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.senderAddress != null && Object.hasOwnProperty.call(message, "senderAddress"))
+                writer.uint32(/* id 1, wireType 2 =*/10).bytes(message.senderAddress);
+            if (message.endorsementId != null && Object.hasOwnProperty.call(message, "endorsementId"))
+                writer.uint32(/* id 2, wireType 2 =*/18).string(message.endorsementId);
+            if (message.reason != null && Object.hasOwnProperty.call(message, "reason"))
+                writer.uint32(/* id 3, wireType 2 =*/26).string(message.reason);
+            return writer;
+        };
+
+        /**
+         * Encodes the specified MessageSlashEndorsement message, length delimited. Does not implicitly {@link types.MessageSlashEndorsement.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof types.MessageSlashEndorsement
+         * @static
+         * @param {types.IMessageSlashEndorsement} message MessageSlashEndorsement message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        MessageSlashEndorsement.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a MessageSlashEndorsement message from the specified reader or buffer.
+         * @function decode
+         * @memberof types.MessageSlashEndorsement
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {types.MessageSlashEndorsement} MessageSlashEndorsement
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        MessageSlashEndorsement.decode = function decode(reader, length, error) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.types.MessageSlashEndorsement();
+            while (reader.pos < end) {
+                var tag = reader.uint32();
+                if (tag === error)
+                    break;
+                switch (tag >>> 3) {
+                case 1: {
+                        message.senderAddress = reader.bytes();
+                        break;
+                    }
+                case 2: {
+                        message.endorsementId = reader.string();
+                        break;
+                    }
+                case 3: {
+                        message.reason = reader.string();
+                        break;
+                    }
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a MessageSlashEndorsement message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof types.MessageSlashEndorsement
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {types.MessageSlashEndorsement} MessageSlashEndorsement
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        MessageSlashEndorsement.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a MessageSlashEndorsement message.
+         * @function verify
+         * @memberof types.MessageSlashEndorsement
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        MessageSlashEndorsement.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.senderAddress != null && message.hasOwnProperty("senderAddress"))
+                if (!(message.senderAddress && typeof message.senderAddress.length === "number" || $util.isString(message.senderAddress)))
+                    return "senderAddress: buffer expected";
+            if (message.endorsementId != null && message.hasOwnProperty("endorsementId"))
+                if (!$util.isString(message.endorsementId))
+                    return "endorsementId: string expected";
+            if (message.reason != null && message.hasOwnProperty("reason"))
+                if (!$util.isString(message.reason))
+                    return "reason: string expected";
+            return null;
+        };
+
+        /**
+         * Creates a MessageSlashEndorsement message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof types.MessageSlashEndorsement
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {types.MessageSlashEndorsement} MessageSlashEndorsement
+         */
+        MessageSlashEndorsement.fromObject = function fromObject(object) {
+            if (object instanceof $root.types.MessageSlashEndorsement)
+                return object;
+            var message = new $root.types.MessageSlashEndorsement();
+            if (object.senderAddress != null)
+                if (typeof object.senderAddress === "string")
+                    $util.base64.decode(object.senderAddress, message.senderAddress = $util.newBuffer($util.base64.length(object.senderAddress)), 0);
+                else if (object.senderAddress.length >= 0)
+                    message.senderAddress = object.senderAddress;
+            if (object.endorsementId != null)
+                message.endorsementId = String(object.endorsementId);
+            if (object.reason != null)
+                message.reason = String(object.reason);
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a MessageSlashEndorsement message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof types.MessageSlashEndorsement
+         * @static
+         * @param {types.MessageSlashEndorsement} message MessageSlashEndorsement
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        MessageSlashEndorsement.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            var object = {};
+            if (options.defaults) {
+                if (options.bytes === String)
+                    object.senderAddress = "";
+                else {
+                    object.senderAddress = [];
+                    if (options.bytes !== Array)
+                        object.senderAddress = $util.newBuffer(object.senderAddress);
+                }
+                object.endorsementId = "";
+                object.reason = "";
+            }
+            if (message.senderAddress != null && message.hasOwnProperty("senderAddress"))
+                object.senderAddress = options.bytes === String ? $util.base64.encode(message.senderAddress, 0, message.senderAddress.length) : options.bytes === Array ? Array.prototype.slice.call(message.senderAddress) : message.senderAddress;
+            if (message.endorsementId != null && message.hasOwnProperty("endorsementId"))
+                object.endorsementId = message.endorsementId;
+            if (message.reason != null && message.hasOwnProperty("reason"))
+                object.reason = message.reason;
+            return object;
+        };
+
+        /**
+         * Converts this MessageSlashEndorsement to JSON.
+         * @function toJSON
+         * @memberof types.MessageSlashEndorsement
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        MessageSlashEndorsement.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for MessageSlashEndorsement
+         * @function getTypeUrl
+         * @memberof types.MessageSlashEndorsement
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        MessageSlashEndorsement.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/types.MessageSlashEndorsement";
+        };
+
+        return MessageSlashEndorsement;
+    })();
+
+    types.MessageClaimRole = (function() {
+
+        /**
+         * Properties of a MessageClaimRole.
+         * @memberof types
+         * @interface IMessageClaimRole
+         * @property {Uint8Array|null} [senderAddress] MessageClaimRole senderAddress
+         * @property {string|null} [circleId] MessageClaimRole circleId
+         */
+
+        /**
+         * Constructs a new MessageClaimRole.
+         * @memberof types
+         * @classdesc Represents a MessageClaimRole.
+         * @implements IMessageClaimRole
+         * @constructor
+         * @param {types.IMessageClaimRole=} [properties] Properties to set
+         */
+        function MessageClaimRole(properties) {
+            if (properties)
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * MessageClaimRole senderAddress.
+         * @member {Uint8Array} senderAddress
+         * @memberof types.MessageClaimRole
+         * @instance
+         */
+        MessageClaimRole.prototype.senderAddress = $util.newBuffer([]);
+
+        /**
+         * MessageClaimRole circleId.
+         * @member {string} circleId
+         * @memberof types.MessageClaimRole
+         * @instance
+         */
+        MessageClaimRole.prototype.circleId = "";
+
+        /**
+         * Creates a new MessageClaimRole instance using the specified properties.
+         * @function create
+         * @memberof types.MessageClaimRole
+         * @static
+         * @param {types.IMessageClaimRole=} [properties] Properties to set
+         * @returns {types.MessageClaimRole} MessageClaimRole instance
+         */
+        MessageClaimRole.create = function create(properties) {
+            return new MessageClaimRole(properties);
+        };
+
+        /**
+         * Encodes the specified MessageClaimRole message. Does not implicitly {@link types.MessageClaimRole.verify|verify} messages.
+         * @function encode
+         * @memberof types.MessageClaimRole
+         * @static
+         * @param {types.IMessageClaimRole} message MessageClaimRole message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        MessageClaimRole.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.senderAddress != null && Object.hasOwnProperty.call(message, "senderAddress"))
+                writer.uint32(/* id 1, wireType 2 =*/10).bytes(message.senderAddress);
+            if (message.circleId != null && Object.hasOwnProperty.call(message, "circleId"))
+                writer.uint32(/* id 2, wireType 2 =*/18).string(message.circleId);
+            return writer;
+        };
+
+        /**
+         * Encodes the specified MessageClaimRole message, length delimited. Does not implicitly {@link types.MessageClaimRole.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof types.MessageClaimRole
+         * @static
+         * @param {types.IMessageClaimRole} message MessageClaimRole message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        MessageClaimRole.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a MessageClaimRole message from the specified reader or buffer.
+         * @function decode
+         * @memberof types.MessageClaimRole
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {types.MessageClaimRole} MessageClaimRole
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        MessageClaimRole.decode = function decode(reader, length, error) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.types.MessageClaimRole();
+            while (reader.pos < end) {
+                var tag = reader.uint32();
+                if (tag === error)
+                    break;
+                switch (tag >>> 3) {
+                case 1: {
+                        message.senderAddress = reader.bytes();
+                        break;
+                    }
+                case 2: {
+                        message.circleId = reader.string();
+                        break;
+                    }
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a MessageClaimRole message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof types.MessageClaimRole
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {types.MessageClaimRole} MessageClaimRole
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        MessageClaimRole.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a MessageClaimRole message.
+         * @function verify
+         * @memberof types.MessageClaimRole
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        MessageClaimRole.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.senderAddress != null && message.hasOwnProperty("senderAddress"))
+                if (!(message.senderAddress && typeof message.senderAddress.length === "number" || $util.isString(message.senderAddress)))
+                    return "senderAddress: buffer expected";
+            if (message.circleId != null && message.hasOwnProperty("circleId"))
+                if (!$util.isString(message.circleId))
+                    return "circleId: string expected";
+            return null;
+        };
+
+        /**
+         * Creates a MessageClaimRole message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof types.MessageClaimRole
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {types.MessageClaimRole} MessageClaimRole
+         */
+        MessageClaimRole.fromObject = function fromObject(object) {
+            if (object instanceof $root.types.MessageClaimRole)
+                return object;
+            var message = new $root.types.MessageClaimRole();
+            if (object.senderAddress != null)
+                if (typeof object.senderAddress === "string")
+                    $util.base64.decode(object.senderAddress, message.senderAddress = $util.newBuffer($util.base64.length(object.senderAddress)), 0);
+                else if (object.senderAddress.length >= 0)
+                    message.senderAddress = object.senderAddress;
+            if (object.circleId != null)
+                message.circleId = String(object.circleId);
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a MessageClaimRole message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof types.MessageClaimRole
+         * @static
+         * @param {types.MessageClaimRole} message MessageClaimRole
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        MessageClaimRole.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            var object = {};
+            if (options.defaults) {
+                if (options.bytes === String)
+                    object.senderAddress = "";
+                else {
+                    object.senderAddress = [];
+                    if (options.bytes !== Array)
+                        object.senderAddress = $util.newBuffer(object.senderAddress);
+                }
+                object.circleId = "";
+            }
+            if (message.senderAddress != null && message.hasOwnProperty("senderAddress"))
+                object.senderAddress = options.bytes === String ? $util.base64.encode(message.senderAddress, 0, message.senderAddress.length) : options.bytes === Array ? Array.prototype.slice.call(message.senderAddress) : message.senderAddress;
+            if (message.circleId != null && message.hasOwnProperty("circleId"))
+                object.circleId = message.circleId;
+            return object;
+        };
+
+        /**
+         * Converts this MessageClaimRole to JSON.
+         * @function toJSON
+         * @memberof types.MessageClaimRole
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        MessageClaimRole.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for MessageClaimRole
+         * @function getTypeUrl
+         * @memberof types.MessageClaimRole
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        MessageClaimRole.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/types.MessageClaimRole";
+        };
+
+        return MessageClaimRole;
+    })();
+
+    types.Profile = (function() {
+
+        /**
+         * Properties of a Profile.
+         * @memberof types
+         * @interface IProfile
+         * @property {Uint8Array|null} [address] Profile address
+         * @property {string|null} [username] Profile username
+         * @property {string|null} [bio] Profile bio
+         * @property {string|null} [avatarUrl] Profile avatarUrl
+         * @property {number|Long|null} [reputation] Profile reputation
+         */
+
+        /**
+         * Constructs a new Profile.
+         * @memberof types
+         * @classdesc Represents a Profile.
+         * @implements IProfile
+         * @constructor
+         * @param {types.IProfile=} [properties] Properties to set
+         */
+        function Profile(properties) {
+            if (properties)
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * Profile address.
+         * @member {Uint8Array} address
+         * @memberof types.Profile
+         * @instance
+         */
+        Profile.prototype.address = $util.newBuffer([]);
+
+        /**
+         * Profile username.
+         * @member {string} username
+         * @memberof types.Profile
+         * @instance
+         */
+        Profile.prototype.username = "";
+
+        /**
+         * Profile bio.
+         * @member {string} bio
+         * @memberof types.Profile
+         * @instance
+         */
+        Profile.prototype.bio = "";
+
+        /**
+         * Profile avatarUrl.
+         * @member {string} avatarUrl
+         * @memberof types.Profile
+         * @instance
+         */
+        Profile.prototype.avatarUrl = "";
+
+        /**
+         * Profile reputation.
+         * @member {number|Long} reputation
+         * @memberof types.Profile
+         * @instance
+         */
+        Profile.prototype.reputation = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
+
+        /**
+         * Creates a new Profile instance using the specified properties.
+         * @function create
+         * @memberof types.Profile
+         * @static
+         * @param {types.IProfile=} [properties] Properties to set
+         * @returns {types.Profile} Profile instance
+         */
+        Profile.create = function create(properties) {
+            return new Profile(properties);
+        };
+
+        /**
+         * Encodes the specified Profile message. Does not implicitly {@link types.Profile.verify|verify} messages.
+         * @function encode
+         * @memberof types.Profile
+         * @static
+         * @param {types.IProfile} message Profile message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        Profile.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.address != null && Object.hasOwnProperty.call(message, "address"))
+                writer.uint32(/* id 1, wireType 2 =*/10).bytes(message.address);
+            if (message.username != null && Object.hasOwnProperty.call(message, "username"))
+                writer.uint32(/* id 2, wireType 2 =*/18).string(message.username);
+            if (message.bio != null && Object.hasOwnProperty.call(message, "bio"))
+                writer.uint32(/* id 3, wireType 2 =*/26).string(message.bio);
+            if (message.avatarUrl != null && Object.hasOwnProperty.call(message, "avatarUrl"))
+                writer.uint32(/* id 4, wireType 2 =*/34).string(message.avatarUrl);
+            if (message.reputation != null && Object.hasOwnProperty.call(message, "reputation"))
+                writer.uint32(/* id 5, wireType 0 =*/40).uint64(message.reputation);
+            return writer;
+        };
+
+        /**
+         * Encodes the specified Profile message, length delimited. Does not implicitly {@link types.Profile.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof types.Profile
+         * @static
+         * @param {types.IProfile} message Profile message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        Profile.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a Profile message from the specified reader or buffer.
+         * @function decode
+         * @memberof types.Profile
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {types.Profile} Profile
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        Profile.decode = function decode(reader, length, error) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.types.Profile();
+            while (reader.pos < end) {
+                var tag = reader.uint32();
+                if (tag === error)
+                    break;
+                switch (tag >>> 3) {
+                case 1: {
+                        message.address = reader.bytes();
+                        break;
+                    }
+                case 2: {
+                        message.username = reader.string();
+                        break;
+                    }
+                case 3: {
+                        message.bio = reader.string();
+                        break;
+                    }
+                case 4: {
+                        message.avatarUrl = reader.string();
+                        break;
+                    }
+                case 5: {
+                        message.reputation = reader.uint64();
+                        break;
+                    }
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a Profile message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof types.Profile
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {types.Profile} Profile
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        Profile.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a Profile message.
+         * @function verify
+         * @memberof types.Profile
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        Profile.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.address != null && message.hasOwnProperty("address"))
+                if (!(message.address && typeof message.address.length === "number" || $util.isString(message.address)))
+                    return "address: buffer expected";
+            if (message.username != null && message.hasOwnProperty("username"))
+                if (!$util.isString(message.username))
+                    return "username: string expected";
+            if (message.bio != null && message.hasOwnProperty("bio"))
+                if (!$util.isString(message.bio))
+                    return "bio: string expected";
+            if (message.avatarUrl != null && message.hasOwnProperty("avatarUrl"))
+                if (!$util.isString(message.avatarUrl))
+                    return "avatarUrl: string expected";
+            if (message.reputation != null && message.hasOwnProperty("reputation"))
+                if (!$util.isInteger(message.reputation) && !(message.reputation && $util.isInteger(message.reputation.low) && $util.isInteger(message.reputation.high)))
+                    return "reputation: integer|Long expected";
+            return null;
+        };
+
+        /**
+         * Creates a Profile message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof types.Profile
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {types.Profile} Profile
+         */
+        Profile.fromObject = function fromObject(object) {
+            if (object instanceof $root.types.Profile)
+                return object;
+            var message = new $root.types.Profile();
+            if (object.address != null)
+                if (typeof object.address === "string")
+                    $util.base64.decode(object.address, message.address = $util.newBuffer($util.base64.length(object.address)), 0);
+                else if (object.address.length >= 0)
+                    message.address = object.address;
+            if (object.username != null)
+                message.username = String(object.username);
+            if (object.bio != null)
+                message.bio = String(object.bio);
+            if (object.avatarUrl != null)
+                message.avatarUrl = String(object.avatarUrl);
+            if (object.reputation != null)
+                if ($util.Long)
+                    (message.reputation = $util.Long.fromValue(object.reputation)).unsigned = true;
+                else if (typeof object.reputation === "string")
+                    message.reputation = parseInt(object.reputation, 10);
+                else if (typeof object.reputation === "number")
+                    message.reputation = object.reputation;
+                else if (typeof object.reputation === "object")
+                    message.reputation = new $util.LongBits(object.reputation.low >>> 0, object.reputation.high >>> 0).toNumber(true);
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a Profile message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof types.Profile
+         * @static
+         * @param {types.Profile} message Profile
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        Profile.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            var object = {};
+            if (options.defaults) {
+                if (options.bytes === String)
+                    object.address = "";
+                else {
+                    object.address = [];
+                    if (options.bytes !== Array)
+                        object.address = $util.newBuffer(object.address);
+                }
+                object.username = "";
+                object.bio = "";
+                object.avatarUrl = "";
+                if ($util.Long) {
+                    var long = new $util.Long(0, 0, true);
+                    object.reputation = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                } else
+                    object.reputation = options.longs === String ? "0" : 0;
+            }
+            if (message.address != null && message.hasOwnProperty("address"))
+                object.address = options.bytes === String ? $util.base64.encode(message.address, 0, message.address.length) : options.bytes === Array ? Array.prototype.slice.call(message.address) : message.address;
+            if (message.username != null && message.hasOwnProperty("username"))
+                object.username = message.username;
+            if (message.bio != null && message.hasOwnProperty("bio"))
+                object.bio = message.bio;
+            if (message.avatarUrl != null && message.hasOwnProperty("avatarUrl"))
+                object.avatarUrl = message.avatarUrl;
+            if (message.reputation != null && message.hasOwnProperty("reputation"))
+                if (typeof message.reputation === "number")
+                    object.reputation = options.longs === String ? String(message.reputation) : message.reputation;
+                else
+                    object.reputation = options.longs === String ? $util.Long.prototype.toString.call(message.reputation) : options.longs === Number ? new $util.LongBits(message.reputation.low >>> 0, message.reputation.high >>> 0).toNumber(true) : message.reputation;
+            return object;
+        };
+
+        /**
+         * Converts this Profile to JSON.
+         * @function toJSON
+         * @memberof types.Profile
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        Profile.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for Profile
+         * @function getTypeUrl
+         * @memberof types.Profile
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        Profile.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/types.Profile";
+        };
+
+        return Profile;
+    })();
+
+    types.Circle = (function() {
+
+        /**
+         * Properties of a Circle.
+         * @memberof types
+         * @interface ICircle
+         * @property {string|null} [circleId] Circle circleId
+         * @property {string|null} [name] Circle name
+         * @property {string|null} [description] Circle description
+         * @property {Uint8Array|null} [creatorAddress] Circle creatorAddress
+         * @property {Array.<Uint8Array>|null} [members] Circle members
+         */
+
+        /**
+         * Constructs a new Circle.
+         * @memberof types
+         * @classdesc Represents a Circle.
+         * @implements ICircle
+         * @constructor
+         * @param {types.ICircle=} [properties] Properties to set
+         */
+        function Circle(properties) {
+            this.members = [];
+            if (properties)
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * Circle circleId.
+         * @member {string} circleId
+         * @memberof types.Circle
+         * @instance
+         */
+        Circle.prototype.circleId = "";
+
+        /**
+         * Circle name.
+         * @member {string} name
+         * @memberof types.Circle
+         * @instance
+         */
+        Circle.prototype.name = "";
+
+        /**
+         * Circle description.
+         * @member {string} description
+         * @memberof types.Circle
+         * @instance
+         */
+        Circle.prototype.description = "";
+
+        /**
+         * Circle creatorAddress.
+         * @member {Uint8Array} creatorAddress
+         * @memberof types.Circle
+         * @instance
+         */
+        Circle.prototype.creatorAddress = $util.newBuffer([]);
+
+        /**
+         * Circle members.
+         * @member {Array.<Uint8Array>} members
+         * @memberof types.Circle
+         * @instance
+         */
+        Circle.prototype.members = $util.emptyArray;
+
+        /**
+         * Creates a new Circle instance using the specified properties.
+         * @function create
+         * @memberof types.Circle
+         * @static
+         * @param {types.ICircle=} [properties] Properties to set
+         * @returns {types.Circle} Circle instance
+         */
+        Circle.create = function create(properties) {
+            return new Circle(properties);
+        };
+
+        /**
+         * Encodes the specified Circle message. Does not implicitly {@link types.Circle.verify|verify} messages.
+         * @function encode
+         * @memberof types.Circle
+         * @static
+         * @param {types.ICircle} message Circle message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        Circle.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.circleId != null && Object.hasOwnProperty.call(message, "circleId"))
+                writer.uint32(/* id 1, wireType 2 =*/10).string(message.circleId);
+            if (message.name != null && Object.hasOwnProperty.call(message, "name"))
+                writer.uint32(/* id 2, wireType 2 =*/18).string(message.name);
+            if (message.description != null && Object.hasOwnProperty.call(message, "description"))
+                writer.uint32(/* id 3, wireType 2 =*/26).string(message.description);
+            if (message.creatorAddress != null && Object.hasOwnProperty.call(message, "creatorAddress"))
+                writer.uint32(/* id 4, wireType 2 =*/34).bytes(message.creatorAddress);
+            if (message.members != null && message.members.length)
+                for (var i = 0; i < message.members.length; ++i)
+                    writer.uint32(/* id 5, wireType 2 =*/42).bytes(message.members[i]);
+            return writer;
+        };
+
+        /**
+         * Encodes the specified Circle message, length delimited. Does not implicitly {@link types.Circle.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof types.Circle
+         * @static
+         * @param {types.ICircle} message Circle message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        Circle.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a Circle message from the specified reader or buffer.
+         * @function decode
+         * @memberof types.Circle
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {types.Circle} Circle
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        Circle.decode = function decode(reader, length, error) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.types.Circle();
+            while (reader.pos < end) {
+                var tag = reader.uint32();
+                if (tag === error)
+                    break;
+                switch (tag >>> 3) {
+                case 1: {
+                        message.circleId = reader.string();
+                        break;
+                    }
+                case 2: {
+                        message.name = reader.string();
+                        break;
+                    }
+                case 3: {
+                        message.description = reader.string();
+                        break;
+                    }
+                case 4: {
+                        message.creatorAddress = reader.bytes();
+                        break;
+                    }
+                case 5: {
+                        if (!(message.members && message.members.length))
+                            message.members = [];
+                        message.members.push(reader.bytes());
+                        break;
+                    }
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a Circle message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof types.Circle
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {types.Circle} Circle
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        Circle.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a Circle message.
+         * @function verify
+         * @memberof types.Circle
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        Circle.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.circleId != null && message.hasOwnProperty("circleId"))
+                if (!$util.isString(message.circleId))
+                    return "circleId: string expected";
+            if (message.name != null && message.hasOwnProperty("name"))
+                if (!$util.isString(message.name))
+                    return "name: string expected";
+            if (message.description != null && message.hasOwnProperty("description"))
+                if (!$util.isString(message.description))
+                    return "description: string expected";
+            if (message.creatorAddress != null && message.hasOwnProperty("creatorAddress"))
+                if (!(message.creatorAddress && typeof message.creatorAddress.length === "number" || $util.isString(message.creatorAddress)))
+                    return "creatorAddress: buffer expected";
+            if (message.members != null && message.hasOwnProperty("members")) {
+                if (!Array.isArray(message.members))
+                    return "members: array expected";
+                for (var i = 0; i < message.members.length; ++i)
+                    if (!(message.members[i] && typeof message.members[i].length === "number" || $util.isString(message.members[i])))
+                        return "members: buffer[] expected";
+            }
+            return null;
+        };
+
+        /**
+         * Creates a Circle message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof types.Circle
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {types.Circle} Circle
+         */
+        Circle.fromObject = function fromObject(object) {
+            if (object instanceof $root.types.Circle)
+                return object;
+            var message = new $root.types.Circle();
+            if (object.circleId != null)
+                message.circleId = String(object.circleId);
+            if (object.name != null)
+                message.name = String(object.name);
+            if (object.description != null)
+                message.description = String(object.description);
+            if (object.creatorAddress != null)
+                if (typeof object.creatorAddress === "string")
+                    $util.base64.decode(object.creatorAddress, message.creatorAddress = $util.newBuffer($util.base64.length(object.creatorAddress)), 0);
+                else if (object.creatorAddress.length >= 0)
+                    message.creatorAddress = object.creatorAddress;
+            if (object.members) {
+                if (!Array.isArray(object.members))
+                    throw TypeError(".types.Circle.members: array expected");
+                message.members = [];
+                for (var i = 0; i < object.members.length; ++i)
+                    if (typeof object.members[i] === "string")
+                        $util.base64.decode(object.members[i], message.members[i] = $util.newBuffer($util.base64.length(object.members[i])), 0);
+                    else if (object.members[i].length >= 0)
+                        message.members[i] = object.members[i];
+            }
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a Circle message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof types.Circle
+         * @static
+         * @param {types.Circle} message Circle
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        Circle.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            var object = {};
+            if (options.arrays || options.defaults)
+                object.members = [];
+            if (options.defaults) {
+                object.circleId = "";
+                object.name = "";
+                object.description = "";
+                if (options.bytes === String)
+                    object.creatorAddress = "";
+                else {
+                    object.creatorAddress = [];
+                    if (options.bytes !== Array)
+                        object.creatorAddress = $util.newBuffer(object.creatorAddress);
+                }
+            }
+            if (message.circleId != null && message.hasOwnProperty("circleId"))
+                object.circleId = message.circleId;
+            if (message.name != null && message.hasOwnProperty("name"))
+                object.name = message.name;
+            if (message.description != null && message.hasOwnProperty("description"))
+                object.description = message.description;
+            if (message.creatorAddress != null && message.hasOwnProperty("creatorAddress"))
+                object.creatorAddress = options.bytes === String ? $util.base64.encode(message.creatorAddress, 0, message.creatorAddress.length) : options.bytes === Array ? Array.prototype.slice.call(message.creatorAddress) : message.creatorAddress;
+            if (message.members && message.members.length) {
+                object.members = [];
+                for (var j = 0; j < message.members.length; ++j)
+                    object.members[j] = options.bytes === String ? $util.base64.encode(message.members[j], 0, message.members[j].length) : options.bytes === Array ? Array.prototype.slice.call(message.members[j]) : message.members[j];
+            }
+            return object;
+        };
+
+        /**
+         * Converts this Circle to JSON.
+         * @function toJSON
+         * @memberof types.Circle
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        Circle.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for Circle
+         * @function getTypeUrl
+         * @memberof types.Circle
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        Circle.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/types.Circle";
+        };
+
+        return Circle;
+    })();
+
+    types.Endorsement = (function() {
+
+        /**
+         * Properties of an Endorsement.
+         * @memberof types
+         * @interface IEndorsement
+         * @property {string|null} [endorsementId] Endorsement endorsementId
+         * @property {string|null} [circleId] Endorsement circleId
+         * @property {Uint8Array|null} [fromAddress] Endorsement fromAddress
+         * @property {Uint8Array|null} [targetAddress] Endorsement targetAddress
+         * @property {string|null} [tag] Endorsement tag
+         * @property {string|null} [message] Endorsement message
+         * @property {boolean|null} [slashed] Endorsement slashed
+         * @property {string|null} [slashReason] Endorsement slashReason
+         */
+
+        /**
+         * Constructs a new Endorsement.
+         * @memberof types
+         * @classdesc Represents an Endorsement.
+         * @implements IEndorsement
+         * @constructor
+         * @param {types.IEndorsement=} [properties] Properties to set
+         */
+        function Endorsement(properties) {
+            if (properties)
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * Endorsement endorsementId.
+         * @member {string} endorsementId
+         * @memberof types.Endorsement
+         * @instance
+         */
+        Endorsement.prototype.endorsementId = "";
+
+        /**
+         * Endorsement circleId.
+         * @member {string} circleId
+         * @memberof types.Endorsement
+         * @instance
+         */
+        Endorsement.prototype.circleId = "";
+
+        /**
+         * Endorsement fromAddress.
+         * @member {Uint8Array} fromAddress
+         * @memberof types.Endorsement
+         * @instance
+         */
+        Endorsement.prototype.fromAddress = $util.newBuffer([]);
+
+        /**
+         * Endorsement targetAddress.
+         * @member {Uint8Array} targetAddress
+         * @memberof types.Endorsement
+         * @instance
+         */
+        Endorsement.prototype.targetAddress = $util.newBuffer([]);
+
+        /**
+         * Endorsement tag.
+         * @member {string} tag
+         * @memberof types.Endorsement
+         * @instance
+         */
+        Endorsement.prototype.tag = "";
+
+        /**
+         * Endorsement message.
+         * @member {string} message
+         * @memberof types.Endorsement
+         * @instance
+         */
+        Endorsement.prototype.message = "";
+
+        /**
+         * Endorsement slashed.
+         * @member {boolean} slashed
+         * @memberof types.Endorsement
+         * @instance
+         */
+        Endorsement.prototype.slashed = false;
+
+        /**
+         * Endorsement slashReason.
+         * @member {string} slashReason
+         * @memberof types.Endorsement
+         * @instance
+         */
+        Endorsement.prototype.slashReason = "";
+
+        /**
+         * Creates a new Endorsement instance using the specified properties.
+         * @function create
+         * @memberof types.Endorsement
+         * @static
+         * @param {types.IEndorsement=} [properties] Properties to set
+         * @returns {types.Endorsement} Endorsement instance
+         */
+        Endorsement.create = function create(properties) {
+            return new Endorsement(properties);
+        };
+
+        /**
+         * Encodes the specified Endorsement message. Does not implicitly {@link types.Endorsement.verify|verify} messages.
+         * @function encode
+         * @memberof types.Endorsement
+         * @static
+         * @param {types.IEndorsement} message Endorsement message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        Endorsement.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.endorsementId != null && Object.hasOwnProperty.call(message, "endorsementId"))
+                writer.uint32(/* id 1, wireType 2 =*/10).string(message.endorsementId);
+            if (message.circleId != null && Object.hasOwnProperty.call(message, "circleId"))
+                writer.uint32(/* id 2, wireType 2 =*/18).string(message.circleId);
+            if (message.fromAddress != null && Object.hasOwnProperty.call(message, "fromAddress"))
+                writer.uint32(/* id 3, wireType 2 =*/26).bytes(message.fromAddress);
+            if (message.targetAddress != null && Object.hasOwnProperty.call(message, "targetAddress"))
+                writer.uint32(/* id 4, wireType 2 =*/34).bytes(message.targetAddress);
+            if (message.tag != null && Object.hasOwnProperty.call(message, "tag"))
+                writer.uint32(/* id 5, wireType 2 =*/42).string(message.tag);
+            if (message.message != null && Object.hasOwnProperty.call(message, "message"))
+                writer.uint32(/* id 6, wireType 2 =*/50).string(message.message);
+            if (message.slashed != null && Object.hasOwnProperty.call(message, "slashed"))
+                writer.uint32(/* id 7, wireType 0 =*/56).bool(message.slashed);
+            if (message.slashReason != null && Object.hasOwnProperty.call(message, "slashReason"))
+                writer.uint32(/* id 8, wireType 2 =*/66).string(message.slashReason);
+            return writer;
+        };
+
+        /**
+         * Encodes the specified Endorsement message, length delimited. Does not implicitly {@link types.Endorsement.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof types.Endorsement
+         * @static
+         * @param {types.IEndorsement} message Endorsement message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        Endorsement.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes an Endorsement message from the specified reader or buffer.
+         * @function decode
+         * @memberof types.Endorsement
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {types.Endorsement} Endorsement
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        Endorsement.decode = function decode(reader, length, error) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.types.Endorsement();
+            while (reader.pos < end) {
+                var tag = reader.uint32();
+                if (tag === error)
+                    break;
+                switch (tag >>> 3) {
+                case 1: {
+                        message.endorsementId = reader.string();
+                        break;
+                    }
+                case 2: {
+                        message.circleId = reader.string();
+                        break;
+                    }
+                case 3: {
+                        message.fromAddress = reader.bytes();
+                        break;
+                    }
+                case 4: {
+                        message.targetAddress = reader.bytes();
+                        break;
+                    }
+                case 5: {
+                        message.tag = reader.string();
+                        break;
+                    }
+                case 6: {
+                        message.message = reader.string();
+                        break;
+                    }
+                case 7: {
+                        message.slashed = reader.bool();
+                        break;
+                    }
+                case 8: {
+                        message.slashReason = reader.string();
+                        break;
+                    }
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes an Endorsement message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof types.Endorsement
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {types.Endorsement} Endorsement
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        Endorsement.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies an Endorsement message.
+         * @function verify
+         * @memberof types.Endorsement
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        Endorsement.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.endorsementId != null && message.hasOwnProperty("endorsementId"))
+                if (!$util.isString(message.endorsementId))
+                    return "endorsementId: string expected";
+            if (message.circleId != null && message.hasOwnProperty("circleId"))
+                if (!$util.isString(message.circleId))
+                    return "circleId: string expected";
+            if (message.fromAddress != null && message.hasOwnProperty("fromAddress"))
+                if (!(message.fromAddress && typeof message.fromAddress.length === "number" || $util.isString(message.fromAddress)))
+                    return "fromAddress: buffer expected";
+            if (message.targetAddress != null && message.hasOwnProperty("targetAddress"))
+                if (!(message.targetAddress && typeof message.targetAddress.length === "number" || $util.isString(message.targetAddress)))
+                    return "targetAddress: buffer expected";
+            if (message.tag != null && message.hasOwnProperty("tag"))
+                if (!$util.isString(message.tag))
+                    return "tag: string expected";
+            if (message.message != null && message.hasOwnProperty("message"))
+                if (!$util.isString(message.message))
+                    return "message: string expected";
+            if (message.slashed != null && message.hasOwnProperty("slashed"))
+                if (typeof message.slashed !== "boolean")
+                    return "slashed: boolean expected";
+            if (message.slashReason != null && message.hasOwnProperty("slashReason"))
+                if (!$util.isString(message.slashReason))
+                    return "slashReason: string expected";
+            return null;
+        };
+
+        /**
+         * Creates an Endorsement message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof types.Endorsement
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {types.Endorsement} Endorsement
+         */
+        Endorsement.fromObject = function fromObject(object) {
+            if (object instanceof $root.types.Endorsement)
+                return object;
+            var message = new $root.types.Endorsement();
+            if (object.endorsementId != null)
+                message.endorsementId = String(object.endorsementId);
+            if (object.circleId != null)
+                message.circleId = String(object.circleId);
             if (object.fromAddress != null)
                 if (typeof object.fromAddress === "string")
                     $util.base64.decode(object.fromAddress, message.fromAddress = $util.newBuffer($util.base64.length(object.fromAddress)), 0);
                 else if (object.fromAddress.length >= 0)
                     message.fromAddress = object.fromAddress;
-            if (object.toAddress != null)
-                if (typeof object.toAddress === "string")
-                    $util.base64.decode(object.toAddress, message.toAddress = $util.newBuffer($util.base64.length(object.toAddress)), 0);
-                else if (object.toAddress.length >= 0)
-                    message.toAddress = object.toAddress;
-            if (object.amount != null)
-                if ($util.Long)
-                    (message.amount = $util.Long.fromValue(object.amount)).unsigned = true;
-                else if (typeof object.amount === "string")
-                    message.amount = parseInt(object.amount, 10);
-                else if (typeof object.amount === "number")
-                    message.amount = object.amount;
-                else if (typeof object.amount === "object")
-                    message.amount = new $util.LongBits(object.amount.low >>> 0, object.amount.high >>> 0).toNumber(true);
+            if (object.targetAddress != null)
+                if (typeof object.targetAddress === "string")
+                    $util.base64.decode(object.targetAddress, message.targetAddress = $util.newBuffer($util.base64.length(object.targetAddress)), 0);
+                else if (object.targetAddress.length >= 0)
+                    message.targetAddress = object.targetAddress;
+            if (object.tag != null)
+                message.tag = String(object.tag);
+            if (object.message != null)
+                message.message = String(object.message);
+            if (object.slashed != null)
+                message.slashed = Boolean(object.slashed);
+            if (object.slashReason != null)
+                message.slashReason = String(object.slashReason);
             return message;
         };
 
         /**
-         * Creates a plain object from a MessageSend message. Also converts values to other types if specified.
+         * Creates a plain object from an Endorsement message. Also converts values to other types if specified.
          * @function toObject
-         * @memberof types.MessageSend
+         * @memberof types.Endorsement
          * @static
-         * @param {types.MessageSend} message MessageSend
+         * @param {types.Endorsement} message Endorsement
          * @param {$protobuf.IConversionOptions} [options] Conversion options
          * @returns {Object.<string,*>} Plain object
          */
-        MessageSend.toObject = function toObject(message, options) {
+        Endorsement.toObject = function toObject(message, options) {
             if (!options)
                 options = {};
             var object = {};
             if (options.defaults) {
+                object.endorsementId = "";
+                object.circleId = "";
                 if (options.bytes === String)
                     object.fromAddress = "";
                 else {
@@ -8775,57 +11139,361 @@ $root.types = (function() {
                         object.fromAddress = $util.newBuffer(object.fromAddress);
                 }
                 if (options.bytes === String)
-                    object.toAddress = "";
+                    object.targetAddress = "";
                 else {
-                    object.toAddress = [];
+                    object.targetAddress = [];
                     if (options.bytes !== Array)
-                        object.toAddress = $util.newBuffer(object.toAddress);
+                        object.targetAddress = $util.newBuffer(object.targetAddress);
                 }
-                if ($util.Long) {
-                    var long = new $util.Long(0, 0, true);
-                    object.amount = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-                } else
-                    object.amount = options.longs === String ? "0" : 0;
+                object.tag = "";
+                object.message = "";
+                object.slashed = false;
+                object.slashReason = "";
             }
+            if (message.endorsementId != null && message.hasOwnProperty("endorsementId"))
+                object.endorsementId = message.endorsementId;
+            if (message.circleId != null && message.hasOwnProperty("circleId"))
+                object.circleId = message.circleId;
             if (message.fromAddress != null && message.hasOwnProperty("fromAddress"))
                 object.fromAddress = options.bytes === String ? $util.base64.encode(message.fromAddress, 0, message.fromAddress.length) : options.bytes === Array ? Array.prototype.slice.call(message.fromAddress) : message.fromAddress;
-            if (message.toAddress != null && message.hasOwnProperty("toAddress"))
-                object.toAddress = options.bytes === String ? $util.base64.encode(message.toAddress, 0, message.toAddress.length) : options.bytes === Array ? Array.prototype.slice.call(message.toAddress) : message.toAddress;
-            if (message.amount != null && message.hasOwnProperty("amount"))
-                if (typeof message.amount === "number")
-                    object.amount = options.longs === String ? String(message.amount) : message.amount;
-                else
-                    object.amount = options.longs === String ? $util.Long.prototype.toString.call(message.amount) : options.longs === Number ? new $util.LongBits(message.amount.low >>> 0, message.amount.high >>> 0).toNumber(true) : message.amount;
+            if (message.targetAddress != null && message.hasOwnProperty("targetAddress"))
+                object.targetAddress = options.bytes === String ? $util.base64.encode(message.targetAddress, 0, message.targetAddress.length) : options.bytes === Array ? Array.prototype.slice.call(message.targetAddress) : message.targetAddress;
+            if (message.tag != null && message.hasOwnProperty("tag"))
+                object.tag = message.tag;
+            if (message.message != null && message.hasOwnProperty("message"))
+                object.message = message.message;
+            if (message.slashed != null && message.hasOwnProperty("slashed"))
+                object.slashed = message.slashed;
+            if (message.slashReason != null && message.hasOwnProperty("slashReason"))
+                object.slashReason = message.slashReason;
             return object;
         };
 
         /**
-         * Converts this MessageSend to JSON.
+         * Converts this Endorsement to JSON.
          * @function toJSON
-         * @memberof types.MessageSend
+         * @memberof types.Endorsement
          * @instance
          * @returns {Object.<string,*>} JSON object
          */
-        MessageSend.prototype.toJSON = function toJSON() {
+        Endorsement.prototype.toJSON = function toJSON() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
         /**
-         * Gets the default type url for MessageSend
+         * Gets the default type url for Endorsement
          * @function getTypeUrl
-         * @memberof types.MessageSend
+         * @memberof types.Endorsement
          * @static
          * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
          * @returns {string} The default type url
          */
-        MessageSend.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+        Endorsement.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
             if (typeUrlPrefix === undefined) {
                 typeUrlPrefix = "type.googleapis.com";
             }
-            return typeUrlPrefix + "/types.MessageSend";
+            return typeUrlPrefix + "/types.Endorsement";
         };
 
-        return MessageSend;
+        return Endorsement;
+    })();
+
+    types.Role = (function() {
+
+        /**
+         * Properties of a Role.
+         * @memberof types
+         * @interface IRole
+         * @property {string|null} [circleId] Role circleId
+         * @property {Uint8Array|null} [address] Role address
+         * @property {string|null} [role] Role role
+         * @property {number|Long|null} [reputation] Role reputation
+         */
+
+        /**
+         * Constructs a new Role.
+         * @memberof types
+         * @classdesc Represents a Role.
+         * @implements IRole
+         * @constructor
+         * @param {types.IRole=} [properties] Properties to set
+         */
+        function Role(properties) {
+            if (properties)
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * Role circleId.
+         * @member {string} circleId
+         * @memberof types.Role
+         * @instance
+         */
+        Role.prototype.circleId = "";
+
+        /**
+         * Role address.
+         * @member {Uint8Array} address
+         * @memberof types.Role
+         * @instance
+         */
+        Role.prototype.address = $util.newBuffer([]);
+
+        /**
+         * Role role.
+         * @member {string} role
+         * @memberof types.Role
+         * @instance
+         */
+        Role.prototype.role = "";
+
+        /**
+         * Role reputation.
+         * @member {number|Long} reputation
+         * @memberof types.Role
+         * @instance
+         */
+        Role.prototype.reputation = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
+
+        /**
+         * Creates a new Role instance using the specified properties.
+         * @function create
+         * @memberof types.Role
+         * @static
+         * @param {types.IRole=} [properties] Properties to set
+         * @returns {types.Role} Role instance
+         */
+        Role.create = function create(properties) {
+            return new Role(properties);
+        };
+
+        /**
+         * Encodes the specified Role message. Does not implicitly {@link types.Role.verify|verify} messages.
+         * @function encode
+         * @memberof types.Role
+         * @static
+         * @param {types.IRole} message Role message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        Role.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.circleId != null && Object.hasOwnProperty.call(message, "circleId"))
+                writer.uint32(/* id 1, wireType 2 =*/10).string(message.circleId);
+            if (message.address != null && Object.hasOwnProperty.call(message, "address"))
+                writer.uint32(/* id 2, wireType 2 =*/18).bytes(message.address);
+            if (message.role != null && Object.hasOwnProperty.call(message, "role"))
+                writer.uint32(/* id 3, wireType 2 =*/26).string(message.role);
+            if (message.reputation != null && Object.hasOwnProperty.call(message, "reputation"))
+                writer.uint32(/* id 4, wireType 0 =*/32).uint64(message.reputation);
+            return writer;
+        };
+
+        /**
+         * Encodes the specified Role message, length delimited. Does not implicitly {@link types.Role.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof types.Role
+         * @static
+         * @param {types.IRole} message Role message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        Role.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a Role message from the specified reader or buffer.
+         * @function decode
+         * @memberof types.Role
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {types.Role} Role
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        Role.decode = function decode(reader, length, error) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.types.Role();
+            while (reader.pos < end) {
+                var tag = reader.uint32();
+                if (tag === error)
+                    break;
+                switch (tag >>> 3) {
+                case 1: {
+                        message.circleId = reader.string();
+                        break;
+                    }
+                case 2: {
+                        message.address = reader.bytes();
+                        break;
+                    }
+                case 3: {
+                        message.role = reader.string();
+                        break;
+                    }
+                case 4: {
+                        message.reputation = reader.uint64();
+                        break;
+                    }
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a Role message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof types.Role
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {types.Role} Role
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        Role.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a Role message.
+         * @function verify
+         * @memberof types.Role
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        Role.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.circleId != null && message.hasOwnProperty("circleId"))
+                if (!$util.isString(message.circleId))
+                    return "circleId: string expected";
+            if (message.address != null && message.hasOwnProperty("address"))
+                if (!(message.address && typeof message.address.length === "number" || $util.isString(message.address)))
+                    return "address: buffer expected";
+            if (message.role != null && message.hasOwnProperty("role"))
+                if (!$util.isString(message.role))
+                    return "role: string expected";
+            if (message.reputation != null && message.hasOwnProperty("reputation"))
+                if (!$util.isInteger(message.reputation) && !(message.reputation && $util.isInteger(message.reputation.low) && $util.isInteger(message.reputation.high)))
+                    return "reputation: integer|Long expected";
+            return null;
+        };
+
+        /**
+         * Creates a Role message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof types.Role
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {types.Role} Role
+         */
+        Role.fromObject = function fromObject(object) {
+            if (object instanceof $root.types.Role)
+                return object;
+            var message = new $root.types.Role();
+            if (object.circleId != null)
+                message.circleId = String(object.circleId);
+            if (object.address != null)
+                if (typeof object.address === "string")
+                    $util.base64.decode(object.address, message.address = $util.newBuffer($util.base64.length(object.address)), 0);
+                else if (object.address.length >= 0)
+                    message.address = object.address;
+            if (object.role != null)
+                message.role = String(object.role);
+            if (object.reputation != null)
+                if ($util.Long)
+                    (message.reputation = $util.Long.fromValue(object.reputation)).unsigned = true;
+                else if (typeof object.reputation === "string")
+                    message.reputation = parseInt(object.reputation, 10);
+                else if (typeof object.reputation === "number")
+                    message.reputation = object.reputation;
+                else if (typeof object.reputation === "object")
+                    message.reputation = new $util.LongBits(object.reputation.low >>> 0, object.reputation.high >>> 0).toNumber(true);
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a Role message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof types.Role
+         * @static
+         * @param {types.Role} message Role
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        Role.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            var object = {};
+            if (options.defaults) {
+                object.circleId = "";
+                if (options.bytes === String)
+                    object.address = "";
+                else {
+                    object.address = [];
+                    if (options.bytes !== Array)
+                        object.address = $util.newBuffer(object.address);
+                }
+                object.role = "";
+                if ($util.Long) {
+                    var long = new $util.Long(0, 0, true);
+                    object.reputation = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                } else
+                    object.reputation = options.longs === String ? "0" : 0;
+            }
+            if (message.circleId != null && message.hasOwnProperty("circleId"))
+                object.circleId = message.circleId;
+            if (message.address != null && message.hasOwnProperty("address"))
+                object.address = options.bytes === String ? $util.base64.encode(message.address, 0, message.address.length) : options.bytes === Array ? Array.prototype.slice.call(message.address) : message.address;
+            if (message.role != null && message.hasOwnProperty("role"))
+                object.role = message.role;
+            if (message.reputation != null && message.hasOwnProperty("reputation"))
+                if (typeof message.reputation === "number")
+                    object.reputation = options.longs === String ? String(message.reputation) : message.reputation;
+                else
+                    object.reputation = options.longs === String ? $util.Long.prototype.toString.call(message.reputation) : options.longs === Number ? new $util.LongBits(message.reputation.low >>> 0, message.reputation.high >>> 0).toNumber(true) : message.reputation;
+            return object;
+        };
+
+        /**
+         * Converts this Role to JSON.
+         * @function toJSON
+         * @memberof types.Role
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        Role.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for Role
+         * @function getTypeUrl
+         * @memberof types.Role
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        Role.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/types.Role";
+        };
+
+        return Role;
     })();
 
     types.FeeParams = (function() {

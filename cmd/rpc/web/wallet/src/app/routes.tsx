@@ -2,26 +2,18 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import MainLayout from '@/components/layouts/MainLayout'
 
-import Dashboard from '@/app/pages/Dashboard'
 import { KeyManagement } from '@/app/pages/KeyManagement'
-import { Accounts } from '@/app/pages/Accounts'
-import Staking from '@/app/pages/Staking'
-import Monitoring from '@/app/pages/Monitoring'
-import Governance from '@/app/pages/Governance'
-import Orders from '@/app/pages/Orders'
+import RepuRing from '@/app/pages/RepuRing'
 
 const router = createBrowserRouter([
     {
         element: <MainLayout />,
         children: [
-            { path: '/', element: <Dashboard /> },
-            { path: '/accounts', element: <Accounts /> },
-            { path: '/staking', element: <Staking /> },
-            { path: '/governance', element: <Governance /> },
-            { path: '/orders', element: <Orders /> },
-            { path: '/monitoring', element: <Monitoring /> },
+            { path: '/', element: <RepuRing /> },
+            { path: '/repuring', element: <Navigate to="/" replace /> },
             { path: '/key-management', element: <KeyManagement /> },
-            { path: '/all-addresses', element: <Navigate to="/accounts" replace /> },
+            { path: '/accounts', element: <Navigate to="/key-management" replace /> },
+            { path: '/all-addresses', element: <Navigate to="/key-management" replace /> },
         ],
     },
 ], {

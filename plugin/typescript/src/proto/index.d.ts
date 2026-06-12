@@ -3270,109 +3270,1162 @@ export namespace types {
         public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
-    /** Properties of a MessageSend. */
-    interface IMessageSend {
+    /** Properties of a MessageCreateProfile. */
+    interface IMessageCreateProfile {
 
-        /** MessageSend fromAddress */
-        fromAddress?: (Uint8Array|null);
+        /** MessageCreateProfile senderAddress */
+        senderAddress?: (Uint8Array|null);
 
-        /** MessageSend toAddress */
-        toAddress?: (Uint8Array|null);
+        /** MessageCreateProfile username */
+        username?: (string|null);
 
-        /** MessageSend amount */
-        amount?: (number|Long|null);
+        /** MessageCreateProfile bio */
+        bio?: (string|null);
+
+        /** MessageCreateProfile avatarUrl */
+        avatarUrl?: (string|null);
     }
 
-    /** Represents a MessageSend. */
-    class MessageSend implements IMessageSend {
+    /** Represents a MessageCreateProfile. */
+    class MessageCreateProfile implements IMessageCreateProfile {
 
         /**
-         * Constructs a new MessageSend.
+         * Constructs a new MessageCreateProfile.
          * @param [properties] Properties to set
          */
-        constructor(properties?: types.IMessageSend);
+        constructor(properties?: types.IMessageCreateProfile);
 
-        /** MessageSend fromAddress. */
-        public fromAddress: Uint8Array;
+        /** MessageCreateProfile senderAddress. */
+        public senderAddress: Uint8Array;
 
-        /** MessageSend toAddress. */
-        public toAddress: Uint8Array;
+        /** MessageCreateProfile username. */
+        public username: string;
 
-        /** MessageSend amount. */
-        public amount: (number|Long);
+        /** MessageCreateProfile bio. */
+        public bio: string;
+
+        /** MessageCreateProfile avatarUrl. */
+        public avatarUrl: string;
 
         /**
-         * Creates a new MessageSend instance using the specified properties.
+         * Creates a new MessageCreateProfile instance using the specified properties.
          * @param [properties] Properties to set
-         * @returns MessageSend instance
+         * @returns MessageCreateProfile instance
          */
-        public static create(properties?: types.IMessageSend): types.MessageSend;
+        public static create(properties?: types.IMessageCreateProfile): types.MessageCreateProfile;
 
         /**
-         * Encodes the specified MessageSend message. Does not implicitly {@link types.MessageSend.verify|verify} messages.
-         * @param message MessageSend message or plain object to encode
+         * Encodes the specified MessageCreateProfile message. Does not implicitly {@link types.MessageCreateProfile.verify|verify} messages.
+         * @param message MessageCreateProfile message or plain object to encode
          * @param [writer] Writer to encode to
          * @returns Writer
          */
-        public static encode(message: types.IMessageSend, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encode(message: types.IMessageCreateProfile, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
-         * Encodes the specified MessageSend message, length delimited. Does not implicitly {@link types.MessageSend.verify|verify} messages.
-         * @param message MessageSend message or plain object to encode
+         * Encodes the specified MessageCreateProfile message, length delimited. Does not implicitly {@link types.MessageCreateProfile.verify|verify} messages.
+         * @param message MessageCreateProfile message or plain object to encode
          * @param [writer] Writer to encode to
          * @returns Writer
          */
-        public static encodeDelimited(message: types.IMessageSend, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encodeDelimited(message: types.IMessageCreateProfile, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
-         * Decodes a MessageSend message from the specified reader or buffer.
+         * Decodes a MessageCreateProfile message from the specified reader or buffer.
          * @param reader Reader or buffer to decode from
          * @param [length] Message length if known beforehand
-         * @returns MessageSend
+         * @returns MessageCreateProfile
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): types.MessageSend;
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): types.MessageCreateProfile;
 
         /**
-         * Decodes a MessageSend message from the specified reader or buffer, length delimited.
+         * Decodes a MessageCreateProfile message from the specified reader or buffer, length delimited.
          * @param reader Reader or buffer to decode from
-         * @returns MessageSend
+         * @returns MessageCreateProfile
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): types.MessageSend;
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): types.MessageCreateProfile;
 
         /**
-         * Verifies a MessageSend message.
+         * Verifies a MessageCreateProfile message.
          * @param message Plain object to verify
          * @returns `null` if valid, otherwise the reason why it is not
          */
         public static verify(message: { [k: string]: any }): (string|null);
 
         /**
-         * Creates a MessageSend message from a plain object. Also converts values to their respective internal types.
+         * Creates a MessageCreateProfile message from a plain object. Also converts values to their respective internal types.
          * @param object Plain object
-         * @returns MessageSend
+         * @returns MessageCreateProfile
          */
-        public static fromObject(object: { [k: string]: any }): types.MessageSend;
+        public static fromObject(object: { [k: string]: any }): types.MessageCreateProfile;
 
         /**
-         * Creates a plain object from a MessageSend message. Also converts values to other types if specified.
-         * @param message MessageSend
+         * Creates a plain object from a MessageCreateProfile message. Also converts values to other types if specified.
+         * @param message MessageCreateProfile
          * @param [options] Conversion options
          * @returns Plain object
          */
-        public static toObject(message: types.MessageSend, options?: $protobuf.IConversionOptions): { [k: string]: any };
+        public static toObject(message: types.MessageCreateProfile, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
         /**
-         * Converts this MessageSend to JSON.
+         * Converts this MessageCreateProfile to JSON.
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
 
         /**
-         * Gets the default type url for MessageSend
+         * Gets the default type url for MessageCreateProfile
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a MessageCreateCircle. */
+    interface IMessageCreateCircle {
+
+        /** MessageCreateCircle senderAddress */
+        senderAddress?: (Uint8Array|null);
+
+        /** MessageCreateCircle circleId */
+        circleId?: (string|null);
+
+        /** MessageCreateCircle name */
+        name?: (string|null);
+
+        /** MessageCreateCircle description */
+        description?: (string|null);
+    }
+
+    /** Represents a MessageCreateCircle. */
+    class MessageCreateCircle implements IMessageCreateCircle {
+
+        /**
+         * Constructs a new MessageCreateCircle.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: types.IMessageCreateCircle);
+
+        /** MessageCreateCircle senderAddress. */
+        public senderAddress: Uint8Array;
+
+        /** MessageCreateCircle circleId. */
+        public circleId: string;
+
+        /** MessageCreateCircle name. */
+        public name: string;
+
+        /** MessageCreateCircle description. */
+        public description: string;
+
+        /**
+         * Creates a new MessageCreateCircle instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns MessageCreateCircle instance
+         */
+        public static create(properties?: types.IMessageCreateCircle): types.MessageCreateCircle;
+
+        /**
+         * Encodes the specified MessageCreateCircle message. Does not implicitly {@link types.MessageCreateCircle.verify|verify} messages.
+         * @param message MessageCreateCircle message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: types.IMessageCreateCircle, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified MessageCreateCircle message, length delimited. Does not implicitly {@link types.MessageCreateCircle.verify|verify} messages.
+         * @param message MessageCreateCircle message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: types.IMessageCreateCircle, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a MessageCreateCircle message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns MessageCreateCircle
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): types.MessageCreateCircle;
+
+        /**
+         * Decodes a MessageCreateCircle message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns MessageCreateCircle
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): types.MessageCreateCircle;
+
+        /**
+         * Verifies a MessageCreateCircle message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a MessageCreateCircle message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns MessageCreateCircle
+         */
+        public static fromObject(object: { [k: string]: any }): types.MessageCreateCircle;
+
+        /**
+         * Creates a plain object from a MessageCreateCircle message. Also converts values to other types if specified.
+         * @param message MessageCreateCircle
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: types.MessageCreateCircle, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this MessageCreateCircle to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for MessageCreateCircle
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a MessageJoinCircle. */
+    interface IMessageJoinCircle {
+
+        /** MessageJoinCircle senderAddress */
+        senderAddress?: (Uint8Array|null);
+
+        /** MessageJoinCircle circleId */
+        circleId?: (string|null);
+    }
+
+    /** Represents a MessageJoinCircle. */
+    class MessageJoinCircle implements IMessageJoinCircle {
+
+        /**
+         * Constructs a new MessageJoinCircle.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: types.IMessageJoinCircle);
+
+        /** MessageJoinCircle senderAddress. */
+        public senderAddress: Uint8Array;
+
+        /** MessageJoinCircle circleId. */
+        public circleId: string;
+
+        /**
+         * Creates a new MessageJoinCircle instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns MessageJoinCircle instance
+         */
+        public static create(properties?: types.IMessageJoinCircle): types.MessageJoinCircle;
+
+        /**
+         * Encodes the specified MessageJoinCircle message. Does not implicitly {@link types.MessageJoinCircle.verify|verify} messages.
+         * @param message MessageJoinCircle message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: types.IMessageJoinCircle, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified MessageJoinCircle message, length delimited. Does not implicitly {@link types.MessageJoinCircle.verify|verify} messages.
+         * @param message MessageJoinCircle message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: types.IMessageJoinCircle, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a MessageJoinCircle message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns MessageJoinCircle
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): types.MessageJoinCircle;
+
+        /**
+         * Decodes a MessageJoinCircle message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns MessageJoinCircle
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): types.MessageJoinCircle;
+
+        /**
+         * Verifies a MessageJoinCircle message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a MessageJoinCircle message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns MessageJoinCircle
+         */
+        public static fromObject(object: { [k: string]: any }): types.MessageJoinCircle;
+
+        /**
+         * Creates a plain object from a MessageJoinCircle message. Also converts values to other types if specified.
+         * @param message MessageJoinCircle
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: types.MessageJoinCircle, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this MessageJoinCircle to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for MessageJoinCircle
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a MessageEndorseUser. */
+    interface IMessageEndorseUser {
+
+        /** MessageEndorseUser senderAddress */
+        senderAddress?: (Uint8Array|null);
+
+        /** MessageEndorseUser circleId */
+        circleId?: (string|null);
+
+        /** MessageEndorseUser targetAddress */
+        targetAddress?: (Uint8Array|null);
+
+        /** MessageEndorseUser tag */
+        tag?: (string|null);
+
+        /** MessageEndorseUser message */
+        message?: (string|null);
+    }
+
+    /** Represents a MessageEndorseUser. */
+    class MessageEndorseUser implements IMessageEndorseUser {
+
+        /**
+         * Constructs a new MessageEndorseUser.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: types.IMessageEndorseUser);
+
+        /** MessageEndorseUser senderAddress. */
+        public senderAddress: Uint8Array;
+
+        /** MessageEndorseUser circleId. */
+        public circleId: string;
+
+        /** MessageEndorseUser targetAddress. */
+        public targetAddress: Uint8Array;
+
+        /** MessageEndorseUser tag. */
+        public tag: string;
+
+        /** MessageEndorseUser message. */
+        public message: string;
+
+        /**
+         * Creates a new MessageEndorseUser instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns MessageEndorseUser instance
+         */
+        public static create(properties?: types.IMessageEndorseUser): types.MessageEndorseUser;
+
+        /**
+         * Encodes the specified MessageEndorseUser message. Does not implicitly {@link types.MessageEndorseUser.verify|verify} messages.
+         * @param message MessageEndorseUser message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: types.IMessageEndorseUser, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified MessageEndorseUser message, length delimited. Does not implicitly {@link types.MessageEndorseUser.verify|verify} messages.
+         * @param message MessageEndorseUser message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: types.IMessageEndorseUser, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a MessageEndorseUser message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns MessageEndorseUser
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): types.MessageEndorseUser;
+
+        /**
+         * Decodes a MessageEndorseUser message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns MessageEndorseUser
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): types.MessageEndorseUser;
+
+        /**
+         * Verifies a MessageEndorseUser message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a MessageEndorseUser message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns MessageEndorseUser
+         */
+        public static fromObject(object: { [k: string]: any }): types.MessageEndorseUser;
+
+        /**
+         * Creates a plain object from a MessageEndorseUser message. Also converts values to other types if specified.
+         * @param message MessageEndorseUser
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: types.MessageEndorseUser, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this MessageEndorseUser to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for MessageEndorseUser
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a MessageSlashEndorsement. */
+    interface IMessageSlashEndorsement {
+
+        /** MessageSlashEndorsement senderAddress */
+        senderAddress?: (Uint8Array|null);
+
+        /** MessageSlashEndorsement endorsementId */
+        endorsementId?: (string|null);
+
+        /** MessageSlashEndorsement reason */
+        reason?: (string|null);
+    }
+
+    /** Represents a MessageSlashEndorsement. */
+    class MessageSlashEndorsement implements IMessageSlashEndorsement {
+
+        /**
+         * Constructs a new MessageSlashEndorsement.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: types.IMessageSlashEndorsement);
+
+        /** MessageSlashEndorsement senderAddress. */
+        public senderAddress: Uint8Array;
+
+        /** MessageSlashEndorsement endorsementId. */
+        public endorsementId: string;
+
+        /** MessageSlashEndorsement reason. */
+        public reason: string;
+
+        /**
+         * Creates a new MessageSlashEndorsement instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns MessageSlashEndorsement instance
+         */
+        public static create(properties?: types.IMessageSlashEndorsement): types.MessageSlashEndorsement;
+
+        /**
+         * Encodes the specified MessageSlashEndorsement message. Does not implicitly {@link types.MessageSlashEndorsement.verify|verify} messages.
+         * @param message MessageSlashEndorsement message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: types.IMessageSlashEndorsement, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified MessageSlashEndorsement message, length delimited. Does not implicitly {@link types.MessageSlashEndorsement.verify|verify} messages.
+         * @param message MessageSlashEndorsement message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: types.IMessageSlashEndorsement, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a MessageSlashEndorsement message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns MessageSlashEndorsement
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): types.MessageSlashEndorsement;
+
+        /**
+         * Decodes a MessageSlashEndorsement message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns MessageSlashEndorsement
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): types.MessageSlashEndorsement;
+
+        /**
+         * Verifies a MessageSlashEndorsement message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a MessageSlashEndorsement message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns MessageSlashEndorsement
+         */
+        public static fromObject(object: { [k: string]: any }): types.MessageSlashEndorsement;
+
+        /**
+         * Creates a plain object from a MessageSlashEndorsement message. Also converts values to other types if specified.
+         * @param message MessageSlashEndorsement
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: types.MessageSlashEndorsement, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this MessageSlashEndorsement to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for MessageSlashEndorsement
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a MessageClaimRole. */
+    interface IMessageClaimRole {
+
+        /** MessageClaimRole senderAddress */
+        senderAddress?: (Uint8Array|null);
+
+        /** MessageClaimRole circleId */
+        circleId?: (string|null);
+    }
+
+    /** Represents a MessageClaimRole. */
+    class MessageClaimRole implements IMessageClaimRole {
+
+        /**
+         * Constructs a new MessageClaimRole.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: types.IMessageClaimRole);
+
+        /** MessageClaimRole senderAddress. */
+        public senderAddress: Uint8Array;
+
+        /** MessageClaimRole circleId. */
+        public circleId: string;
+
+        /**
+         * Creates a new MessageClaimRole instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns MessageClaimRole instance
+         */
+        public static create(properties?: types.IMessageClaimRole): types.MessageClaimRole;
+
+        /**
+         * Encodes the specified MessageClaimRole message. Does not implicitly {@link types.MessageClaimRole.verify|verify} messages.
+         * @param message MessageClaimRole message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: types.IMessageClaimRole, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified MessageClaimRole message, length delimited. Does not implicitly {@link types.MessageClaimRole.verify|verify} messages.
+         * @param message MessageClaimRole message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: types.IMessageClaimRole, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a MessageClaimRole message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns MessageClaimRole
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): types.MessageClaimRole;
+
+        /**
+         * Decodes a MessageClaimRole message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns MessageClaimRole
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): types.MessageClaimRole;
+
+        /**
+         * Verifies a MessageClaimRole message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a MessageClaimRole message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns MessageClaimRole
+         */
+        public static fromObject(object: { [k: string]: any }): types.MessageClaimRole;
+
+        /**
+         * Creates a plain object from a MessageClaimRole message. Also converts values to other types if specified.
+         * @param message MessageClaimRole
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: types.MessageClaimRole, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this MessageClaimRole to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for MessageClaimRole
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a Profile. */
+    interface IProfile {
+
+        /** Profile address */
+        address?: (Uint8Array|null);
+
+        /** Profile username */
+        username?: (string|null);
+
+        /** Profile bio */
+        bio?: (string|null);
+
+        /** Profile avatarUrl */
+        avatarUrl?: (string|null);
+
+        /** Profile reputation */
+        reputation?: (number|Long|null);
+    }
+
+    /** Represents a Profile. */
+    class Profile implements IProfile {
+
+        /**
+         * Constructs a new Profile.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: types.IProfile);
+
+        /** Profile address. */
+        public address: Uint8Array;
+
+        /** Profile username. */
+        public username: string;
+
+        /** Profile bio. */
+        public bio: string;
+
+        /** Profile avatarUrl. */
+        public avatarUrl: string;
+
+        /** Profile reputation. */
+        public reputation: (number|Long);
+
+        /**
+         * Creates a new Profile instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns Profile instance
+         */
+        public static create(properties?: types.IProfile): types.Profile;
+
+        /**
+         * Encodes the specified Profile message. Does not implicitly {@link types.Profile.verify|verify} messages.
+         * @param message Profile message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: types.IProfile, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified Profile message, length delimited. Does not implicitly {@link types.Profile.verify|verify} messages.
+         * @param message Profile message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: types.IProfile, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a Profile message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns Profile
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): types.Profile;
+
+        /**
+         * Decodes a Profile message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns Profile
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): types.Profile;
+
+        /**
+         * Verifies a Profile message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a Profile message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns Profile
+         */
+        public static fromObject(object: { [k: string]: any }): types.Profile;
+
+        /**
+         * Creates a plain object from a Profile message. Also converts values to other types if specified.
+         * @param message Profile
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: types.Profile, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this Profile to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for Profile
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a Circle. */
+    interface ICircle {
+
+        /** Circle circleId */
+        circleId?: (string|null);
+
+        /** Circle name */
+        name?: (string|null);
+
+        /** Circle description */
+        description?: (string|null);
+
+        /** Circle creatorAddress */
+        creatorAddress?: (Uint8Array|null);
+
+        /** Circle members */
+        members?: (Uint8Array[]|null);
+    }
+
+    /** Represents a Circle. */
+    class Circle implements ICircle {
+
+        /**
+         * Constructs a new Circle.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: types.ICircle);
+
+        /** Circle circleId. */
+        public circleId: string;
+
+        /** Circle name. */
+        public name: string;
+
+        /** Circle description. */
+        public description: string;
+
+        /** Circle creatorAddress. */
+        public creatorAddress: Uint8Array;
+
+        /** Circle members. */
+        public members: Uint8Array[];
+
+        /**
+         * Creates a new Circle instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns Circle instance
+         */
+        public static create(properties?: types.ICircle): types.Circle;
+
+        /**
+         * Encodes the specified Circle message. Does not implicitly {@link types.Circle.verify|verify} messages.
+         * @param message Circle message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: types.ICircle, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified Circle message, length delimited. Does not implicitly {@link types.Circle.verify|verify} messages.
+         * @param message Circle message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: types.ICircle, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a Circle message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns Circle
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): types.Circle;
+
+        /**
+         * Decodes a Circle message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns Circle
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): types.Circle;
+
+        /**
+         * Verifies a Circle message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a Circle message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns Circle
+         */
+        public static fromObject(object: { [k: string]: any }): types.Circle;
+
+        /**
+         * Creates a plain object from a Circle message. Also converts values to other types if specified.
+         * @param message Circle
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: types.Circle, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this Circle to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for Circle
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of an Endorsement. */
+    interface IEndorsement {
+
+        /** Endorsement endorsementId */
+        endorsementId?: (string|null);
+
+        /** Endorsement circleId */
+        circleId?: (string|null);
+
+        /** Endorsement fromAddress */
+        fromAddress?: (Uint8Array|null);
+
+        /** Endorsement targetAddress */
+        targetAddress?: (Uint8Array|null);
+
+        /** Endorsement tag */
+        tag?: (string|null);
+
+        /** Endorsement message */
+        message?: (string|null);
+
+        /** Endorsement slashed */
+        slashed?: (boolean|null);
+
+        /** Endorsement slashReason */
+        slashReason?: (string|null);
+    }
+
+    /** Represents an Endorsement. */
+    class Endorsement implements IEndorsement {
+
+        /**
+         * Constructs a new Endorsement.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: types.IEndorsement);
+
+        /** Endorsement endorsementId. */
+        public endorsementId: string;
+
+        /** Endorsement circleId. */
+        public circleId: string;
+
+        /** Endorsement fromAddress. */
+        public fromAddress: Uint8Array;
+
+        /** Endorsement targetAddress. */
+        public targetAddress: Uint8Array;
+
+        /** Endorsement tag. */
+        public tag: string;
+
+        /** Endorsement message. */
+        public message: string;
+
+        /** Endorsement slashed. */
+        public slashed: boolean;
+
+        /** Endorsement slashReason. */
+        public slashReason: string;
+
+        /**
+         * Creates a new Endorsement instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns Endorsement instance
+         */
+        public static create(properties?: types.IEndorsement): types.Endorsement;
+
+        /**
+         * Encodes the specified Endorsement message. Does not implicitly {@link types.Endorsement.verify|verify} messages.
+         * @param message Endorsement message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: types.IEndorsement, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified Endorsement message, length delimited. Does not implicitly {@link types.Endorsement.verify|verify} messages.
+         * @param message Endorsement message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: types.IEndorsement, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes an Endorsement message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns Endorsement
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): types.Endorsement;
+
+        /**
+         * Decodes an Endorsement message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns Endorsement
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): types.Endorsement;
+
+        /**
+         * Verifies an Endorsement message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates an Endorsement message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns Endorsement
+         */
+        public static fromObject(object: { [k: string]: any }): types.Endorsement;
+
+        /**
+         * Creates a plain object from an Endorsement message. Also converts values to other types if specified.
+         * @param message Endorsement
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: types.Endorsement, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this Endorsement to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for Endorsement
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a Role. */
+    interface IRole {
+
+        /** Role circleId */
+        circleId?: (string|null);
+
+        /** Role address */
+        address?: (Uint8Array|null);
+
+        /** Role role */
+        role?: (string|null);
+
+        /** Role reputation */
+        reputation?: (number|Long|null);
+    }
+
+    /** Represents a Role. */
+    class Role implements IRole {
+
+        /**
+         * Constructs a new Role.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: types.IRole);
+
+        /** Role circleId. */
+        public circleId: string;
+
+        /** Role address. */
+        public address: Uint8Array;
+
+        /** Role role. */
+        public role: string;
+
+        /** Role reputation. */
+        public reputation: (number|Long);
+
+        /**
+         * Creates a new Role instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns Role instance
+         */
+        public static create(properties?: types.IRole): types.Role;
+
+        /**
+         * Encodes the specified Role message. Does not implicitly {@link types.Role.verify|verify} messages.
+         * @param message Role message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: types.IRole, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified Role message, length delimited. Does not implicitly {@link types.Role.verify|verify} messages.
+         * @param message Role message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: types.IRole, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a Role message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns Role
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): types.Role;
+
+        /**
+         * Decodes a Role message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns Role
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): types.Role;
+
+        /**
+         * Verifies a Role message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a Role message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns Role
+         */
+        public static fromObject(object: { [k: string]: any }): types.Role;
+
+        /**
+         * Creates a plain object from a Role message. Also converts values to other types if specified.
+         * @param message Role
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: types.Role, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this Role to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for Role
          * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
          * @returns The default type url
          */

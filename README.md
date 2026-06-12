@@ -1,108 +1,179 @@
-<img src="./canopy-logo-white-bg.svg" alt="Canopy Logo" width="500"/>
+# RepuRing
 
-_Official golang implementation of the Canopy Network Protocol_
+RepuRing is an onchain Social-Fi app where users create social circles, endorse each other, earn reputation points, and unlock community roles based on verifiable onchain trust.
 
-[![GoDoc](https://img.shields.io/badge/godoc-reference-white.svg)](https://godoc.org/github.com/canopy-network/canopy)
-[![Getting Started](https://img.shields.io/badge/getting%20started-guide-white)](https://canopynetwork.org)
-[![Go Version](https://img.shields.io/badge/golang-v1.21-white.svg)](https://golang.org)
-[![Next.js Version](https://img.shields.io/badge/next%20js-v14.2.3-white.svg)](https://nextjs.org/)
+## What It Does
 
+RepuRing extends the Canopy template with custom plugin transactions for an onchain reputation graph:
 
-# Overview
+- create a social profile,
+- create and join circles,
+- endorse another circle member,
+- increase reputation from endorsements,
+- slash invalid endorsements as the circle creator/admin,
+- claim a role from the current reputation score.
 
-[![License](https://img.shields.io/badge/License-MIT-white.svg)](https://opensource.org/licenses/MIT)
-[![Testing](https://img.shields.io/badge/testing-docker%20compose-white)](https://docs.docker.com/compose/)
-[![Platform](https://img.shields.io/badge/platform-linux%20%7C%20macos-white.svg)](https://github.com/canopy-network/canopy/releases)
-[![Status](https://img.shields.io/badge/status-alphanet-white)](https://docs.docker.com/compose/)
+It is Social-Fi because social identity, endorsements, reputation, and roles are signed transactions committed to Canopy plugin state rather than frontend-only metadata.
 
-### ⫸ **Welcome to the Network that Powers the Peer-to-Peer Launchpad for New Chains**
+## Implementation
 
-Built on a recursive architecture, chains bootstrap each other into independence —  
-forming an `unstoppable` web of utility and security. 
+The working implementation is in the TypeScript plugin template:
 
-**Here you'll find:**
+- `plugin/typescript/proto/tx.proto`
+- `plugin/typescript/src/contract/contract.ts`
+- `plugin/typescript/src/contract/plugin.ts`
 
-➪ A recursive framework to build blockchains.
+This follows `plugin/typescript/AGENTS.md`: protobuf messages are registered in `ContractConfig`, decoded in `FromAny()`, statelessly validated in `CheckTx`, and applied deterministically in `DeliverTx` through `StateRead` / `StateWrite`.
 
-➪ The seed chain that started the recursive cycle.
+## Custom Transactions
 
-For more information on the Canopy Network Protocol visit [https://canopynetwork.org](https://canopynetwork.org)
+| Transaction | State transition |
+| --- | --- |
+| `createProfile` | Stores profile under signer address and initializes reputation to `0`. |
+| `createCircle` | Stores a unique circle, sets creator/admin, and adds creator as first member. |
+| `joinCircle` | Adds signer to an existing circle member list. |
+| `endorseUser` | Stores a deterministic endorsement and adds `+1` reputation to target. |
+| `slashEndorsement` | Marks an endorsement slashed and subtracts `2` reputation, floored at `0`. |
+| `claimRole` | Stores/updates the signer role for a circle. |
 
-## Network Status
+Allowed tags: `builder`, `helper`, `creator`, `leader`, `trusted`.
 
-⪢ Canopy is in `Betanet` 🚀 ➝ learn more about the [road-to-mainnet](https://www.canopynetwork.org/learn-more/road-to-mainnet)
+Role thresholds:
 
-## Protocol Documentation
+- `0..4`: `Newbie`
+- `5..14`: `Trusted`
+- `15..29`: `Core Member`
+- `30+`: `Circle Leader`
 
-➪ Check out the Canopy Network wiki:  [https://canopy-network.gitbook.io/docs](https://canopy-network.gitbook.io/docs)
+## RPC Ports
 
-## Repository Documentation
+- `50002`: Canopy query and transaction RPC.
+- `50003`: Canopy admin / keystore RPC.
 
-Welcome to the Canopy Network reference implementation. This repository can be well understood reading about the core modules:
+`.env.example` contains the same defaults for scripts.
 
-- [Controller](controller/README.md): Coordinates communication between all the major parts of the Canopy blockchain, like a central hub or "bus" that connects the system together.
-- [Finite State Machine (FSM)](fsm/README.md): Defines the logic for how transactions change the blockchain's state — it decides what’s valid and how state transitions happen from one block to the next.
-- [Byzantine Fault Tolerant (BFT) Consensus](bft/README.md): A consensus mechanism that allows the network to agree on new blocks even if some nodes are unreliable or malicious.
-- [Peer-to-Peer Networking](p2p/README.md): A secure and encrypted communication system that lets nodes talk directly to each other without needing a central server.
-- [Persistence](store/README.md): Manages the blockchain’s storage — it saves the current state (ledger), indexes past transactions, and ensures fast and reliable data verification.
+## Build
 
-## How to Run It
-
-➪ To run the Canopy binary, use the following commands:
+Build the RepuRing TypeScript plugin:
 
 ```bash
-make build/canopy-full
+cd plugin/typescript
+npm install
+npm run build:all
+```
+
+Build the wallet frontend:
+
+```bash
+cd cmd/rpc/web/wallet
+npm install
+npm run build
+```
+
+## Run Local Chain
+
+Docker path from the Canopy template:
+
+```bash
+make docker/plugin PLUGIN=typescript
+docker run -p 50002:50002 -p 50003:50003 -v ~/.canopy:/root/.canopy canopy-typescript
+```
+
+Manual path:
+
+1. Build Canopy with the normal template instructions.
+2. Set `"plugin": "typescript"` in `~/.canopy/config.json`.
+3. Start the node:
+
+```bash
 canopy start
 ```
 
-## How to Run It with 🐳 Docker
-
-➪ To run a Canopy `Localnet` in a *containerized* environment, use the following commands:
-```bash
-make docker/build
-make docker/up-fast
-make docker/logs
-
-or simply
-
-make docker/up && make docker/logs
-```
-
-## Running Tests
-
-➪ To run Canopy unit tests, use the Go testing tools:
+## Run Web UI
 
 ```bash
-make test
+cd cmd/rpc/web/wallet
+npm run dev -- --host 127.0.0.1 --port 5173
 ```
 
-## How to Contribute
+Open:
 
-➪ Canopy is an open-source project, and we welcome contributions from the community. Here's how to get involved:
+```text
+http://127.0.0.1:5173/
+```
 
-1. **Fork** the repository and clone it locally.
-2. **Code** your improvements or fixes.
-3. **Submit a Pull Request** (PR) for review.
+The RepuRing page signs custom plugin transactions in the browser, submits them to `/v1/tx`, and refreshes profile, circle, role, endorsement, and leaderboard state from the RepuRing query routes. It does not use a mocked transaction path.
 
-➣ Please follow these [guidelines](CONTRIBUTING.md) to maintain high-quality contributions:
+## Demo Script
 
-### High Impact or Architectural Changes
+With the local chain running on ports `50002` and `50003`:
 
-➪ Before making large changes, discuss them with the Canopy team on [Discord](https://discord.gg/pNcSJj7Wdh) to ensure alignment.
+```bash
+node scripts/demo/repuring-demo.mjs
+```
 
-### Coding Style
+The script:
 
-- Code must adhere to official Go formatting (use [`gofmt`](https://golang.org/cmd/gofmt)).
-- (Optional) Use [EditorConfig](https://editorconfig.org) for consistent formatting.
-- All code should follow Go documentation/commentary guidelines.
-- PRs should be opened against the `development` branch.
+1. Creates Alice and Bob keys through admin RPC.
+2. Submits `createProfile` for Alice.
+3. Submits `createProfile` for Bob.
+4. Alice creates a `Canopy Builders` circle.
+5. Bob joins.
+6. Alice endorses Bob with tag `builder`.
+7. Queries Bob reputation and shows it increased.
+8. Bob claims a role.
+9. Queries the leaderboard.
+10. Alice slashes the endorsement.
+11. Queries Bob reputation again and shows it decreased.
 
-[![Pre-Release](https://img.shields.io/github/release-pre/canopy-network/canopy.svg)](https://github.com/canopy-network/canopy/releases)
-[![Go Report Card](https://goreportcard.com/badge/github.com/canopy-network/canopy)](https://goreportcard.com/report/github.com/canopy-network/canopy)
-[![Contributors](https://img.shields.io/github/contributors/canopy-network/canopy.svg)](https://github.com/canopy-network/canopy/pulse)
-[![Last Commit](https://img.shields.io/github/last-commit/canopy-network/canopy.svg)](https://github.com/canopy-network/canopy/pulse)
+Expected reputation transition for Bob in plugin state: `0 -> 1 -> 0`.
 
-## Contact
+## Query Surface
 
-[![Twitter](https://img.shields.io/twitter/url/http/shields.io.svg?style=social)](https://x.com/CNPYNetwork)
-[![Discord](https://img.shields.io/badge/discord-online-blue.svg)](https://discord.gg/pNcSJj7Wdh)
+The contract stores deterministic keys for:
+
+- profile by address,
+- username index,
+- circle by `circle_id`,
+- membership by `circle_id + address`,
+- role by `circle_id + address`,
+- endorsement by deterministic `endorsement_id`,
+- circle/user endorsement indexes.
+
+The requested logical queries are exposed as HTTP POST routes on port `50002`:
+
+| Logical query | RPC route | Body |
+| --- | --- | --- |
+| `getProfile(address)` | `/v1/query/repuring/profile` | `{ "address": "<hex>" }` |
+| `getCircle(circle_id)` | `/v1/query/repuring/circle` | `{ "circleId": "canopy-builders" }` |
+| `getCircleMembers(circle_id)` | `/v1/query/repuring/circle-members` | `{ "circleId": "canopy-builders" }` |
+| `getReputation(address)` | `/v1/query/repuring/reputation` | `{ "address": "<hex>" }` |
+| `getRole(circle_id, address)` | `/v1/query/repuring/role` | `{ "circleId": "canopy-builders", "address": "<hex>" }` |
+| `getEndorsementsForUser(address)` | `/v1/query/repuring/endorsements-for-user` | `{ "address": "<hex>" }` |
+| `getEndorsementsInCircle(circle_id)` | `/v1/query/repuring/endorsements-in-circle` | `{ "circleId": "canopy-builders" }` |
+| `getLeaderboard(circle_id)` | `/v1/query/repuring/leaderboard` | `{ "circleId": "canopy-builders" }` |
+
+Each query also accepts optional `{ "height": 123 }` to read historical state through the Canopy time-machine path.
+
+## Demo Video Script
+
+1. Show local Canopy running with plugin `typescript`, ports `50002/50003`.
+2. Show `npm run build:all` passing in `plugin/typescript`.
+3. Show wallet at `/`.
+4. Select or create wallet accounts.
+5. Submit profile/circle/join/endorse/claim/slash transactions.
+6. Show returned transaction hashes from `/v1/tx`.
+7. Refresh the dashboard and show Bob reputation, role, endorsement record, and leaderboard.
+8. Run the admin slash step and show Bob reputation decrease through `/v1/query/repuring/reputation`.
+
+## Verification Performed
+
+```bash
+cd plugin/typescript && npm run build:all
+cd plugin/typescript && npm test
+cd cmd/rpc/web/wallet && npm run build
+node --check scripts/demo/repuring-demo.mjs
+Invoke-WebRequest http://127.0.0.1:5173/repuring
+```
+
+`/` and `/repuring` return the RepuRing SPA. The local Canopy RPC was not running in this environment, so the demo script correctly fails at live RPC connection instead of using mock data unless the chain is started first.

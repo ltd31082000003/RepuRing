@@ -73,6 +73,9 @@
         "dexLiquidityDeposit": "out",
         "dexLiquidityWithdraw": "in"
       }
+    },
+    "quickActions": {
+      "max": 12
     }
   },
   "actions": [
@@ -159,7 +162,7 @@
             "type": "amount",
             "label": "Amount",
             "required": true,
-            "min": 1e-06,
+            "min": 0.000001,
             "max": "{{ fromMicroDenom<{{ds.account?.amount ?? 0}}> }}",
             "validation": {
               "messages": {
@@ -2429,7 +2432,7 @@
             "type": "amount",
             "label": "Treasury Amount",
             "required": true,
-            "min": 1e-06,
+            "min": 0.000001,
             "placeholder": "Amount to transfer from DAO treasury",
             "span": {
               "base": 12
@@ -3002,7 +3005,9 @@
           "refetchIntervalMs": 4000,
           "refetchOnMount": true,
           "refetchOnWindowFocus": false,
-          "critical": ["height"]
+          "critical": [
+            "height"
+          ]
         }
       },
       "ui": {
@@ -3324,7 +3329,9 @@
           "refetchIntervalMs": 4000,
           "refetchOnMount": true,
           "refetchOnWindowFocus": false,
-          "critical": ["height"]
+          "critical": [
+            "height"
+          ]
         }
       },
       "ui": {
@@ -3657,7 +3664,9 @@
           "refetchIntervalMs": 4000,
           "refetchOnMount": true,
           "refetchOnWindowFocus": false,
-          "critical": ["height"]
+          "critical": [
+            "height"
+          ]
         }
       },
       "ui": {
@@ -4281,7 +4290,7 @@
             "type": "amount",
             "label": "Requested Amount",
             "required": true,
-            "min": 1e-06,
+            "min": 0.000001,
             "validation": {
               "messages": {
                 "required": "Requested amount is required",
@@ -4560,7 +4569,7 @@
             "type": "amount",
             "label": "Amount For Sale",
             "required": true,
-            "min": 1e-06,
+            "min": 0.000001,
             "value": "{{params.amount ?? ''}}",
             "autoPopulate": "once",
             "validation": {
@@ -4583,7 +4592,7 @@
             "required": true,
             "value": "{{params.receiveAmount ?? ''}}",
             "autoPopulate": "once",
-            "min": 1e-06,
+            "min": 0.000001,
             "validation": {
               "messages": {
                 "required": "Requested amount is required",
@@ -5347,7 +5356,7 @@
             "type": "amount",
             "label": "Amount",
             "required": true,
-            "min": 1e-06,
+            "min": 0.000001,
             "validation": {
               "messages": {
                 "required": "Amount is required",
@@ -5365,7 +5374,7 @@
             "type": "amount",
             "label": "Minimum Receive Amount",
             "required": true,
-            "min": 1e-06,
+            "min": 0.000001,
             "validation": {
               "messages": {
                 "required": "Minimum receive amount is required",
@@ -5562,7 +5571,7 @@
             "type": "amount",
             "label": "Amount",
             "required": true,
-            "min": 1e-06,
+            "min": 0.000001,
             "validation": {
               "messages": {
                 "required": "Amount is required",
@@ -5884,5 +5893,6 @@
         }
       }
     }
-  ]
+  ],
+  "version": "1"
 }

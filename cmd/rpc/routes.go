@@ -64,6 +64,14 @@ const (
 	ValidatorSetRoutePath          = "/v1/query/validator-set"
 	CheckpointRoutePath            = "/v1/query/checkpoint"
 	SubscribeRCInfoPath            = "/v1/subscribe-rc-info"
+	RepuRingProfileRoutePath       = "/v1/query/repuring/profile"
+	RepuRingCircleRoutePath        = "/v1/query/repuring/circle"
+	RepuRingCircleMembersRoutePath = "/v1/query/repuring/circle-members"
+	RepuRingReputationRoutePath    = "/v1/query/repuring/reputation"
+	RepuRingRoleRoutePath          = "/v1/query/repuring/role"
+	RepuRingUserEndorseRoutePath   = "/v1/query/repuring/endorsements-for-user"
+	RepuRingCircleEndorseRoutePath = "/v1/query/repuring/endorsements-in-circle"
+	RepuRingLeaderboardRoutePath   = "/v1/query/repuring/leaderboard"
 	// eth
 	EthereumRoutePath = "/v1/eth"
 	// admin
@@ -158,6 +166,14 @@ const (
 	LotteryRouteName               = "lottery"
 	RootChainInfoRouteName         = "root-chain-info"
 	CheckpointRouteName            = "checkpoint"
+	RepuRingProfileRouteName       = "repuring-profile"
+	RepuRingCircleRouteName        = "repuring-circle"
+	RepuRingCircleMembersRouteName = "repuring-circle-members"
+	RepuRingReputationRouteName    = "repuring-reputation"
+	RepuRingRoleRouteName          = "repuring-role"
+	RepuRingUserEndorseRouteName   = "repuring-endorsements-for-user"
+	RepuRingCircleEndorseRouteName = "repuring-endorsements-in-circle"
+	RepuRingLeaderboardRouteName   = "repuring-leaderboard"
 	// debug
 	DebugBlockedRouteName   = "blocked"
 	DebugHeapRouteName      = "heap"
@@ -265,6 +281,14 @@ var routePaths = routes{
 	RootChainInfoRouteName:         {Method: http.MethodPost, Path: RootChainInfoRoutePath},
 	ValidatorSetRouteName:          {Method: http.MethodPost, Path: ValidatorSetRoutePath},
 	CheckpointRouteName:            {Method: http.MethodPost, Path: CheckpointRoutePath},
+	RepuRingProfileRouteName:       {Method: http.MethodPost, Path: RepuRingProfileRoutePath},
+	RepuRingCircleRouteName:        {Method: http.MethodPost, Path: RepuRingCircleRoutePath},
+	RepuRingCircleMembersRouteName: {Method: http.MethodPost, Path: RepuRingCircleMembersRoutePath},
+	RepuRingReputationRouteName:    {Method: http.MethodPost, Path: RepuRingReputationRoutePath},
+	RepuRingRoleRouteName:          {Method: http.MethodPost, Path: RepuRingRoleRoutePath},
+	RepuRingUserEndorseRouteName:   {Method: http.MethodPost, Path: RepuRingUserEndorseRoutePath},
+	RepuRingCircleEndorseRouteName: {Method: http.MethodPost, Path: RepuRingCircleEndorseRoutePath},
+	RepuRingLeaderboardRouteName:   {Method: http.MethodPost, Path: RepuRingLeaderboardRoutePath},
 	// eth
 	EthereumRouteName: {Method: http.MethodPost, Path: EthereumRoutePath},
 	// admin
@@ -365,6 +389,14 @@ func createRouter(s *Server) *httprouter.Router {
 		PollRouteName:                  s.Poll,
 		RootChainInfoRouteName:         s.RootChainInfo,
 		CheckpointRouteName:            s.Checkpoint,
+		RepuRingProfileRouteName:       s.RepuRingProfile,
+		RepuRingCircleRouteName:        s.RepuRingCircle,
+		RepuRingCircleMembersRouteName: s.RepuRingCircleMembers,
+		RepuRingReputationRouteName:    s.RepuRingReputation,
+		RepuRingRoleRouteName:          s.RepuRingRole,
+		RepuRingUserEndorseRouteName:   s.RepuRingEndorsementsForUser,
+		RepuRingCircleEndorseRouteName: s.RepuRingEndorsementsInCircle,
+		RepuRingLeaderboardRouteName:   s.RepuRingLeaderboard,
 		EthereumRouteName:              s.EthereumHandler,
 		SubscribeRCInfoName:            s.WebSocket,
 	}
