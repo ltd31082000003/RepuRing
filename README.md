@@ -99,10 +99,31 @@ npm run dev -- --host 127.0.0.1 --port 5173
 Open:
 
 ```text
-http://127.0.0.1:5173/
+http://127.0.0.1:5173/repuring
 ```
 
-The RepuRing page signs custom plugin transactions in the browser, submits them to `/v1/tx`, and refreshes profile, circle, role, endorsement, and leaderboard state from the RepuRing query routes. It does not use a mocked transaction path.
+The RepuRing UI is a route-based Social-Fi dApp:
+
+| Route | Purpose |
+| --- | --- |
+| `/repuring` | Overview dashboard, product story, RPC status, current profile/reputation/role. |
+| `/repuring/circles` | Create profile, create circle, join circle, and inspect members. |
+| `/repuring/endorse` | Submit `EndorseUserTx` and review recent endorsements. |
+| `/repuring/leaderboard` | View circle reputation rankings and role badges. |
+| `/repuring/admin` | Submit `ClaimRoleTx` and `SlashEndorsementTx`. |
+| `/key-management` | Create/select local signing keys from the Canopy template wallet. |
+
+The RepuRing pages sign custom plugin transactions in the browser, submit them to `http://localhost:50002/v1/tx`, and refresh profile, circle, role, endorsement, and leaderboard state from the RepuRing query routes. They do not use a mocked transaction path for the main flow.
+
+## Demo UI Flow
+
+1. Open `http://127.0.0.1:5173/repuring`.
+2. Create a signing key on `/key-management` if needed.
+3. Create a profile on `/repuring/circles`.
+4. Create or join a circle on `/repuring/circles`.
+5. Endorse another member on `/repuring/endorse`.
+6. Check rankings on `/repuring/leaderboard`.
+7. Claim a role or slash an endorsement on `/repuring/admin`.
 
 ## Demo Script
 
@@ -159,21 +180,36 @@ Each query also accepts optional `{ "height": 123 }` to read historical state th
 
 1. Show local Canopy running with plugin `typescript`, ports `50002/50003`.
 2. Show `npm run build:all` passing in `plugin/typescript`.
-3. Show wallet at `/`.
-4. Select or create wallet accounts.
-5. Submit profile/circle/join/endorse/claim/slash transactions.
-6. Show returned transaction hashes from `/v1/tx`.
-7. Refresh the dashboard and show Bob reputation, role, endorsement record, and leaderboard.
-8. Run the admin slash step and show Bob reputation decrease through `/v1/query/repuring/reputation`.
+3. Show the overview at `/repuring`.
+4. Create/select wallet accounts in `/key-management`.
+5. Submit profile and circle transactions on `/repuring/circles`.
+6. Submit an endorsement on `/repuring/endorse`.
+7. Show returned transaction hashes from `/v1/tx`.
+8. Show reputation, role, and rankings on `/repuring/leaderboard`.
+9. Run the admin slash step on `/repuring/admin` and show Bob reputation decrease through `/v1/query/repuring/reputation`.
 
-## Verification Performed
+## Verification Checklist
 
 ```bash
 cd plugin/typescript && npm run build:all
 cd plugin/typescript && npm test
 cd cmd/rpc/web/wallet && npm run build
 node --check scripts/demo/repuring-demo.mjs
-Invoke-WebRequest http://127.0.0.1:5173/repuring
 ```
 
-`/` and `/repuring` return the RepuRing SPA. The local Canopy RPC was not running in this environment, so the demo script correctly fails at live RPC connection instead of using mock data unless the chain is started first.
+Manual route flow:
+
+- `/` redirects to `/repuring`.
+- `/repuring` shows the RepuRing overview.
+- `/repuring/circles` opens profile/circle membership UI.
+- `/repuring/endorse` opens endorsement UI.
+- `/repuring/leaderboard` opens the leaderboard UI.
+- `/repuring/admin` opens role claim and moderation UI.
+- `/key-management` remains available for local signing keys.
+
+Live flow checklist:
+
+- Start local Canopy RPC on ports `50002` and `50003`.
+- Create/select an account and enter the signing password.
+- Submit `CreateProfileTx`, `CreateCircleTx`, `JoinCircleTx`, `EndorseUserTx`, `ClaimRoleTx`, and `SlashEndorsementTx`.
+- Confirm leaderboard and reputation changes come from RepuRing RPC query state.

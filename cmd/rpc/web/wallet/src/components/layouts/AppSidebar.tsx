@@ -15,11 +15,11 @@ import {
 } from 'lucide-react';
 
 const navItems = [
-    { name: 'RepuRing', path: '/', icon: BadgeCheck },
-    { name: 'Circles', path: '/#circles', icon: Users },
-    { name: 'Endorse', path: '/#endorse', icon: HeartHandshake },
-    { name: 'Leaderboard', path: '/#leaderboard', icon: Trophy },
-    { name: 'Admin', path: '/#admin', icon: ShieldCheck },
+    { name: 'RepuRing', path: '/repuring', icon: BadgeCheck },
+    { name: 'Circles', path: '/repuring/circles', icon: Users },
+    { name: 'Endorse', path: '/repuring/endorse', icon: HeartHandshake },
+    { name: 'Leaderboard', path: '/repuring/leaderboard', icon: Trophy },
+    { name: 'Admin', path: '/repuring/admin', icon: ShieldCheck },
     { name: 'Keys', path: '/key-management', icon: KeyRound },
 ];
 
@@ -63,7 +63,7 @@ export const AppSidebar = (): JSX.Element => {
                     }`}
                 >
                     <Link
-                        to="/"
+                        to="/repuring"
                         className={`flex h-full w-full min-w-0 items-center overflow-hidden transition-all duration-300 ${
                             collapsed ? 'justify-center' : 'justify-start py-1 pl-4 pr-2'
                         }`}
@@ -111,7 +111,7 @@ export const AppSidebar = (): JSX.Element => {
                         <NavLink
                             key={name}
                             to={path}
-                            end={path === '/'}
+                            end={path === '/repuring'}
                             title={collapsed ? name : undefined}
                             className={({ isActive }) => navLinkClass(isActive, collapsed)}
                         >
@@ -168,7 +168,7 @@ export const AppSidebar = (): JSX.Element => {
                     >
                         <Menu className="h-5 w-5" />
                     </button>
-                    <Link to="/" className="flex items-center px-1 py-1">
+                    <Link to="/repuring" className="flex items-center px-1 py-1">
                         <span className="flex items-center gap-2 text-base font-semibold text-white">
                             <BadgeCheck className="h-5 w-5 text-primary" />
                             RepuRing
@@ -200,7 +200,7 @@ export const AppSidebar = (): JSX.Element => {
                                 <div className="flex h-16 flex-shrink-0 items-center border-b border-zinc-800 px-4">
                                     <div className="flex h-full w-full items-center justify-between">
                                         <Link
-                                            to="/"
+                                            to="/repuring"
                                             onClick={() => setMobileOpen(false)}
                                             className="flex items-center px-1 py-1"
                                         >
@@ -225,7 +225,7 @@ export const AppSidebar = (): JSX.Element => {
                                         <NavLink
                                             key={name}
                                             to={path}
-                                            end={path === '/'}
+                                            end={path === '/repuring'}
                                             onClick={() => setMobileOpen(false)}
                                             className={({ isActive }) => navLinkClass(isActive, false)}
                                         >

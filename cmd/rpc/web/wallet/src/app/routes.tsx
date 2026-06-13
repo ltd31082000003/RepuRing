@@ -1,16 +1,39 @@
 
-import { createBrowserRouter, Navigate } from 'react-router-dom'
+import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom'
 import MainLayout from '@/components/layouts/MainLayout'
 
 import { KeyManagement } from '@/app/pages/KeyManagement'
-import RepuRing from '@/app/pages/RepuRing'
+import { RepuRingProvider } from '@/app/pages/repuring/RepuRingProvider'
+import RepuRingOverview from '@/app/pages/repuring/RepuRingOverview'
+import RepuRingCircles from '@/app/pages/repuring/RepuRingCircles'
+import RepuRingEndorse from '@/app/pages/repuring/RepuRingEndorse'
+import RepuRingLeaderboard from '@/app/pages/repuring/RepuRingLeaderboard'
+import RepuRingAdmin from '@/app/pages/repuring/RepuRingAdmin'
+
+function RepuRingRoutes(): JSX.Element {
+    return (
+        <RepuRingProvider>
+            <Outlet />
+        </RepuRingProvider>
+    )
+}
 
 const router = createBrowserRouter([
     {
         element: <MainLayout />,
         children: [
-            { path: '/', element: <RepuRing /> },
-            { path: '/repuring', element: <Navigate to="/" replace /> },
+            { path: '/', element: <Navigate to="/repuring" replace /> },
+            {
+                path: '/repuring',
+                element: <RepuRingRoutes />,
+                children: [
+                    { index: true, element: <RepuRingOverview /> },
+                    { path: 'circles', element: <RepuRingCircles /> },
+                    { path: 'endorse', element: <RepuRingEndorse /> },
+                    { path: 'leaderboard', element: <RepuRingLeaderboard /> },
+                    { path: 'admin', element: <RepuRingAdmin /> },
+                ],
+            },
             { path: '/key-management', element: <KeyManagement /> },
             { path: '/accounts', element: <Navigate to="/key-management" replace /> },
             { path: '/all-addresses', element: <Navigate to="/key-management" replace /> },
