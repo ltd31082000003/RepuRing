@@ -40,20 +40,49 @@ async function main() {
   console.log(`Bob:   ${bob.address}`);
 
   await send(alice, 'createProfile', { senderAddress: hexToBytes(alice.address), username: `alice-${suffix}`, bio: 'Canopy builder' });
+  await waitFor(`Alice profile ${alice.address}`, async () => {
+    const profile = await queryMaybe('/v1/query/repuring/profile', { address: alice.address });
+    return profile?.username === `alice-${suffix}`;
+  });
   await send(bob, 'createProfile', { senderAddress: hexToBytes(bob.address), username: `bob-${suffix}`, bio: 'Helpful community member' });
+  await waitFor(`Bob profile ${bob.address}`, async () => {
+    const profile = await queryMaybe('/v1/query/repuring/profile', { address: bob.address });
+    return profile?.username === `bob-${suffix}`;
+  });
   await send(alice, 'createCircle', { senderAddress: hexToBytes(alice.address), circleId, name: 'Canopy Builders', description: 'Local demo circle' });
+  await waitFor(`circle ${circleId}`, async () => {
+    const circle = await queryMaybe('/v1/query/repuring/circle', { circleId });
+    return circle?.circleId === circleId;
+  });
   await send(bob, 'joinCircle', { senderAddress: hexToBytes(bob.address), circleId });
+  await waitFor(`Bob membership in ${circleId}`, async () => {
+    const result = await queryMaybe('/v1/query/repuring/circle-members', { circleId });
+    const members = Array.isArray(result) ? result : result?.members;
+    return Array.isArray(members) && members.some((member) => cleanHex(member.address || member) === bob.address);
+  });
   const endorsementId = makeEndorsementId(circleId, alice.address, bob.address);
   await send(alice, 'endorseUser', { senderAddress: hexToBytes(alice.address), circleId, targetAddress: hexToBytes(bob.address), tag: 'builder', message: 'Bob shipped a useful demo' });
-  const bobAfterEndorse = await query('/v1/query/repuring/reputation', { address: bob.address });
+  const bobAfterEndorse = await waitFor(`Bob reputation after endorsement`, async () => {
+    const reputation = await queryMaybe('/v1/query/repuring/reputation', { address: bob.address });
+    return Number(reputation?.reputation || 0) >= 1 ? reputation : false;
+  });
   console.log(`Bob reputation after endorsement: ${bobAfterEndorse.reputation}`);
   await send(bob, 'claimRole', { senderAddress: hexToBytes(bob.address), circleId });
-  const bobRole = await query('/v1/query/repuring/role', { address: bob.address, circleId });
+  const bobRole = await waitFor(`Bob role in ${circleId}`, async () => {
+    const role = await queryMaybe('/v1/query/repuring/role', { address: bob.address, circleId });
+    return role?.role ? role : false;
+  });
   console.log(`Bob claimed role: ${bobRole.role}`);
-  const leaderboard = await query('/v1/query/repuring/leaderboard', { circleId });
+  const leaderboard = await waitFor(`leaderboard for ${circleId}`, async () => {
+    const rows = await queryMaybe('/v1/query/repuring/leaderboard', { circleId });
+    return Array.isArray(rows) && rows.some((row) => cleanHex(row.address) === bob.address) ? rows : false;
+  });
   console.log('Leaderboard:', leaderboard.map((row, index) => `${index + 1}. ${row.username} (${row.reputation})`).join(' | '));
   await send(alice, 'slashEndorsement', { senderAddress: hexToBytes(alice.address), endorsementId, reason: 'demo slash by circle creator' });
-  const bobAfterSlash = await query('/v1/query/repuring/reputation', { address: bob.address });
+  const bobAfterSlash = await waitFor(`Bob reputation after slash`, async () => {
+    const reputation = await queryMaybe('/v1/query/repuring/reputation', { address: bob.address });
+    return Number(reputation?.reputation || 0) === 0 ? reputation : false;
+  });
   console.log(`Bob reputation after slash: ${bobAfterSlash.reputation}`);
 
   console.log('\nDemo flow submitted real transactions.');
@@ -67,18 +96,16 @@ async function send(signer, kind, msg) {
   const height = await getHeight();
   const msgBytes = Message.encode(Message.create(msg)).finish();
   const time = Date.now() * 1000;
-  const anyMsg = google.protobuf.Any.create({ type_url: typeUrl, value: msgBytes });
-  const signTx = types.Transaction.create({
+  const signBytes = encodeTransaction({
     messageType: kind,
-    msg: anyMsg,
-    signature: null,
+    typeUrl,
+    msgBytes,
     createdHeight: height,
     time,
     fee: FEE,
-    networkId: NETWORK_ID,
-    chainId: CHAIN_ID,
+    networkID: NETWORK_ID,
+    chainID: CHAIN_ID,
   });
-  const signBytes = types.Transaction.encode(signTx).finish();
   const signature = signBLS(signer.privateKey, signBytes);
   const tx = {
     type: kind,
@@ -128,6 +155,25 @@ async function query(path, body) {
   return post(`${QUERY_RPC}${path}`, body);
 }
 
+async function queryMaybe(path, body) {
+  try {
+    return await query(path, body);
+  } catch {
+    return null;
+  }
+}
+
+async function waitFor(label, fn, timeoutMs = 90000) {
+  const started = Date.now();
+  let lastValue = null;
+  while (Date.now() - started < timeoutMs) {
+    lastValue = await fn();
+    if (lastValue) return lastValue;
+    await sleep(2500);
+  }
+  throw new Error(`Timed out waiting for ${label}`);
+}
+
 function signBLS(privateKeyHex, message) {
   const hashedPoint = bls12_381.longSignatures.hash(message);
   const signaturePoint = bls12_381.longSignatures.sign(hashedPoint, hexToBytes(privateKeyHex));
@@ -156,6 +202,53 @@ function hexToBytes(hex) {
 
 function bytesToHex(bytes) {
   return Buffer.from(bytes).toString('hex');
+}
+
+function encodeTransaction(v) {
+  const anyMsg = concat([fieldString(1, v.typeUrl), fieldBytes(2, v.msgBytes)]);
+  const fields = [
+    fieldString(1, v.messageType),
+    fieldBytes(2, anyMsg),
+    fieldVarint(4, v.createdHeight),
+    fieldVarint(5, v.time),
+  ];
+  if (v.fee !== 0) fields.push(fieldVarint(6, v.fee));
+  fields.push(fieldVarint(8, v.networkID), fieldVarint(9, v.chainID));
+  return concat(fields);
+}
+
+function fieldString(n, value) {
+  return fieldBytes(n, new TextEncoder().encode(String(value ?? '')));
+}
+
+function fieldBytes(n, value) {
+  return concat([varint((n << 3) | 2), varint(value.length), value]);
+}
+
+function fieldVarint(n, value) {
+  return concat([varint((n << 3) | 0), varint(value)]);
+}
+
+function varint(value) {
+  let v = BigInt(Math.trunc(value));
+  const out = [];
+  while (v >= 0x80n) {
+    out.push(Number((v & 0x7fn) | 0x80n));
+    v >>= 7n;
+  }
+  out.push(Number(v));
+  return Uint8Array.from(out);
+}
+
+function concat(parts) {
+  const len = parts.reduce((sum, part) => sum + part.length, 0);
+  const out = new Uint8Array(len);
+  let offset = 0;
+  for (const part of parts) {
+    out.set(part, offset);
+    offset += part.length;
+  }
+  return out;
 }
 
 function sleep(ms) {

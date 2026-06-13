@@ -526,7 +526,8 @@ async function readMany(
     const values = new Map<string, Uint8Array>();
     for (const resp of response?.results || []) {
         const qid = resp.queryId as Long;
-        const value = resp.entries?.[0]?.value || null;
+        const rawValue = resp.entries?.[0]?.value || null;
+        const value = rawValue && rawValue.length > 0 ? rawValue : null;
         if (value) values.set(qid.toString(), value);
     }
 

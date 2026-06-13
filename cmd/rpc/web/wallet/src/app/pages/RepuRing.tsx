@@ -484,15 +484,15 @@ function encodeMessage(kind: TxKind, v: Record<string, unknown>): Uint8Array {
 
 function encodeTransaction(v: { messageType: string; typeUrl: string; msgBytes: Uint8Array; createdHeight: number; time: number; fee: number; networkID: number; chainID: number }) {
   const anyMsg = concat([fieldString(1, v.typeUrl), fieldBytes(2, v.msgBytes)]);
-  return concat([
+  const fields = [
     fieldString(1, v.messageType),
     fieldBytes(2, anyMsg),
     fieldVarint(4, v.createdHeight),
     fieldVarint(5, v.time),
-    fieldVarint(6, v.fee),
-    fieldVarint(8, v.networkID),
-    fieldVarint(9, v.chainID),
-  ]);
+  ];
+  if (v.fee !== 0) fields.push(fieldVarint(6, v.fee));
+  fields.push(fieldVarint(8, v.networkID), fieldVarint(9, v.chainID));
+  return concat(fields);
 }
 
 function signBLS(privateKeyHex: string, message: Uint8Array): Uint8Array {
