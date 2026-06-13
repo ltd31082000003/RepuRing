@@ -228,3 +228,10 @@ Live flow checklist:
 - Create/select an account and enter the signing password.
 - Submit `CreateProfileTx`, `CreateCircleTx`, `JoinCircleTx`, `CreateContributionTx`, `EndorseContributionTx`, `ClaimRoleTx`, and `SlashEndorsementTx`.
 - Confirm leaderboard and reputation changes come from RepuRing RPC query state.
+
+## Future Work
+
+- Project-scoped reputation so each community can weight contributor standing independently.
+- Project discovery for finding and joining active Web3 contribution circles.
+- Contribution timestamps for chronological feeds, auditability, and richer demo timelines.
+- Anti-Sybil and weighted endorsements for stronger trust signals in larger communities.

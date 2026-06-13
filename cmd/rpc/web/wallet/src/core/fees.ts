@@ -105,7 +105,7 @@ export function useResolvedFees(
 ): ResolvedFees {
   const { denom, refreshMs = 30000, providers, buckets } = feesConfig;
   const [raw, setRaw] = useState<any>(null);
-  const timerRef = useRef<number | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const ctxRef = useRef(opts.ctx);
   useEffect(() => {
