@@ -115,8 +115,7 @@ export function RepuRingProvider({ children }: { children: React.ReactNode }): J
     const response = await postJSON(`${QUERY_RPC}/v1/tx`, tx);
     setLastTx(typeof response === 'string' ? response : JSON.stringify(response));
     setStatus(`${kind} submitted. Waiting for block, then refreshing state...`);
-    await sleep(1800);
-    await refreshState();
+    await refreshAfterCommit(refreshState);
   }
 
   return (
@@ -269,3 +268,9 @@ function hexToBytes(hex: string) {
 }
 function bytesToHex(bytes: Uint8Array) { return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join(''); }
 function sleep(ms: number) { return new Promise((resolve) => setTimeout(resolve, ms)); }
+async function refreshAfterCommit(refresh: () => Promise<void>) {
+  await sleep(1800);
+  await refresh();
+  await sleep(2500);
+  await refresh();
+}
