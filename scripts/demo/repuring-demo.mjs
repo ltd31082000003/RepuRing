@@ -19,7 +19,9 @@ const meta = {
   createProfile: ['MessageCreateProfile', types.MessageCreateProfile, 'type.googleapis.com/types.MessageCreateProfile'],
   createCircle: ['MessageCreateCircle', types.MessageCreateCircle, 'type.googleapis.com/types.MessageCreateCircle'],
   joinCircle: ['MessageJoinCircle', types.MessageJoinCircle, 'type.googleapis.com/types.MessageJoinCircle'],
+  createContribution: ['MessageCreateContribution', types.MessageCreateContribution, 'type.googleapis.com/types.MessageCreateContribution'],
   endorseUser: ['MessageEndorseUser', types.MessageEndorseUser, 'type.googleapis.com/types.MessageEndorseUser'],
+  endorseContribution: ['MessageEndorseContribution', types.MessageEndorseContribution, 'type.googleapis.com/types.MessageEndorseContribution'],
   slashEndorsement: ['MessageSlashEndorsement', types.MessageSlashEndorsement, 'type.googleapis.com/types.MessageSlashEndorsement'],
   claimRole: ['MessageClaimRole', types.MessageClaimRole, 'type.googleapis.com/types.MessageClaimRole'],
 };
@@ -34,22 +36,23 @@ async function main() {
   const bobAddr = await newKey(`bob-${suffix}`);
   const alice = await getKey(aliceAddr);
   const bob = await getKey(bobAddr);
-  const circleId = `canopy-builders-${suffix}`;
+  const circleId = `pharos-builders-${suffix}`;
+  const contributionId = `pharos-guide-${suffix}`;
 
   console.log(`Alice: ${alice.address}`);
   console.log(`Bob:   ${bob.address}`);
 
-  await send(alice, 'createProfile', { senderAddress: hexToBytes(alice.address), username: `alice-${suffix}`, bio: 'Canopy builder' });
+  await send(alice, 'createProfile', { senderAddress: hexToBytes(alice.address), username: `alice-${suffix}`, bio: 'Pharos project admin' });
   await waitFor(`Alice profile ${alice.address}`, async () => {
     const profile = await queryMaybe('/v1/query/repuring/profile', { address: alice.address });
     return profile?.username === `alice-${suffix}`;
   });
-  await send(bob, 'createProfile', { senderAddress: hexToBytes(bob.address), username: `bob-${suffix}`, bio: 'Helpful community member' });
+  await send(bob, 'createProfile', { senderAddress: hexToBytes(bob.address), username: `bob-${suffix}`, bio: 'Helpful Pharos contributor' });
   await waitFor(`Bob profile ${bob.address}`, async () => {
     const profile = await queryMaybe('/v1/query/repuring/profile', { address: bob.address });
     return profile?.username === `bob-${suffix}`;
   });
-  await send(alice, 'createCircle', { senderAddress: hexToBytes(alice.address), circleId, name: 'Canopy Builders', description: 'Local demo circle' });
+  await send(alice, 'createCircle', { senderAddress: hexToBytes(alice.address), circleId, name: 'Pharos Builders', description: 'Community for contributors helping the Pharos ecosystem.' });
   await waitFor(`circle ${circleId}`, async () => {
     const circle = await queryMaybe('/v1/query/repuring/circle', { circleId });
     return circle?.circleId === circleId;
@@ -60,13 +63,26 @@ async function main() {
     const members = Array.isArray(result) ? result : result?.members;
     return Array.isArray(members) && members.some((member) => cleanHex(member.address || member) === bob.address);
   });
-  const endorsementId = makeEndorsementId(circleId, alice.address, bob.address);
-  await send(alice, 'endorseUser', { senderAddress: hexToBytes(alice.address), circleId, targetAddress: hexToBytes(bob.address), tag: 'builder', message: 'Bob shipped a useful demo' });
+  await send(bob, 'createContribution', {
+    senderAddress: hexToBytes(bob.address),
+    contributionId,
+    circleId,
+    title: 'Wrote Pharos testnet guide',
+    description: 'Created a guide to help new users test the Pharos ecosystem.',
+    proofUrl: 'https://example.com/pharos-guide',
+    category: 'educator',
+  });
+  await waitFor(`Bob contribution ${contributionId}`, async () => {
+    const contributions = await queryMaybe('/v1/query/repuring/contributions-in-circle', { circleId });
+    return Array.isArray(contributions) && contributions.some((item) => item.contributionId === contributionId);
+  });
+  const endorsementId = makeContributionEndorsementId(contributionId, alice.address);
+  await send(alice, 'endorseContribution', { senderAddress: hexToBytes(alice.address), contributionId, tag: 'builder', message: 'Endorsed contribution: Wrote Pharos testnet guide' });
   const bobAfterEndorse = await waitFor(`Bob reputation after endorsement`, async () => {
     const reputation = await queryMaybe('/v1/query/repuring/reputation', { address: bob.address });
     return Number(reputation?.reputation || 0) >= 1 ? reputation : false;
   });
-  console.log(`Bob reputation after endorsement: ${bobAfterEndorse.reputation}`);
+  console.log(`Bob reputation after contribution endorsement: ${bobAfterEndorse.reputation}`);
   await send(bob, 'claimRole', { senderAddress: hexToBytes(bob.address), circleId });
   const bobRole = await waitFor(`Bob role in ${circleId}`, async () => {
     const role = await queryMaybe('/v1/query/repuring/role', { address: bob.address, circleId });
@@ -87,7 +103,8 @@ async function main() {
 
   console.log('\nDemo flow submitted real transactions.');
   console.log(`Circle ID: ${circleId}`);
-  console.log(`Endorsement ID: ${endorsementId}`);
+  console.log(`Contribution ID: ${contributionId}`);
+  console.log(`Contribution endorsement ID: ${endorsementId}`);
   console.log('Verified Bob reputation transition through RPC query state.');
 }
 
@@ -180,14 +197,14 @@ function signBLS(privateKeyHex, message) {
   return bls12_381.longSignatures.Signature.toBytes(signaturePoint);
 }
 
-function makeEndorsementId(circleId, from, target) {
+function makeContributionEndorsementId(contributionId, from) {
   const { createHash } = requireFromPlugin('crypto');
   return createHash('sha256')
-    .update(circleId)
+    .update('contribution')
+    .update(Buffer.from([0]))
+    .update(contributionId)
     .update(Buffer.from([0]))
     .update(hexToBytes(from))
-    .update(Buffer.from([0]))
-    .update(hexToBytes(target))
     .digest('hex')
     .slice(0, 32);
 }

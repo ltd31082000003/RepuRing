@@ -13,12 +13,15 @@ import (
 )
 
 const (
-	repuringProfilePrefix           byte = 80
-	repuringCirclePrefix            byte = 82
-	repuringRolePrefix              byte = 84
-	repuringEndorsementPrefix       byte = 85
-	repuringCircleEndorsementPrefix byte = 86
-	repuringUserEndorsementPrefix   byte = 87
+	repuringProfilePrefix            byte = 80
+	repuringCirclePrefix             byte = 82
+	repuringRolePrefix               byte = 84
+	repuringEndorsementPrefix        byte = 85
+	repuringCircleEndorsementPrefix  byte = 86
+	repuringUserEndorsementPrefix    byte = 87
+	repuringContributionPrefix       byte = 89
+	repuringCircleContributionPrefix byte = 90
+	repuringUserContributionPrefix   byte = 91
 )
 
 type repuringAddressRequest struct {
@@ -43,6 +46,13 @@ type repuringRoleRequest struct {
 
 func (r *repuringRoleRequest) GetHeight() uint64 { return r.Height }
 
+type repuringContributionRequest struct {
+	Height         uint64 `json:"height"`
+	ContributionID string `json:"contributionId"`
+}
+
+func (r *repuringContributionRequest) GetHeight() uint64 { return r.Height }
+
 type repuringProfileView struct {
 	Address    string `json:"address"`
 	Username   string `json:"username"`
@@ -60,14 +70,28 @@ type repuringCircleView struct {
 }
 
 type repuringEndorsementView struct {
-	EndorsementID string `json:"endorsementId"`
-	CircleID      string `json:"circleId"`
-	FromAddress   string `json:"fromAddress"`
-	TargetAddress string `json:"targetAddress"`
-	Tag           string `json:"tag"`
-	Message       string `json:"message"`
-	Slashed       bool   `json:"slashed"`
-	SlashReason   string `json:"slashReason"`
+	EndorsementID  string `json:"endorsementId"`
+	CircleID       string `json:"circleId"`
+	FromAddress    string `json:"fromAddress"`
+	TargetAddress  string `json:"targetAddress"`
+	Tag            string `json:"tag"`
+	Message        string `json:"message"`
+	Slashed        bool   `json:"slashed"`
+	SlashReason    string `json:"slashReason"`
+	ContributionID string `json:"contributionId"`
+}
+
+type repuringContributionView struct {
+	ContributionID   string `json:"contributionId"`
+	CircleID         string `json:"circleId"`
+	AuthorAddress    string `json:"authorAddress"`
+	AuthorUsername   string `json:"authorUsername"`
+	Title            string `json:"title"`
+	Description      string `json:"description"`
+	ProofURL         string `json:"proofUrl"`
+	Category         string `json:"category"`
+	EndorsementCount uint64 `json:"endorsementCount"`
+	Slashed          bool   `json:"slashed"`
 }
 
 type repuringRoleView struct {
@@ -102,14 +126,27 @@ type repuringCircleRecord struct {
 }
 
 type repuringEndorsementRecord struct {
-	EndorsementID string
-	CircleID      string
-	FromAddress   []byte
-	TargetAddress []byte
-	Tag           string
-	Message       string
-	Slashed       bool
-	SlashReason   string
+	EndorsementID  string
+	CircleID       string
+	FromAddress    []byte
+	TargetAddress  []byte
+	Tag            string
+	Message        string
+	Slashed        bool
+	SlashReason    string
+	ContributionID string
+}
+
+type repuringContributionRecord struct {
+	ContributionID   string
+	CircleID         string
+	AuthorAddress    []byte
+	Title            string
+	Description      string
+	ProofURL         string
+	Category         string
+	EndorsementCount uint64
+	Slashed          bool
 }
 
 type repuringRoleRecord struct {
@@ -228,6 +265,45 @@ func (s *Server) RepuRingEndorsementsInCircle(w http.ResponseWriter, r *http.Req
 			return errPayload(err), http.StatusBadRequest
 		}
 		return endorsementViews(items), http.StatusOK
+	})
+}
+
+// RepuRingContribution reads a contribution proof by id.
+func (s *Server) RepuRingContribution(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	req := new(repuringContributionRequest)
+	s.repuringRead(w, r, req, func(state *fsm.StateMachine) (any, int) {
+		contribution, err := repuringGetContribution(state, req.ContributionID)
+		if err != nil {
+			return errPayload(err), http.StatusBadRequest
+		}
+		if contribution == nil {
+			return errPayload(fmt.Errorf("repuring contribution not found")), http.StatusNotFound
+		}
+		return contribution.view(state), http.StatusOK
+	})
+}
+
+// RepuRingContributionsInCircle lists contribution proofs posted in a circle.
+func (s *Server) RepuRingContributionsInCircle(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	req := new(repuringCircleRequest)
+	s.repuringRead(w, r, req, func(state *fsm.StateMachine) (any, int) {
+		items, err := repuringGetIndexedContributions(state, repuringKey(repuringCircleContributionPrefix, []byte(req.CircleID)))
+		if err != nil {
+			return errPayload(err), http.StatusBadRequest
+		}
+		return contributionViews(state, items), http.StatusOK
+	})
+}
+
+// RepuRingContributionsForUser lists contribution proofs authored by an address.
+func (s *Server) RepuRingContributionsForUser(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	req := new(repuringAddressRequest)
+	s.repuringRead(w, r, req, func(state *fsm.StateMachine) (any, int) {
+		items, err := repuringGetIndexedContributions(state, repuringKey(repuringUserContributionPrefix, req.Address))
+		if err != nil {
+			return errPayload(err), http.StatusBadRequest
+		}
+		return contributionViews(state, items), http.StatusOK
 	})
 }
 
@@ -352,6 +428,21 @@ func repuringGetEndorsement(state *fsm.StateMachine, endorsementID string) (*rep
 	return decodeRepuringEndorsement(bz)
 }
 
+func repuringGetContribution(state *fsm.StateMachine, contributionID string) (*repuringContributionRecord, error) {
+	contributionID = strings.TrimSpace(contributionID)
+	if contributionID == "" {
+		return nil, fmt.Errorf("contribution id must not be empty")
+	}
+	bz, err := state.Get(repuringKey(repuringContributionPrefix, []byte(contributionID)))
+	if err != nil {
+		return nil, err
+	}
+	if len(bz) == 0 {
+		return nil, nil
+	}
+	return decodeRepuringContribution(bz)
+}
+
 func repuringGetIndexedEndorsements(state *fsm.StateMachine, prefix []byte) ([]*repuringEndorsementRecord, error) {
 	it, err := state.Iterator(prefix)
 	if err != nil {
@@ -378,6 +469,35 @@ func repuringGetIndexedEndorsements(state *fsm.StateMachine, prefix []byte) ([]*
 	return items, nil
 }
 
+func repuringGetIndexedContributions(state *fsm.StateMachine, prefix []byte) ([]*repuringContributionRecord, error) {
+	it, err := state.Iterator(prefix)
+	if err != nil {
+		return nil, err
+	}
+	defer it.Close()
+	items := make([]*repuringContributionRecord, 0)
+	for ; it.Valid(); it.Next() {
+		segments := lib.DecodeLengthPrefixed(it.Key())
+		if len(segments) < 3 {
+			return nil, fmt.Errorf("invalid repuring contribution index key")
+		}
+		contribution, err := repuringGetContribution(state, string(segments[len(segments)-1]))
+		if err != nil {
+			return nil, err
+		}
+		if contribution != nil {
+			items = append(items, contribution)
+		}
+	}
+	sort.Slice(items, func(i, j int) bool {
+		if items[i].EndorsementCount != items[j].EndorsementCount {
+			return items[i].EndorsementCount > items[j].EndorsementCount
+		}
+		return items[i].ContributionID < items[j].ContributionID
+	})
+	return items, nil
+}
+
 func (p *repuringProfileRecord) view() repuringProfileView {
 	return repuringProfileView{
 		Address:    bytesToHex(p.Address),
@@ -400,14 +520,34 @@ func (c *repuringCircleRecord) view() repuringCircleView {
 
 func (e *repuringEndorsementRecord) view() repuringEndorsementView {
 	return repuringEndorsementView{
-		EndorsementID: e.EndorsementID,
-		CircleID:      e.CircleID,
-		FromAddress:   bytesToHex(e.FromAddress),
-		TargetAddress: bytesToHex(e.TargetAddress),
-		Tag:           e.Tag,
-		Message:       e.Message,
-		Slashed:       e.Slashed,
-		SlashReason:   e.SlashReason,
+		EndorsementID:  e.EndorsementID,
+		CircleID:       e.CircleID,
+		FromAddress:    bytesToHex(e.FromAddress),
+		TargetAddress:  bytesToHex(e.TargetAddress),
+		Tag:            e.Tag,
+		Message:        e.Message,
+		Slashed:        e.Slashed,
+		SlashReason:    e.SlashReason,
+		ContributionID: e.ContributionID,
+	}
+}
+
+func (c *repuringContributionRecord) view(state *fsm.StateMachine) repuringContributionView {
+	username := ""
+	if profile, err := repuringGetProfile(state, c.AuthorAddress); err == nil && profile != nil {
+		username = profile.Username
+	}
+	return repuringContributionView{
+		ContributionID:   c.ContributionID,
+		CircleID:         c.CircleID,
+		AuthorAddress:    bytesToHex(c.AuthorAddress),
+		AuthorUsername:   username,
+		Title:            c.Title,
+		Description:      c.Description,
+		ProofURL:         c.ProofURL,
+		Category:         c.Category,
+		EndorsementCount: c.EndorsementCount,
+		Slashed:          c.Slashed,
 	}
 }
 
@@ -425,6 +565,14 @@ func endorsementViews(records []*repuringEndorsementRecord) []repuringEndorsemen
 	views := make([]repuringEndorsementView, 0, len(records))
 	for _, record := range records {
 		views = append(views, record.view())
+	}
+	return views
+}
+
+func contributionViews(state *fsm.StateMachine, records []*repuringContributionRecord) []repuringContributionView {
+	views := make([]repuringContributionView, 0, len(records))
+	for _, record := range records {
+		views = append(views, record.view(state))
 	}
 	return views
 }
@@ -499,14 +647,33 @@ func decodeRepuringEndorsement(bz []byte) (*repuringEndorsementRecord, error) {
 		return nil, err
 	}
 	return &repuringEndorsementRecord{
-		EndorsementID: string(msg.bytes(1)),
-		CircleID:      string(msg.bytes(2)),
-		FromAddress:   msg.bytes(3),
-		TargetAddress: msg.bytes(4),
-		Tag:           string(msg.bytes(5)),
-		Message:       string(msg.bytes(6)),
-		Slashed:       msg.uint64(7) != 0,
-		SlashReason:   string(msg.bytes(8)),
+		EndorsementID:  string(msg.bytes(1)),
+		CircleID:       string(msg.bytes(2)),
+		FromAddress:    msg.bytes(3),
+		TargetAddress:  msg.bytes(4),
+		Tag:            string(msg.bytes(5)),
+		Message:        string(msg.bytes(6)),
+		Slashed:        msg.uint64(7) != 0,
+		SlashReason:    string(msg.bytes(8)),
+		ContributionID: string(msg.bytes(9)),
+	}, nil
+}
+
+func decodeRepuringContribution(bz []byte) (*repuringContributionRecord, error) {
+	msg, err := decodeProtoFields(bz)
+	if err != nil {
+		return nil, err
+	}
+	return &repuringContributionRecord{
+		ContributionID:   string(msg.bytes(1)),
+		CircleID:         string(msg.bytes(2)),
+		AuthorAddress:    msg.bytes(3),
+		Title:            string(msg.bytes(4)),
+		Description:      string(msg.bytes(5)),
+		ProofURL:         string(msg.bytes(6)),
+		Category:         string(msg.bytes(7)),
+		EndorsementCount: msg.uint64(8),
+		Slashed:          msg.uint64(9) != 0,
 	}, nil
 }
 

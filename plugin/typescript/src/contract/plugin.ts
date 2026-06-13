@@ -420,8 +420,14 @@ export function FromAny(any: any): [any | null, string | null, IPluginError | nu
         if (typeUrl.includes('MessageJoinCircle')) {
             return [types.MessageJoinCircle.decode(any.value), 'MessageJoinCircle', null];
         }
+        if (typeUrl.includes('MessageCreateContribution')) {
+            return [types.MessageCreateContribution.decode(any.value), 'MessageCreateContribution', null];
+        }
         if (typeUrl.includes('MessageEndorseUser')) {
             return [types.MessageEndorseUser.decode(any.value), 'MessageEndorseUser', null];
+        }
+        if (typeUrl.includes('MessageEndorseContribution')) {
+            return [types.MessageEndorseContribution.decode(any.value), 'MessageEndorseContribution', null];
         }
         if (typeUrl.includes('MessageSlashEndorsement')) {
             return [types.MessageSlashEndorsement.decode(any.value), 'MessageSlashEndorsement', null];

@@ -10,14 +10,15 @@ The demo is intentionally RPC-first: every action should be submitted to a local
 2. Create Alice and Bob keys through admin RPC.
 3. Submit `createProfile` for Alice.
 4. Submit `createProfile` for Bob.
-5. Submit `createCircle` from Alice with `circle_id = canopy-builders`.
+5. Submit `createCircle` from Alice with `circle_id = pharos-builders-*`.
 6. Submit `joinCircle` from Bob.
-7. Submit `endorseUser` from Alice to Bob with tag `builder`.
-8. Query Bob reputation.
-9. Submit `claimRole` from Bob.
-10. Query leaderboard.
-11. Submit `slashEndorsement` from Alice.
-12. Query Bob reputation again.
+7. Submit `createContribution` from Bob for `Wrote Pharos testnet guide`.
+8. Submit `endorseContribution` from Alice with tag `builder`.
+9. Query Bob reputation.
+10. Submit `claimRole` from Bob.
+11. Query leaderboard.
+12. Submit `slashEndorsement` from Alice.
+13. Query Bob reputation again.
 
 ## RPC Endpoints
 

@@ -12,6 +12,7 @@ import { fileDescriptorProtos } from '../proto/descriptors.js';
 
 const moduleName = 'repuring';
 const validTags = new Set(['builder', 'helper', 'creator', 'leader', 'trusted']);
+const validContributionCategories = new Set(['builder', 'helper', 'creator', 'researcher', 'tester', 'educator']);
 
 // ContractConfig registers every custom RepuRing transaction with Canopy.
 // The order must match supportedTransactions <-> transactionTypeUrls.
@@ -24,7 +25,9 @@ export const ContractConfig: any = {
         'createProfile',
         'createCircle',
         'joinCircle',
+        'createContribution',
         'endorseUser',
+        'endorseContribution',
         'slashEndorsement',
         'claimRole'
     ],
@@ -32,7 +35,9 @@ export const ContractConfig: any = {
         'type.googleapis.com/types.MessageCreateProfile',
         'type.googleapis.com/types.MessageCreateCircle',
         'type.googleapis.com/types.MessageJoinCircle',
+        'type.googleapis.com/types.MessageCreateContribution',
         'type.googleapis.com/types.MessageEndorseUser',
+        'type.googleapis.com/types.MessageEndorseContribution',
         'type.googleapis.com/types.MessageSlashEndorsement',
         'type.googleapis.com/types.MessageClaimRole'
     ],
@@ -94,6 +99,18 @@ export class Contract {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    CheckMessageCreateContribution(msg: any): any {
+        if (!isAddress(msg.senderAddress)) return { error: ErrInvalidAddress() };
+        if (!clean(msg.contributionId)) return { error: ErrRepuRing('contribution_id must not be empty') };
+        if (!clean(msg.circleId)) return { error: ErrRepuRing('circle_id must not be empty') };
+        if (!clean(msg.title)) return { error: ErrRepuRing('contribution title must not be empty') };
+        if (!validContributionCategories.has(clean(msg.category))) {
+            return { error: ErrRepuRing('contribution category is not allowed') };
+        }
+        return signerResponse(msg.senderAddress);
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     CheckMessageEndorseUser(msg: any): any {
         if (!isAddress(msg.senderAddress) || !isAddress(msg.targetAddress)) {
             return { error: ErrInvalidAddress() };
@@ -104,6 +121,14 @@ export class Contract {
         if (!clean(msg.circleId)) return { error: ErrRepuRing('circle_id must not be empty') };
         if (!validTags.has(clean(msg.tag))) return { error: ErrRepuRing('tag is not allowed') };
         return signerResponse(msg.senderAddress, msg.targetAddress);
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    CheckMessageEndorseContribution(msg: any): any {
+        if (!isAddress(msg.senderAddress)) return { error: ErrInvalidAddress() };
+        if (!clean(msg.contributionId)) return { error: ErrRepuRing('contribution_id must not be empty') };
+        if (!validTags.has(clean(msg.tag))) return { error: ErrRepuRing('tag is not allowed') };
+        return signerResponse(msg.senderAddress);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -139,8 +164,12 @@ export class ContractAsync {
                 return contract.CheckMessageCreateCircle(msg);
             case 'MessageJoinCircle':
                 return contract.CheckMessageJoinCircle(msg);
+            case 'MessageCreateContribution':
+                return contract.CheckMessageCreateContribution(msg);
             case 'MessageEndorseUser':
                 return contract.CheckMessageEndorseUser(msg);
+            case 'MessageEndorseContribution':
+                return contract.CheckMessageEndorseContribution(msg);
             case 'MessageSlashEndorsement':
                 return contract.CheckMessageSlashEndorsement(msg);
             case 'MessageClaimRole':
@@ -164,8 +193,12 @@ export class ContractAsync {
                 return ContractAsync.DeliverMessageCreateCircle(contract, msg);
             case 'MessageJoinCircle':
                 return ContractAsync.DeliverMessageJoinCircle(contract, msg);
+            case 'MessageCreateContribution':
+                return ContractAsync.DeliverMessageCreateContribution(contract, msg);
             case 'MessageEndorseUser':
                 return ContractAsync.DeliverMessageEndorseUser(contract, msg);
+            case 'MessageEndorseContribution':
+                return ContractAsync.DeliverMessageEndorseContribution(contract, msg);
             case 'MessageSlashEndorsement':
                 return ContractAsync.DeliverMessageSlashEndorsement(contract, msg);
             case 'MessageClaimRole':
@@ -260,6 +293,44 @@ export class ContractAsync {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    static async DeliverMessageCreateContribution(contract: Contract, msg: any): Promise<any> {
+        const sender = msg.senderAddress as Uint8Array;
+        const circleId = clean(msg.circleId);
+        const contributionId = clean(msg.contributionId);
+        const [reads, err] = await readMany(contract, [
+            [KeyForProfile(sender), types.Profile],
+            [KeyForCircle(circleId), types.Circle],
+            [KeyForMember(circleId, sender), null],
+            [KeyForContribution(contributionId), types.Contribution]
+        ]);
+        if (err) return { error: err };
+        const [profile, circle, member, contribution] = reads;
+        if (!profile[0]) return { error: ErrRepuRing('sender must create a profile first') };
+        if (!circle[0]) return { error: ErrRepuRing('circle does not exist') };
+        if (!member[1]) return { error: ErrRepuRing('sender must be a circle member') };
+        if (contribution[0]) return { error: ErrRepuRing('contribution_id already exists') };
+
+        const contributionBytes = types.Contribution.encode(
+            types.Contribution.create({
+                contributionId,
+                circleId,
+                authorAddress: sender,
+                title: clean(msg.title),
+                description: clean(msg.description),
+                proofUrl: clean(msg.proofUrl),
+                category: clean(msg.category),
+                endorsementCount: Long.ZERO,
+                slashed: false
+            })
+        ).finish();
+        return write(contract, [
+            { key: KeyForContribution(contributionId), value: contributionBytes },
+            { key: KeyForCircleContribution(circleId, contributionId), value: oneByte() },
+            { key: KeyForUserContribution(sender, contributionId), value: oneByte() }
+        ]);
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     static async DeliverMessageEndorseUser(contract: Contract, msg: any): Promise<any> {
         const sender = msg.senderAddress as Uint8Array;
         const target = msg.targetAddress as Uint8Array;
@@ -311,6 +382,69 @@ export class ContractAsync {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    static async DeliverMessageEndorseContribution(contract: Contract, msg: any): Promise<any> {
+        const sender = msg.senderAddress as Uint8Array;
+        const contributionId = clean(msg.contributionId);
+        const endorsementId = makeContributionEndorsementId(contributionId, sender);
+        const [contributionResult, err1] = await readOne(
+            contract,
+            KeyForContribution(contributionId),
+            types.Contribution
+        );
+        if (err1) return { error: err1 };
+        const contribution = contributionResult as any | null;
+        if (!contribution) return { error: ErrRepuRing('contribution does not exist') };
+        if (contribution.slashed) return { error: ErrRepuRing('contribution is slashed') };
+        if (bytesEqual(sender, contribution.authorAddress)) {
+            return { error: ErrRepuRing('sender cannot endorse own contribution') };
+        }
+
+        const [reads, err2] = await readMany(contract, [
+            [KeyForProfile(sender), types.Profile],
+            [KeyForProfile(contribution.authorAddress), types.Profile],
+            [KeyForMember(contribution.circleId, sender), null],
+            [KeyForContributionEndorsement(contributionId, sender), null]
+        ]);
+        if (err2) return { error: err2 };
+        const [senderProfile, authorProfile, senderMember, previous] = reads;
+        if (!senderProfile[0]) return { error: ErrRepuRing('sender must create a profile first') };
+        const authorProfileData = authorProfile[0] as any | null;
+        if (!authorProfileData) return { error: ErrRepuRing('contribution author must have a profile') };
+        if (!senderMember[1]) return { error: ErrRepuRing('sender must be a circle member') };
+        if (previous[1]) return { error: ErrRepuRing('sender already endorsed this contribution') };
+
+        const reputation = toLong(authorProfileData.reputation).add(1);
+        const updatedProfile = types.Profile.encode(
+            types.Profile.create({ ...authorProfileData, reputation })
+        ).finish();
+        const endorsementCount = toLong(contribution.endorsementCount).add(1);
+        const updatedContribution = types.Contribution.encode(
+            types.Contribution.create({ ...contribution, endorsementCount })
+        ).finish();
+        const endorsement = types.Endorsement.encode(
+            types.Endorsement.create({
+                endorsementId,
+                circleId: contribution.circleId,
+                fromAddress: sender,
+                targetAddress: contribution.authorAddress,
+                tag: clean(msg.tag),
+                message: clean(msg.message),
+                slashed: false,
+                contributionId
+            })
+        ).finish();
+        return write(contract, [
+            { key: KeyForProfile(contribution.authorAddress), value: updatedProfile },
+            { key: KeyForContribution(contributionId), value: updatedContribution },
+            { key: KeyForEndorsement(endorsementId), value: endorsement },
+            { key: KeyForCircleEndorsement(contribution.circleId, endorsementId), value: oneByte() },
+            { key: KeyForUserEndorsement(contribution.authorAddress, endorsementId), value: oneByte() },
+            { key: KeyForContributionEndorsementIndex(contributionId, endorsementId), value: oneByte() },
+            { key: KeyForContributionEndorsement(contributionId, sender), value: Buffer.from(endorsementId) }
+        ]);
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     static async DeliverMessageSlashEndorsement(contract: Contract, msg: any): Promise<any> {
         const sender = msg.senderAddress as Uint8Array;
         const endorsementId = clean(msg.endorsementId);
@@ -324,14 +458,20 @@ export class ContractAsync {
         if (!endorsement) return { error: ErrRepuRing('endorsement does not exist') };
         if (endorsement.slashed) return { error: ErrRepuRing('endorsement already slashed') };
 
-        const [reads, err2] = await readMany(contract, [
+        const readEntries: [Uint8Array, any | null][] = [
             [KeyForCircle(endorsement.circleId), types.Circle],
             [KeyForProfile(endorsement.targetAddress), types.Profile]
-        ]);
+        ];
+        const contributionId = clean(endorsement.contributionId);
+        if (contributionId) {
+            readEntries.push([KeyForContribution(contributionId), types.Contribution]);
+        }
+        const [reads, err2] = await readMany(contract, readEntries);
         if (err2) return { error: err2 };
-        const [circleResult, profileResult] = reads;
+        const [circleResult, profileResult, contributionResult] = reads;
         const circle = circleResult[0] as any | null;
         const profile = profileResult[0] as any | null;
+        const contribution = contributionResult?.[0] as any | null;
         if (!circle) return { error: ErrRepuRing('circle does not exist') };
         if (!bytesEqual(circle.creatorAddress, sender)) {
             return { error: ErrRepuRing('only circle creator/admin can slash endorsement') };
@@ -351,10 +491,22 @@ export class ContractAsync {
         const updatedProfile = types.Profile.encode(
             types.Profile.create({ ...profile, reputation })
         ).finish();
-        return write(contract, [
+        const sets = [
             { key: KeyForEndorsement(endorsementId), value: updatedEndorsement },
             { key: KeyForProfile(endorsement.targetAddress), value: updatedProfile }
-        ]);
+        ];
+        if (contributionId && contribution) {
+            const endorsementCount = toLong(contribution.endorsementCount).equals(Long.ZERO)
+                ? Long.ZERO
+                : toLong(contribution.endorsementCount).subtract(1);
+            sets.push({
+                key: KeyForContribution(contributionId),
+                value: types.Contribution.encode(
+                    types.Contribution.create({ ...contribution, endorsementCount })
+                ).finish()
+            });
+        }
+        return write(contract, sets);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -392,6 +544,11 @@ const endorsementPrefix = Buffer.from([85]);
 const circleEndorsementPrefix = Buffer.from([86]);
 const userEndorsementPrefix = Buffer.from([87]);
 const pairEndorsementPrefix = Buffer.from([88]);
+const contributionPrefix = Buffer.from([89]);
+const circleContributionPrefix = Buffer.from([90]);
+const userContributionPrefix = Buffer.from([91]);
+const contributionEndorsementPrefix = Buffer.from([92]);
+const contributionEndorsementIndexPrefix = Buffer.from([93]);
 
 export function KeyForAccount(addr: Uint8Array): Uint8Array {
     return JoinLenPrefix(accountPrefix, Buffer.from(addr));
@@ -450,6 +607,26 @@ export function KeyForPairEndorsement(
     );
 }
 
+export function KeyForContribution(contributionId: string): Uint8Array {
+    return JoinLenPrefix(contributionPrefix, Buffer.from(contributionId));
+}
+
+export function KeyForCircleContribution(circleId: string, contributionId: string): Uint8Array {
+    return JoinLenPrefix(circleContributionPrefix, Buffer.from(circleId), Buffer.from(contributionId));
+}
+
+export function KeyForUserContribution(addr: Uint8Array, contributionId: string): Uint8Array {
+    return JoinLenPrefix(userContributionPrefix, Buffer.from(addr), Buffer.from(contributionId));
+}
+
+export function KeyForContributionEndorsement(contributionId: string, sender: Uint8Array): Uint8Array {
+    return JoinLenPrefix(contributionEndorsementPrefix, Buffer.from(contributionId), Buffer.from(sender));
+}
+
+export function KeyForContributionEndorsementIndex(contributionId: string, endorsementId: string): Uint8Array {
+    return JoinLenPrefix(contributionEndorsementIndexPrefix, Buffer.from(contributionId), Buffer.from(endorsementId));
+}
+
 function ErrRepuRing(message: string): IPluginError {
     return NewError(100, moduleName, message);
 }
@@ -488,6 +665,17 @@ function makeEndorsementId(circleId: string, sender: Uint8Array, target: Uint8Ar
         .update(Buffer.from(sender))
         .update(Buffer.from([0]))
         .update(Buffer.from(target))
+        .digest('hex')
+        .slice(0, 32);
+}
+
+function makeContributionEndorsementId(contributionId: string, sender: Uint8Array): string {
+    return createHash('sha256')
+        .update('contribution')
+        .update(Buffer.from([0]))
+        .update(contributionId)
+        .update(Buffer.from([0]))
+        .update(Buffer.from(sender))
         .digest('hex')
         .slice(0, 32);
 }

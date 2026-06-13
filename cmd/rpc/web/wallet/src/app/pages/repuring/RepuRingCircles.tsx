@@ -24,9 +24,9 @@ export default function RepuRingCircles(): JSX.Element {
   return (
     <RepuRingPage>
       <PageHeader
-        eyebrow="Community"
-        title="Create and join onchain trust circles."
-        copy="Create your profile, create a social circle, then add members through real CreateCircleTx and JoinCircleTx transactions."
+        eyebrow="Project community"
+        title="Create and join Web3 project circles."
+        copy="A project/community creates a circle, members join it, then contribution proofs and endorsements build reputation through real CreateCircleTx and JoinCircleTx transactions."
         actions={<Button variant="secondary" onClick={refreshState}>Refresh</Button>}
       />
 
@@ -39,7 +39,7 @@ export default function RepuRingCircles(): JSX.Element {
               </div>
               <Input label="Signing key password" type="password" value={password} onChange={setPassword} placeholder="Used only for keystore signing" />
               <Input label="Username" value={profileForm.username} onChange={(username) => setProfileForm({ ...profileForm, username })} placeholder="alice_builder" />
-              <Input label="Bio" value={profileForm.bio} onChange={(bio) => setProfileForm({ ...profileForm, bio })} placeholder="Canopy community builder" multiline />
+              <Input label="Bio" value={profileForm.bio} onChange={(bio) => setProfileForm({ ...profileForm, bio })} placeholder="Pharos ecosystem contributor" multiline />
               <Input label="Avatar URL" value={profileForm.avatarUrl} onChange={(avatarUrl) => setProfileForm({ ...profileForm, avatarUrl })} placeholder="https://..." />
               <Button onClick={() => submit('createProfile', profileForm)}>Submit CreateProfileTx</Button>
             </Panel>
@@ -47,7 +47,7 @@ export default function RepuRingCircles(): JSX.Element {
 
           <Panel title="Circle Controls" eyebrow="CreateCircleTx + JoinCircleTx">
             <Input label="Signing key password" type="password" value={password} onChange={setPassword} placeholder="Required for BLS signing" />
-            <Input label="Circle ID" value={circleId} onChange={setCircleId} placeholder="canopy-builders" />
+            <Input label="Circle ID" value={circleId} onChange={setCircleId} placeholder="pharos-builders" />
             <Input label="Name" value={circleForm.name} onChange={(name) => setCircleForm({ ...circleForm, name })} />
             <Input label="Description" value={circleForm.description} onChange={(description) => setCircleForm({ ...circleForm, description })} multiline />
             <div className="flex flex-wrap gap-3">

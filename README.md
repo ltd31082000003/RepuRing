@@ -1,19 +1,20 @@
 # RepuRing
 
-RepuRing is an onchain Social-Fi app where users create social circles, endorse each other, earn reputation points, and unlock community roles based on verifiable onchain trust.
+RepuRing is an onchain Social-Fi contribution network for Web3 project communities.
 
 ## What It Does
 
-RepuRing extends the Canopy template with custom plugin transactions for an onchain reputation graph:
+RepuRing extends the Canopy template with custom plugin transactions for an onchain contribution graph:
 
 - create a social profile,
-- create and join circles,
-- endorse another circle member,
-- increase reputation from endorsements,
+- create and join Web3 project community circles,
+- post contribution proofs inside a circle,
+- endorse useful contribution proofs,
+- increase reputation from endorsed work,
 - slash invalid endorsements as the circle creator/admin,
 - claim a role from the current reputation score.
 
-It is Social-Fi because social identity, endorsements, reputation, and roles are signed transactions committed to Canopy plugin state rather than frontend-only metadata.
+It is Social-Fi because project identity, contribution proofs, endorsements, reputation, and roles are signed transactions committed to Canopy plugin state rather than frontend-only metadata.
 
 ## Implementation
 
@@ -32,11 +33,15 @@ This follows `plugin/typescript/AGENTS.md`: protobuf messages are registered in 
 | `createProfile` | Stores profile under signer address and initializes reputation to `0`. |
 | `createCircle` | Stores a unique circle, sets creator/admin, and adds creator as first member. |
 | `joinCircle` | Adds signer to an existing circle member list. |
-| `endorseUser` | Stores a deterministic endorsement and adds `+1` reputation to target. |
-| `slashEndorsement` | Marks an endorsement slashed and subtracts `2` reputation, floored at `0`. |
+| `createContribution` | Stores a contribution proof, indexes it by circle and author, and initializes endorsement count to `0`. |
+| `endorseContribution` | Stores one endorsement per sender/contribution, increments contribution endorsement count, and adds `+1` reputation to the author. |
+| `endorseUser` | Backward-compatible member endorsement that adds `+1` reputation to a target member. |
+| `slashEndorsement` | Marks an endorsement slashed, subtracts `2` reputation floored at `0`, and decrements linked contribution endorsement count when applicable. |
 | `claimRole` | Stores/updates the signer role for a circle. |
 
 Allowed tags: `builder`, `helper`, `creator`, `leader`, `trusted`.
+
+Contribution categories: `builder`, `helper`, `creator`, `researcher`, `tester`, `educator`.
 
 Role thresholds:
 
@@ -108,22 +113,24 @@ The RepuRing UI is a route-based Social-Fi dApp:
 | --- | --- |
 | `/repuring` | Overview dashboard, product story, RPC status, current profile/reputation/role. |
 | `/repuring/circles` | Create profile, create circle, join circle, and inspect members. |
-| `/repuring/endorse` | Submit `EndorseUserTx` and review recent endorsements. |
-| `/repuring/leaderboard` | View circle reputation rankings and role badges. |
+| `/repuring/contributions` | Post `CreateContributionTx` proof-of-work and browse the project contribution feed. |
+| `/repuring/endorse` | Select a contribution and submit `EndorseContributionTx`; `EndorseUserTx` remains available for compatibility. |
+| `/repuring/leaderboard` | View contribution reputation rankings and role badges. |
 | `/repuring/admin` | Submit `ClaimRoleTx` and `SlashEndorsementTx`. |
 | `/key-management` | Create/select local signing keys from the Canopy template wallet. |
 
-The RepuRing pages sign custom plugin transactions in the browser, submit them to `http://localhost:50002/v1/tx`, and refresh profile, circle, role, endorsement, and leaderboard state from the RepuRing query routes. They do not use a mocked transaction path for the main flow.
+The RepuRing pages sign custom plugin transactions in the browser, submit them to `http://localhost:50002/v1/tx`, and refresh profile, circle, contribution, endorsement, role, and leaderboard state from the RepuRing query routes. They do not use a mocked transaction path for the main flow.
 
 ## Demo UI Flow
 
 1. Open `http://127.0.0.1:5173/repuring`.
 2. Create a signing key on `/key-management` if needed.
 3. Create a profile on `/repuring/circles`.
-4. Create or join a circle on `/repuring/circles`.
-5. Endorse another member on `/repuring/endorse`.
-6. Check rankings on `/repuring/leaderboard`.
-7. Claim a role or slash an endorsement on `/repuring/admin`.
+4. Create or join a project community circle on `/repuring/circles`.
+5. Post contribution proof on `/repuring/contributions`.
+6. Endorse that contribution on `/repuring/endorse`.
+7. Check rankings on `/repuring/leaderboard`.
+8. Claim a role or slash an invalid endorsement on `/repuring/admin`.
 
 ## Demo Script
 
@@ -138,14 +145,15 @@ The script:
 1. Creates Alice and Bob keys through admin RPC.
 2. Submits `createProfile` for Alice.
 3. Submits `createProfile` for Bob.
-4. Alice creates a `Canopy Builders` circle.
+4. Alice creates a `Pharos Builders` circle.
 5. Bob joins.
-6. Alice endorses Bob with tag `builder`.
-7. Queries Bob reputation and shows it increased.
-8. Bob claims a role.
-9. Queries the leaderboard.
-10. Alice slashes the endorsement.
-11. Queries Bob reputation again and shows it decreased.
+6. Bob posts a contribution proof: `Wrote Pharos testnet guide`.
+7. Alice endorses Bob's contribution with tag `builder`.
+8. Queries Bob reputation and shows it increased.
+9. Bob claims a role.
+10. Queries the leaderboard.
+11. Alice slashes the endorsement.
+12. Queries Bob reputation again and shows it decreased.
 
 Expected reputation transition for Bob in plugin state: `0 -> 1 -> 0`.
 
@@ -158,21 +166,26 @@ The contract stores deterministic keys for:
 - circle by `circle_id`,
 - membership by `circle_id + address`,
 - role by `circle_id + address`,
+- contribution by `contribution_id`,
+- contribution indexes by `circle_id` and author address,
 - endorsement by deterministic `endorsement_id`,
-- circle/user endorsement indexes.
+- circle/user/contribution endorsement indexes.
 
 The requested logical queries are exposed as HTTP POST routes on port `50002`:
 
 | Logical query | RPC route | Body |
 | --- | --- | --- |
 | `getProfile(address)` | `/v1/query/repuring/profile` | `{ "address": "<hex>" }` |
-| `getCircle(circle_id)` | `/v1/query/repuring/circle` | `{ "circleId": "canopy-builders" }` |
-| `getCircleMembers(circle_id)` | `/v1/query/repuring/circle-members` | `{ "circleId": "canopy-builders" }` |
+| `getCircle(circle_id)` | `/v1/query/repuring/circle` | `{ "circleId": "pharos-builders" }` |
+| `getCircleMembers(circle_id)` | `/v1/query/repuring/circle-members` | `{ "circleId": "pharos-builders" }` |
 | `getReputation(address)` | `/v1/query/repuring/reputation` | `{ "address": "<hex>" }` |
-| `getRole(circle_id, address)` | `/v1/query/repuring/role` | `{ "circleId": "canopy-builders", "address": "<hex>" }` |
+| `getRole(circle_id, address)` | `/v1/query/repuring/role` | `{ "circleId": "pharos-builders", "address": "<hex>" }` |
+| `getContribution(contribution_id)` | `/v1/query/repuring/contribution` | `{ "contributionId": "pharos-guide" }` |
+| `getContributionsInCircle(circle_id)` | `/v1/query/repuring/contributions-in-circle` | `{ "circleId": "pharos-builders" }` |
+| `getContributionsForUser(address)` | `/v1/query/repuring/contributions-for-user` | `{ "address": "<hex>" }` |
 | `getEndorsementsForUser(address)` | `/v1/query/repuring/endorsements-for-user` | `{ "address": "<hex>" }` |
-| `getEndorsementsInCircle(circle_id)` | `/v1/query/repuring/endorsements-in-circle` | `{ "circleId": "canopy-builders" }` |
-| `getLeaderboard(circle_id)` | `/v1/query/repuring/leaderboard` | `{ "circleId": "canopy-builders" }` |
+| `getEndorsementsInCircle(circle_id)` | `/v1/query/repuring/endorsements-in-circle` | `{ "circleId": "pharos-builders" }` |
+| `getLeaderboard(circle_id)` | `/v1/query/repuring/leaderboard` | `{ "circleId": "pharos-builders" }` |
 
 Each query also accepts optional `{ "height": 123 }` to read historical state through the Canopy time-machine path.
 
@@ -183,10 +196,11 @@ Each query also accepts optional `{ "height": 123 }` to read historical state th
 3. Show the overview at `/repuring`.
 4. Create/select wallet accounts in `/key-management`.
 5. Submit profile and circle transactions on `/repuring/circles`.
-6. Submit an endorsement on `/repuring/endorse`.
-7. Show returned transaction hashes from `/v1/tx`.
-8. Show reputation, role, and rankings on `/repuring/leaderboard`.
-9. Run the admin slash step on `/repuring/admin` and show Bob reputation decrease through `/v1/query/repuring/reputation`.
+6. Submit a contribution proof on `/repuring/contributions`.
+7. Submit a contribution endorsement on `/repuring/endorse`.
+8. Show returned transaction hashes from `/v1/tx`.
+9. Show reputation, role, and rankings on `/repuring/leaderboard`.
+10. Run the admin slash step on `/repuring/admin` and show Bob reputation decrease through `/v1/query/repuring/reputation`.
 
 ## Verification Checklist
 
@@ -202,7 +216,8 @@ Manual route flow:
 - `/` redirects to `/repuring`.
 - `/repuring` shows the RepuRing overview.
 - `/repuring/circles` opens profile/circle membership UI.
-- `/repuring/endorse` opens endorsement UI.
+- `/repuring/contributions` opens the project contribution board.
+- `/repuring/endorse` opens contribution endorsement UI.
 - `/repuring/leaderboard` opens the leaderboard UI.
 - `/repuring/admin` opens role claim and moderation UI.
 - `/key-management` remains available for local signing keys.
@@ -211,5 +226,5 @@ Live flow checklist:
 
 - Start local Canopy RPC on ports `50002` and `50003`.
 - Create/select an account and enter the signing password.
-- Submit `CreateProfileTx`, `CreateCircleTx`, `JoinCircleTx`, `EndorseUserTx`, `ClaimRoleTx`, and `SlashEndorsementTx`.
+- Submit `CreateProfileTx`, `CreateCircleTx`, `JoinCircleTx`, `CreateContributionTx`, `EndorseContributionTx`, `ClaimRoleTx`, and `SlashEndorsementTx`.
 - Confirm leaderboard and reputation changes come from RepuRing RPC query state.

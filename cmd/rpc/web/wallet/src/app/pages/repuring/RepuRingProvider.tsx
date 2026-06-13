@@ -3,6 +3,7 @@ import { bls12_381 } from '@noble/curves/bls12-381.js';
 import { useSelectedAccount } from '@/app/providers/SelectedAccountProvider';
 import {
   CircleView,
+  ContributionView,
   EndorsementView,
   LeaderboardRow,
   ProfileView,
@@ -21,7 +22,9 @@ const txMeta: Record<TxKind, { typeUrl: string; message: string }> = {
   createProfile: { typeUrl: 'type.googleapis.com/types.MessageCreateProfile', message: 'MessageCreateProfile' },
   createCircle: { typeUrl: 'type.googleapis.com/types.MessageCreateCircle', message: 'MessageCreateCircle' },
   joinCircle: { typeUrl: 'type.googleapis.com/types.MessageJoinCircle', message: 'MessageJoinCircle' },
+  createContribution: { typeUrl: 'type.googleapis.com/types.MessageCreateContribution', message: 'MessageCreateContribution' },
   endorseUser: { typeUrl: 'type.googleapis.com/types.MessageEndorseUser', message: 'MessageEndorseUser' },
+  endorseContribution: { typeUrl: 'type.googleapis.com/types.MessageEndorseContribution', message: 'MessageEndorseContribution' },
   slashEndorsement: { typeUrl: 'type.googleapis.com/types.MessageSlashEndorsement', message: 'MessageSlashEndorsement' },
   claimRole: { typeUrl: 'type.googleapis.com/types.MessageClaimRole', message: 'MessageClaimRole' },
 };
@@ -29,18 +32,27 @@ const txMeta: Record<TxKind, { typeUrl: string; message: string }> = {
 export function RepuRingProvider({ children }: { children: React.ReactNode }): JSX.Element {
   const { selectedAccount } = useSelectedAccount();
   const [password, setPassword] = React.useState('');
-  const [circleId, setCircleId] = React.useState('canopy-builders');
+  const [circleId, setCircleId] = React.useState('pharos-builders');
   const [targetAddress, setTargetAddress] = React.useState('');
   const [endorsementId, setEndorsementId] = React.useState('');
+  const [selectedContributionId, setSelectedContributionId] = React.useState('');
   const [status, setStatus] = React.useState('Start local Canopy RPC on 50002 / 50003, then refresh state.');
   const [profileForm, setProfileForm] = React.useState({ username: '', bio: '', avatarUrl: '' });
-  const [circleForm, setCircleForm] = React.useState({ name: 'Canopy Builders', description: 'Builders and helpers in the Canopy ecosystem' });
-  const [endorse, setEndorse] = React.useState({ tag: 'builder', message: 'Reliable builder in this circle' });
+  const [circleForm, setCircleForm] = React.useState({ name: 'Pharos Builders', description: 'Community for contributors helping the Pharos ecosystem.' });
+  const [contributionForm, setContributionForm] = React.useState({
+    contributionId: 'pharos-guide',
+    title: 'Wrote Pharos testnet guide',
+    description: 'Created a guide to help new users test the Pharos ecosystem.',
+    proofUrl: 'https://example.com/pharos-guide',
+    category: 'educator',
+  });
+  const [endorse, setEndorse] = React.useState({ tag: 'builder', message: 'Useful contribution for this project community.' });
   const [slashReason, setSlashReason] = React.useState('invalid endorsement');
   const [lastTx, setLastTx] = React.useState('');
   const [profile, setProfile] = React.useState<ProfileView | null>(null);
   const [role, setRole] = React.useState<RoleView | null>(null);
   const [circle, setCircle] = React.useState<CircleView | null>(null);
+  const [contributions, setContributions] = React.useState<ContributionView[]>([]);
   const [endorsements, setEndorsements] = React.useState<EndorsementView[]>([]);
   const [leaderboard, setLeaderboard] = React.useState<LeaderboardRow[]>([]);
 
@@ -66,10 +78,14 @@ export function RepuRingProvider({ children }: { children: React.ReactNode }): J
       const inCircle = circleId.trim()
         ? await queryMaybe<EndorsementView[]>('/v1/query/repuring/endorsements-in-circle', { circleId })
         : [];
+      const nextContributions = circleId.trim()
+        ? await queryMaybe<ContributionView[]>('/v1/query/repuring/contributions-in-circle', { circleId })
+        : [];
 
       setProfile(nextProfile);
       setRole(nextRole);
       setCircle(nextCircle);
+      setContributions(nextContributions || []);
       setLeaderboard(nextLeaderboard || []);
       setEndorsements(mergeEndorsements(byUser || [], inCircle || []));
       setStatus(`State refreshed from ${QUERY_RPC}`);
@@ -81,6 +97,12 @@ export function RepuRingProvider({ children }: { children: React.ReactNode }): J
   React.useEffect(() => {
     void refreshState();
   }, [refreshState]);
+
+  React.useEffect(() => {
+    if (contributions.length > 0 && !contributions.some((item) => item.contributionId === selectedContributionId)) {
+      setSelectedContributionId(contributions[0].contributionId);
+    }
+  }, [contributions, selectedContributionId]);
 
   async function submit(kind: TxKind, fields: Record<string, unknown>) {
     validateSubmit(kind, fields, currentAddress, password);
@@ -131,10 +153,14 @@ export function RepuRingProvider({ children }: { children: React.ReactNode }): J
         setTargetAddress,
         endorsementId,
         setEndorsementId,
+        selectedContributionId,
+        setSelectedContributionId,
         profileForm,
         setProfileForm,
         circleForm,
         setCircleForm,
+        contributionForm,
+        setContributionForm,
         endorse,
         setEndorse,
         slashReason,
@@ -144,6 +170,7 @@ export function RepuRingProvider({ children }: { children: React.ReactNode }): J
         profile,
         role,
         circle,
+        contributions,
         endorsements,
         leaderboard,
         refreshState,
@@ -162,10 +189,17 @@ function validateSubmit(kind: TxKind, fields: Record<string, unknown>, currentAd
   if (kind === 'createCircle' && !String(fields.circleId || '').trim()) throw new Error('Circle ID is required.');
   if (kind === 'createCircle' && !String(fields.name || '').trim()) throw new Error('Circle name is required.');
   if ((kind === 'joinCircle' || kind === 'claimRole') && !String(fields.circleId || '').trim()) throw new Error('Circle ID is required.');
+  if (kind === 'createContribution') {
+    if (!String(fields.circleId || '').trim()) throw new Error('Circle ID is required.');
+    if (!String(fields.contributionId || '').trim()) throw new Error('Contribution ID is required.');
+    if (!String(fields.title || '').trim()) throw new Error('Contribution title is required.');
+    if (!String(fields.category || '').trim()) throw new Error('Contribution category is required.');
+  }
   if (kind === 'endorseUser') {
     if (!String(fields.circleId || '').trim()) throw new Error('Circle ID is required.');
     if (!String(fields.targetAddress || '').trim()) throw new Error('Target address is required.');
   }
+  if (kind === 'endorseContribution' && !String(fields.contributionId || '').trim()) throw new Error('Contribution ID is required.');
   if (kind === 'slashEndorsement' && !String(fields.endorsementId || '').trim()) throw new Error('Endorsement ID is required.');
 }
 
@@ -215,8 +249,12 @@ function encodeMessage(kind: TxKind, v: Record<string, unknown>): Uint8Array {
       return concat([fieldBytes(1, sender), fieldString(2, v.circleId), fieldString(3, v.name), fieldString(4, v.description)]);
     case 'joinCircle':
       return concat([fieldBytes(1, sender), fieldString(2, v.circleId)]);
+    case 'createContribution':
+      return concat([fieldBytes(1, sender), fieldString(2, v.contributionId), fieldString(3, v.circleId), fieldString(4, v.title), fieldString(5, v.description), fieldString(6, v.proofUrl), fieldString(7, v.category)]);
     case 'endorseUser':
       return concat([fieldBytes(1, sender), fieldString(2, v.circleId), fieldBytes(3, hexToBytes(String(v.targetAddress))), fieldString(4, v.tag), fieldString(5, v.message)]);
+    case 'endorseContribution':
+      return concat([fieldBytes(1, sender), fieldString(2, v.contributionId), fieldString(3, v.tag), fieldString(4, v.message)]);
     case 'slashEndorsement':
       return concat([fieldBytes(1, sender), fieldString(2, v.endorsementId), fieldString(3, v.reason)]);
     case 'claimRole':

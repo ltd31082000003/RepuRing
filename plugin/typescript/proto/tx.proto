@@ -43,6 +43,23 @@ message MessageEndorseUser {
   string message = 5;
 }
 
+message MessageCreateContribution {
+  bytes sender_address = 1; // @gotags: json:"senderAddress"
+  string contribution_id = 2; // @gotags: json:"contributionId"
+  string circle_id = 3; // @gotags: json:"circleId"
+  string title = 4;
+  string description = 5;
+  string proof_url = 6; // @gotags: json:"proofUrl"
+  string category = 7;
+}
+
+message MessageEndorseContribution {
+  bytes sender_address = 1; // @gotags: json:"senderAddress"
+  string contribution_id = 2; // @gotags: json:"contributionId"
+  string tag = 3;
+  string message = 4;
+}
+
 message MessageSlashEndorsement {
   bytes sender_address = 1; // @gotags: json:"senderAddress"
   string endorsement_id = 2; // @gotags: json:"endorsementId"
@@ -79,6 +96,19 @@ message Endorsement {
   string message = 6;
   bool slashed = 7;
   string slash_reason = 8; // @gotags: json:"slashReason"
+  string contribution_id = 9; // @gotags: json:"contributionId"
+}
+
+message Contribution {
+  string contribution_id = 1; // @gotags: json:"contributionId"
+  string circle_id = 2; // @gotags: json:"circleId"
+  bytes author_address = 3; // @gotags: json:"authorAddress"
+  string title = 4;
+  string description = 5;
+  string proof_url = 6; // @gotags: json:"proofUrl"
+  string category = 7;
+  uint64 endorsement_count = 8; // @gotags: json:"endorsementCount"
+  bool slashed = 9;
 }
 
 message Role {

@@ -3724,6 +3724,254 @@ export namespace types {
         public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
+    /** Properties of a MessageCreateContribution. */
+    interface IMessageCreateContribution {
+
+        /** MessageCreateContribution senderAddress */
+        senderAddress?: (Uint8Array|null);
+
+        /** MessageCreateContribution contributionId */
+        contributionId?: (string|null);
+
+        /** MessageCreateContribution circleId */
+        circleId?: (string|null);
+
+        /** MessageCreateContribution title */
+        title?: (string|null);
+
+        /** MessageCreateContribution description */
+        description?: (string|null);
+
+        /** MessageCreateContribution proofUrl */
+        proofUrl?: (string|null);
+
+        /** MessageCreateContribution category */
+        category?: (string|null);
+    }
+
+    /** Represents a MessageCreateContribution. */
+    class MessageCreateContribution implements IMessageCreateContribution {
+
+        /**
+         * Constructs a new MessageCreateContribution.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: types.IMessageCreateContribution);
+
+        /** MessageCreateContribution senderAddress. */
+        public senderAddress: Uint8Array;
+
+        /** MessageCreateContribution contributionId. */
+        public contributionId: string;
+
+        /** MessageCreateContribution circleId. */
+        public circleId: string;
+
+        /** MessageCreateContribution title. */
+        public title: string;
+
+        /** MessageCreateContribution description. */
+        public description: string;
+
+        /** MessageCreateContribution proofUrl. */
+        public proofUrl: string;
+
+        /** MessageCreateContribution category. */
+        public category: string;
+
+        /**
+         * Creates a new MessageCreateContribution instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns MessageCreateContribution instance
+         */
+        public static create(properties?: types.IMessageCreateContribution): types.MessageCreateContribution;
+
+        /**
+         * Encodes the specified MessageCreateContribution message. Does not implicitly {@link types.MessageCreateContribution.verify|verify} messages.
+         * @param message MessageCreateContribution message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: types.IMessageCreateContribution, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified MessageCreateContribution message, length delimited. Does not implicitly {@link types.MessageCreateContribution.verify|verify} messages.
+         * @param message MessageCreateContribution message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: types.IMessageCreateContribution, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a MessageCreateContribution message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns MessageCreateContribution
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): types.MessageCreateContribution;
+
+        /**
+         * Decodes a MessageCreateContribution message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns MessageCreateContribution
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): types.MessageCreateContribution;
+
+        /**
+         * Verifies a MessageCreateContribution message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a MessageCreateContribution message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns MessageCreateContribution
+         */
+        public static fromObject(object: { [k: string]: any }): types.MessageCreateContribution;
+
+        /**
+         * Creates a plain object from a MessageCreateContribution message. Also converts values to other types if specified.
+         * @param message MessageCreateContribution
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: types.MessageCreateContribution, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this MessageCreateContribution to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for MessageCreateContribution
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a MessageEndorseContribution. */
+    interface IMessageEndorseContribution {
+
+        /** MessageEndorseContribution senderAddress */
+        senderAddress?: (Uint8Array|null);
+
+        /** MessageEndorseContribution contributionId */
+        contributionId?: (string|null);
+
+        /** MessageEndorseContribution tag */
+        tag?: (string|null);
+
+        /** MessageEndorseContribution message */
+        message?: (string|null);
+    }
+
+    /** Represents a MessageEndorseContribution. */
+    class MessageEndorseContribution implements IMessageEndorseContribution {
+
+        /**
+         * Constructs a new MessageEndorseContribution.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: types.IMessageEndorseContribution);
+
+        /** MessageEndorseContribution senderAddress. */
+        public senderAddress: Uint8Array;
+
+        /** MessageEndorseContribution contributionId. */
+        public contributionId: string;
+
+        /** MessageEndorseContribution tag. */
+        public tag: string;
+
+        /** MessageEndorseContribution message. */
+        public message: string;
+
+        /**
+         * Creates a new MessageEndorseContribution instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns MessageEndorseContribution instance
+         */
+        public static create(properties?: types.IMessageEndorseContribution): types.MessageEndorseContribution;
+
+        /**
+         * Encodes the specified MessageEndorseContribution message. Does not implicitly {@link types.MessageEndorseContribution.verify|verify} messages.
+         * @param message MessageEndorseContribution message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: types.IMessageEndorseContribution, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified MessageEndorseContribution message, length delimited. Does not implicitly {@link types.MessageEndorseContribution.verify|verify} messages.
+         * @param message MessageEndorseContribution message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: types.IMessageEndorseContribution, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a MessageEndorseContribution message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns MessageEndorseContribution
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): types.MessageEndorseContribution;
+
+        /**
+         * Decodes a MessageEndorseContribution message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns MessageEndorseContribution
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): types.MessageEndorseContribution;
+
+        /**
+         * Verifies a MessageEndorseContribution message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a MessageEndorseContribution message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns MessageEndorseContribution
+         */
+        public static fromObject(object: { [k: string]: any }): types.MessageEndorseContribution;
+
+        /**
+         * Creates a plain object from a MessageEndorseContribution message. Also converts values to other types if specified.
+         * @param message MessageEndorseContribution
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: types.MessageEndorseContribution, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this MessageEndorseContribution to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for MessageEndorseContribution
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
     /** Properties of a MessageSlashEndorsement. */
     interface IMessageSlashEndorsement {
 
@@ -4204,6 +4452,9 @@ export namespace types {
 
         /** Endorsement slashReason */
         slashReason?: (string|null);
+
+        /** Endorsement contributionId */
+        contributionId?: (string|null);
     }
 
     /** Represents an Endorsement. */
@@ -4238,6 +4489,9 @@ export namespace types {
 
         /** Endorsement slashReason. */
         public slashReason: string;
+
+        /** Endorsement contributionId. */
+        public contributionId: string;
 
         /**
          * Creates a new Endorsement instance using the specified properties.
@@ -4311,6 +4565,151 @@ export namespace types {
 
         /**
          * Gets the default type url for Endorsement
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a Contribution. */
+    interface IContribution {
+
+        /** Contribution contributionId */
+        contributionId?: (string|null);
+
+        /** Contribution circleId */
+        circleId?: (string|null);
+
+        /** Contribution authorAddress */
+        authorAddress?: (Uint8Array|null);
+
+        /** Contribution title */
+        title?: (string|null);
+
+        /** Contribution description */
+        description?: (string|null);
+
+        /** Contribution proofUrl */
+        proofUrl?: (string|null);
+
+        /** Contribution category */
+        category?: (string|null);
+
+        /** Contribution endorsementCount */
+        endorsementCount?: (number|Long|null);
+
+        /** Contribution slashed */
+        slashed?: (boolean|null);
+    }
+
+    /** Represents a Contribution. */
+    class Contribution implements IContribution {
+
+        /**
+         * Constructs a new Contribution.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: types.IContribution);
+
+        /** Contribution contributionId. */
+        public contributionId: string;
+
+        /** Contribution circleId. */
+        public circleId: string;
+
+        /** Contribution authorAddress. */
+        public authorAddress: Uint8Array;
+
+        /** Contribution title. */
+        public title: string;
+
+        /** Contribution description. */
+        public description: string;
+
+        /** Contribution proofUrl. */
+        public proofUrl: string;
+
+        /** Contribution category. */
+        public category: string;
+
+        /** Contribution endorsementCount. */
+        public endorsementCount: (number|Long);
+
+        /** Contribution slashed. */
+        public slashed: boolean;
+
+        /**
+         * Creates a new Contribution instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns Contribution instance
+         */
+        public static create(properties?: types.IContribution): types.Contribution;
+
+        /**
+         * Encodes the specified Contribution message. Does not implicitly {@link types.Contribution.verify|verify} messages.
+         * @param message Contribution message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: types.IContribution, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified Contribution message, length delimited. Does not implicitly {@link types.Contribution.verify|verify} messages.
+         * @param message Contribution message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: types.IContribution, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a Contribution message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns Contribution
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): types.Contribution;
+
+        /**
+         * Decodes a Contribution message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns Contribution
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): types.Contribution;
+
+        /**
+         * Verifies a Contribution message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a Contribution message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns Contribution
+         */
+        public static fromObject(object: { [k: string]: any }): types.Contribution;
+
+        /**
+         * Creates a plain object from a Contribution message. Also converts values to other types if specified.
+         * @param message Contribution
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: types.Contribution, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this Contribution to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for Contribution
          * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
          * @returns The default type url
          */

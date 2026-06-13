@@ -72,6 +72,9 @@ const (
 	RepuRingUserEndorseRoutePath   = "/v1/query/repuring/endorsements-for-user"
 	RepuRingCircleEndorseRoutePath = "/v1/query/repuring/endorsements-in-circle"
 	RepuRingLeaderboardRoutePath   = "/v1/query/repuring/leaderboard"
+	RepuRingContributionRoutePath  = "/v1/query/repuring/contribution"
+	RepuRingCircleContribRoutePath = "/v1/query/repuring/contributions-in-circle"
+	RepuRingUserContribRoutePath   = "/v1/query/repuring/contributions-for-user"
 	// eth
 	EthereumRoutePath = "/v1/eth"
 	// admin
@@ -174,6 +177,9 @@ const (
 	RepuRingUserEndorseRouteName   = "repuring-endorsements-for-user"
 	RepuRingCircleEndorseRouteName = "repuring-endorsements-in-circle"
 	RepuRingLeaderboardRouteName   = "repuring-leaderboard"
+	RepuRingContributionRouteName  = "repuring-contribution"
+	RepuRingCircleContribRouteName = "repuring-contributions-in-circle"
+	RepuRingUserContribRouteName   = "repuring-contributions-for-user"
 	// debug
 	DebugBlockedRouteName   = "blocked"
 	DebugHeapRouteName      = "heap"
@@ -289,6 +295,9 @@ var routePaths = routes{
 	RepuRingUserEndorseRouteName:   {Method: http.MethodPost, Path: RepuRingUserEndorseRoutePath},
 	RepuRingCircleEndorseRouteName: {Method: http.MethodPost, Path: RepuRingCircleEndorseRoutePath},
 	RepuRingLeaderboardRouteName:   {Method: http.MethodPost, Path: RepuRingLeaderboardRoutePath},
+	RepuRingContributionRouteName:  {Method: http.MethodPost, Path: RepuRingContributionRoutePath},
+	RepuRingCircleContribRouteName: {Method: http.MethodPost, Path: RepuRingCircleContribRoutePath},
+	RepuRingUserContribRouteName:   {Method: http.MethodPost, Path: RepuRingUserContribRoutePath},
 	// eth
 	EthereumRouteName: {Method: http.MethodPost, Path: EthereumRoutePath},
 	// admin
@@ -397,6 +406,9 @@ func createRouter(s *Server) *httprouter.Router {
 		RepuRingUserEndorseRouteName:   s.RepuRingEndorsementsForUser,
 		RepuRingCircleEndorseRouteName: s.RepuRingEndorsementsInCircle,
 		RepuRingLeaderboardRouteName:   s.RepuRingLeaderboard,
+		RepuRingContributionRouteName:  s.RepuRingContribution,
+		RepuRingCircleContribRouteName: s.RepuRingContributionsInCircle,
+		RepuRingUserContribRouteName:   s.RepuRingContributionsForUser,
 		EthereumRouteName:              s.EthereumHandler,
 		SubscribeRCInfoName:            s.WebSocket,
 	}

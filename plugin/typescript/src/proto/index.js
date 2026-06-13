@@ -9666,6 +9666,643 @@ $root.types = (function() {
         return MessageEndorseUser;
     })();
 
+    types.MessageCreateContribution = (function() {
+
+        /**
+         * Properties of a MessageCreateContribution.
+         * @memberof types
+         * @interface IMessageCreateContribution
+         * @property {Uint8Array|null} [senderAddress] MessageCreateContribution senderAddress
+         * @property {string|null} [contributionId] MessageCreateContribution contributionId
+         * @property {string|null} [circleId] MessageCreateContribution circleId
+         * @property {string|null} [title] MessageCreateContribution title
+         * @property {string|null} [description] MessageCreateContribution description
+         * @property {string|null} [proofUrl] MessageCreateContribution proofUrl
+         * @property {string|null} [category] MessageCreateContribution category
+         */
+
+        /**
+         * Constructs a new MessageCreateContribution.
+         * @memberof types
+         * @classdesc Represents a MessageCreateContribution.
+         * @implements IMessageCreateContribution
+         * @constructor
+         * @param {types.IMessageCreateContribution=} [properties] Properties to set
+         */
+        function MessageCreateContribution(properties) {
+            if (properties)
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * MessageCreateContribution senderAddress.
+         * @member {Uint8Array} senderAddress
+         * @memberof types.MessageCreateContribution
+         * @instance
+         */
+        MessageCreateContribution.prototype.senderAddress = $util.newBuffer([]);
+
+        /**
+         * MessageCreateContribution contributionId.
+         * @member {string} contributionId
+         * @memberof types.MessageCreateContribution
+         * @instance
+         */
+        MessageCreateContribution.prototype.contributionId = "";
+
+        /**
+         * MessageCreateContribution circleId.
+         * @member {string} circleId
+         * @memberof types.MessageCreateContribution
+         * @instance
+         */
+        MessageCreateContribution.prototype.circleId = "";
+
+        /**
+         * MessageCreateContribution title.
+         * @member {string} title
+         * @memberof types.MessageCreateContribution
+         * @instance
+         */
+        MessageCreateContribution.prototype.title = "";
+
+        /**
+         * MessageCreateContribution description.
+         * @member {string} description
+         * @memberof types.MessageCreateContribution
+         * @instance
+         */
+        MessageCreateContribution.prototype.description = "";
+
+        /**
+         * MessageCreateContribution proofUrl.
+         * @member {string} proofUrl
+         * @memberof types.MessageCreateContribution
+         * @instance
+         */
+        MessageCreateContribution.prototype.proofUrl = "";
+
+        /**
+         * MessageCreateContribution category.
+         * @member {string} category
+         * @memberof types.MessageCreateContribution
+         * @instance
+         */
+        MessageCreateContribution.prototype.category = "";
+
+        /**
+         * Creates a new MessageCreateContribution instance using the specified properties.
+         * @function create
+         * @memberof types.MessageCreateContribution
+         * @static
+         * @param {types.IMessageCreateContribution=} [properties] Properties to set
+         * @returns {types.MessageCreateContribution} MessageCreateContribution instance
+         */
+        MessageCreateContribution.create = function create(properties) {
+            return new MessageCreateContribution(properties);
+        };
+
+        /**
+         * Encodes the specified MessageCreateContribution message. Does not implicitly {@link types.MessageCreateContribution.verify|verify} messages.
+         * @function encode
+         * @memberof types.MessageCreateContribution
+         * @static
+         * @param {types.IMessageCreateContribution} message MessageCreateContribution message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        MessageCreateContribution.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.senderAddress != null && Object.hasOwnProperty.call(message, "senderAddress"))
+                writer.uint32(/* id 1, wireType 2 =*/10).bytes(message.senderAddress);
+            if (message.contributionId != null && Object.hasOwnProperty.call(message, "contributionId"))
+                writer.uint32(/* id 2, wireType 2 =*/18).string(message.contributionId);
+            if (message.circleId != null && Object.hasOwnProperty.call(message, "circleId"))
+                writer.uint32(/* id 3, wireType 2 =*/26).string(message.circleId);
+            if (message.title != null && Object.hasOwnProperty.call(message, "title"))
+                writer.uint32(/* id 4, wireType 2 =*/34).string(message.title);
+            if (message.description != null && Object.hasOwnProperty.call(message, "description"))
+                writer.uint32(/* id 5, wireType 2 =*/42).string(message.description);
+            if (message.proofUrl != null && Object.hasOwnProperty.call(message, "proofUrl"))
+                writer.uint32(/* id 6, wireType 2 =*/50).string(message.proofUrl);
+            if (message.category != null && Object.hasOwnProperty.call(message, "category"))
+                writer.uint32(/* id 7, wireType 2 =*/58).string(message.category);
+            return writer;
+        };
+
+        /**
+         * Encodes the specified MessageCreateContribution message, length delimited. Does not implicitly {@link types.MessageCreateContribution.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof types.MessageCreateContribution
+         * @static
+         * @param {types.IMessageCreateContribution} message MessageCreateContribution message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        MessageCreateContribution.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a MessageCreateContribution message from the specified reader or buffer.
+         * @function decode
+         * @memberof types.MessageCreateContribution
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {types.MessageCreateContribution} MessageCreateContribution
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        MessageCreateContribution.decode = function decode(reader, length, error) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.types.MessageCreateContribution();
+            while (reader.pos < end) {
+                var tag = reader.uint32();
+                if (tag === error)
+                    break;
+                switch (tag >>> 3) {
+                case 1: {
+                        message.senderAddress = reader.bytes();
+                        break;
+                    }
+                case 2: {
+                        message.contributionId = reader.string();
+                        break;
+                    }
+                case 3: {
+                        message.circleId = reader.string();
+                        break;
+                    }
+                case 4: {
+                        message.title = reader.string();
+                        break;
+                    }
+                case 5: {
+                        message.description = reader.string();
+                        break;
+                    }
+                case 6: {
+                        message.proofUrl = reader.string();
+                        break;
+                    }
+                case 7: {
+                        message.category = reader.string();
+                        break;
+                    }
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a MessageCreateContribution message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof types.MessageCreateContribution
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {types.MessageCreateContribution} MessageCreateContribution
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        MessageCreateContribution.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a MessageCreateContribution message.
+         * @function verify
+         * @memberof types.MessageCreateContribution
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        MessageCreateContribution.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.senderAddress != null && message.hasOwnProperty("senderAddress"))
+                if (!(message.senderAddress && typeof message.senderAddress.length === "number" || $util.isString(message.senderAddress)))
+                    return "senderAddress: buffer expected";
+            if (message.contributionId != null && message.hasOwnProperty("contributionId"))
+                if (!$util.isString(message.contributionId))
+                    return "contributionId: string expected";
+            if (message.circleId != null && message.hasOwnProperty("circleId"))
+                if (!$util.isString(message.circleId))
+                    return "circleId: string expected";
+            if (message.title != null && message.hasOwnProperty("title"))
+                if (!$util.isString(message.title))
+                    return "title: string expected";
+            if (message.description != null && message.hasOwnProperty("description"))
+                if (!$util.isString(message.description))
+                    return "description: string expected";
+            if (message.proofUrl != null && message.hasOwnProperty("proofUrl"))
+                if (!$util.isString(message.proofUrl))
+                    return "proofUrl: string expected";
+            if (message.category != null && message.hasOwnProperty("category"))
+                if (!$util.isString(message.category))
+                    return "category: string expected";
+            return null;
+        };
+
+        /**
+         * Creates a MessageCreateContribution message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof types.MessageCreateContribution
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {types.MessageCreateContribution} MessageCreateContribution
+         */
+        MessageCreateContribution.fromObject = function fromObject(object) {
+            if (object instanceof $root.types.MessageCreateContribution)
+                return object;
+            var message = new $root.types.MessageCreateContribution();
+            if (object.senderAddress != null)
+                if (typeof object.senderAddress === "string")
+                    $util.base64.decode(object.senderAddress, message.senderAddress = $util.newBuffer($util.base64.length(object.senderAddress)), 0);
+                else if (object.senderAddress.length >= 0)
+                    message.senderAddress = object.senderAddress;
+            if (object.contributionId != null)
+                message.contributionId = String(object.contributionId);
+            if (object.circleId != null)
+                message.circleId = String(object.circleId);
+            if (object.title != null)
+                message.title = String(object.title);
+            if (object.description != null)
+                message.description = String(object.description);
+            if (object.proofUrl != null)
+                message.proofUrl = String(object.proofUrl);
+            if (object.category != null)
+                message.category = String(object.category);
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a MessageCreateContribution message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof types.MessageCreateContribution
+         * @static
+         * @param {types.MessageCreateContribution} message MessageCreateContribution
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        MessageCreateContribution.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            var object = {};
+            if (options.defaults) {
+                if (options.bytes === String)
+                    object.senderAddress = "";
+                else {
+                    object.senderAddress = [];
+                    if (options.bytes !== Array)
+                        object.senderAddress = $util.newBuffer(object.senderAddress);
+                }
+                object.contributionId = "";
+                object.circleId = "";
+                object.title = "";
+                object.description = "";
+                object.proofUrl = "";
+                object.category = "";
+            }
+            if (message.senderAddress != null && message.hasOwnProperty("senderAddress"))
+                object.senderAddress = options.bytes === String ? $util.base64.encode(message.senderAddress, 0, message.senderAddress.length) : options.bytes === Array ? Array.prototype.slice.call(message.senderAddress) : message.senderAddress;
+            if (message.contributionId != null && message.hasOwnProperty("contributionId"))
+                object.contributionId = message.contributionId;
+            if (message.circleId != null && message.hasOwnProperty("circleId"))
+                object.circleId = message.circleId;
+            if (message.title != null && message.hasOwnProperty("title"))
+                object.title = message.title;
+            if (message.description != null && message.hasOwnProperty("description"))
+                object.description = message.description;
+            if (message.proofUrl != null && message.hasOwnProperty("proofUrl"))
+                object.proofUrl = message.proofUrl;
+            if (message.category != null && message.hasOwnProperty("category"))
+                object.category = message.category;
+            return object;
+        };
+
+        /**
+         * Converts this MessageCreateContribution to JSON.
+         * @function toJSON
+         * @memberof types.MessageCreateContribution
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        MessageCreateContribution.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for MessageCreateContribution
+         * @function getTypeUrl
+         * @memberof types.MessageCreateContribution
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        MessageCreateContribution.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/types.MessageCreateContribution";
+        };
+
+        return MessageCreateContribution;
+    })();
+
+    types.MessageEndorseContribution = (function() {
+
+        /**
+         * Properties of a MessageEndorseContribution.
+         * @memberof types
+         * @interface IMessageEndorseContribution
+         * @property {Uint8Array|null} [senderAddress] MessageEndorseContribution senderAddress
+         * @property {string|null} [contributionId] MessageEndorseContribution contributionId
+         * @property {string|null} [tag] MessageEndorseContribution tag
+         * @property {string|null} [message] MessageEndorseContribution message
+         */
+
+        /**
+         * Constructs a new MessageEndorseContribution.
+         * @memberof types
+         * @classdesc Represents a MessageEndorseContribution.
+         * @implements IMessageEndorseContribution
+         * @constructor
+         * @param {types.IMessageEndorseContribution=} [properties] Properties to set
+         */
+        function MessageEndorseContribution(properties) {
+            if (properties)
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * MessageEndorseContribution senderAddress.
+         * @member {Uint8Array} senderAddress
+         * @memberof types.MessageEndorseContribution
+         * @instance
+         */
+        MessageEndorseContribution.prototype.senderAddress = $util.newBuffer([]);
+
+        /**
+         * MessageEndorseContribution contributionId.
+         * @member {string} contributionId
+         * @memberof types.MessageEndorseContribution
+         * @instance
+         */
+        MessageEndorseContribution.prototype.contributionId = "";
+
+        /**
+         * MessageEndorseContribution tag.
+         * @member {string} tag
+         * @memberof types.MessageEndorseContribution
+         * @instance
+         */
+        MessageEndorseContribution.prototype.tag = "";
+
+        /**
+         * MessageEndorseContribution message.
+         * @member {string} message
+         * @memberof types.MessageEndorseContribution
+         * @instance
+         */
+        MessageEndorseContribution.prototype.message = "";
+
+        /**
+         * Creates a new MessageEndorseContribution instance using the specified properties.
+         * @function create
+         * @memberof types.MessageEndorseContribution
+         * @static
+         * @param {types.IMessageEndorseContribution=} [properties] Properties to set
+         * @returns {types.MessageEndorseContribution} MessageEndorseContribution instance
+         */
+        MessageEndorseContribution.create = function create(properties) {
+            return new MessageEndorseContribution(properties);
+        };
+
+        /**
+         * Encodes the specified MessageEndorseContribution message. Does not implicitly {@link types.MessageEndorseContribution.verify|verify} messages.
+         * @function encode
+         * @memberof types.MessageEndorseContribution
+         * @static
+         * @param {types.IMessageEndorseContribution} message MessageEndorseContribution message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        MessageEndorseContribution.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.senderAddress != null && Object.hasOwnProperty.call(message, "senderAddress"))
+                writer.uint32(/* id 1, wireType 2 =*/10).bytes(message.senderAddress);
+            if (message.contributionId != null && Object.hasOwnProperty.call(message, "contributionId"))
+                writer.uint32(/* id 2, wireType 2 =*/18).string(message.contributionId);
+            if (message.tag != null && Object.hasOwnProperty.call(message, "tag"))
+                writer.uint32(/* id 3, wireType 2 =*/26).string(message.tag);
+            if (message.message != null && Object.hasOwnProperty.call(message, "message"))
+                writer.uint32(/* id 4, wireType 2 =*/34).string(message.message);
+            return writer;
+        };
+
+        /**
+         * Encodes the specified MessageEndorseContribution message, length delimited. Does not implicitly {@link types.MessageEndorseContribution.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof types.MessageEndorseContribution
+         * @static
+         * @param {types.IMessageEndorseContribution} message MessageEndorseContribution message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        MessageEndorseContribution.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a MessageEndorseContribution message from the specified reader or buffer.
+         * @function decode
+         * @memberof types.MessageEndorseContribution
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {types.MessageEndorseContribution} MessageEndorseContribution
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        MessageEndorseContribution.decode = function decode(reader, length, error) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.types.MessageEndorseContribution();
+            while (reader.pos < end) {
+                var tag = reader.uint32();
+                if (tag === error)
+                    break;
+                switch (tag >>> 3) {
+                case 1: {
+                        message.senderAddress = reader.bytes();
+                        break;
+                    }
+                case 2: {
+                        message.contributionId = reader.string();
+                        break;
+                    }
+                case 3: {
+                        message.tag = reader.string();
+                        break;
+                    }
+                case 4: {
+                        message.message = reader.string();
+                        break;
+                    }
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a MessageEndorseContribution message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof types.MessageEndorseContribution
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {types.MessageEndorseContribution} MessageEndorseContribution
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        MessageEndorseContribution.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a MessageEndorseContribution message.
+         * @function verify
+         * @memberof types.MessageEndorseContribution
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        MessageEndorseContribution.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.senderAddress != null && message.hasOwnProperty("senderAddress"))
+                if (!(message.senderAddress && typeof message.senderAddress.length === "number" || $util.isString(message.senderAddress)))
+                    return "senderAddress: buffer expected";
+            if (message.contributionId != null && message.hasOwnProperty("contributionId"))
+                if (!$util.isString(message.contributionId))
+                    return "contributionId: string expected";
+            if (message.tag != null && message.hasOwnProperty("tag"))
+                if (!$util.isString(message.tag))
+                    return "tag: string expected";
+            if (message.message != null && message.hasOwnProperty("message"))
+                if (!$util.isString(message.message))
+                    return "message: string expected";
+            return null;
+        };
+
+        /**
+         * Creates a MessageEndorseContribution message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof types.MessageEndorseContribution
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {types.MessageEndorseContribution} MessageEndorseContribution
+         */
+        MessageEndorseContribution.fromObject = function fromObject(object) {
+            if (object instanceof $root.types.MessageEndorseContribution)
+                return object;
+            var message = new $root.types.MessageEndorseContribution();
+            if (object.senderAddress != null)
+                if (typeof object.senderAddress === "string")
+                    $util.base64.decode(object.senderAddress, message.senderAddress = $util.newBuffer($util.base64.length(object.senderAddress)), 0);
+                else if (object.senderAddress.length >= 0)
+                    message.senderAddress = object.senderAddress;
+            if (object.contributionId != null)
+                message.contributionId = String(object.contributionId);
+            if (object.tag != null)
+                message.tag = String(object.tag);
+            if (object.message != null)
+                message.message = String(object.message);
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a MessageEndorseContribution message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof types.MessageEndorseContribution
+         * @static
+         * @param {types.MessageEndorseContribution} message MessageEndorseContribution
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        MessageEndorseContribution.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            var object = {};
+            if (options.defaults) {
+                if (options.bytes === String)
+                    object.senderAddress = "";
+                else {
+                    object.senderAddress = [];
+                    if (options.bytes !== Array)
+                        object.senderAddress = $util.newBuffer(object.senderAddress);
+                }
+                object.contributionId = "";
+                object.tag = "";
+                object.message = "";
+            }
+            if (message.senderAddress != null && message.hasOwnProperty("senderAddress"))
+                object.senderAddress = options.bytes === String ? $util.base64.encode(message.senderAddress, 0, message.senderAddress.length) : options.bytes === Array ? Array.prototype.slice.call(message.senderAddress) : message.senderAddress;
+            if (message.contributionId != null && message.hasOwnProperty("contributionId"))
+                object.contributionId = message.contributionId;
+            if (message.tag != null && message.hasOwnProperty("tag"))
+                object.tag = message.tag;
+            if (message.message != null && message.hasOwnProperty("message"))
+                object.message = message.message;
+            return object;
+        };
+
+        /**
+         * Converts this MessageEndorseContribution to JSON.
+         * @function toJSON
+         * @memberof types.MessageEndorseContribution
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        MessageEndorseContribution.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for MessageEndorseContribution
+         * @function getTypeUrl
+         * @memberof types.MessageEndorseContribution
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        MessageEndorseContribution.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/types.MessageEndorseContribution";
+        };
+
+        return MessageEndorseContribution;
+    })();
+
     types.MessageSlashEndorsement = (function() {
 
         /**
@@ -10827,6 +11464,7 @@ $root.types = (function() {
          * @property {string|null} [message] Endorsement message
          * @property {boolean|null} [slashed] Endorsement slashed
          * @property {string|null} [slashReason] Endorsement slashReason
+         * @property {string|null} [contributionId] Endorsement contributionId
          */
 
         /**
@@ -10909,6 +11547,14 @@ $root.types = (function() {
         Endorsement.prototype.slashReason = "";
 
         /**
+         * Endorsement contributionId.
+         * @member {string} contributionId
+         * @memberof types.Endorsement
+         * @instance
+         */
+        Endorsement.prototype.contributionId = "";
+
+        /**
          * Creates a new Endorsement instance using the specified properties.
          * @function create
          * @memberof types.Endorsement
@@ -10948,6 +11594,8 @@ $root.types = (function() {
                 writer.uint32(/* id 7, wireType 0 =*/56).bool(message.slashed);
             if (message.slashReason != null && Object.hasOwnProperty.call(message, "slashReason"))
                 writer.uint32(/* id 8, wireType 2 =*/66).string(message.slashReason);
+            if (message.contributionId != null && Object.hasOwnProperty.call(message, "contributionId"))
+                writer.uint32(/* id 9, wireType 2 =*/74).string(message.contributionId);
             return writer;
         };
 
@@ -11016,6 +11664,10 @@ $root.types = (function() {
                         message.slashReason = reader.string();
                         break;
                     }
+                case 9: {
+                        message.contributionId = reader.string();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -11075,6 +11727,9 @@ $root.types = (function() {
             if (message.slashReason != null && message.hasOwnProperty("slashReason"))
                 if (!$util.isString(message.slashReason))
                     return "slashReason: string expected";
+            if (message.contributionId != null && message.hasOwnProperty("contributionId"))
+                if (!$util.isString(message.contributionId))
+                    return "contributionId: string expected";
             return null;
         };
 
@@ -11112,6 +11767,8 @@ $root.types = (function() {
                 message.slashed = Boolean(object.slashed);
             if (object.slashReason != null)
                 message.slashReason = String(object.slashReason);
+            if (object.contributionId != null)
+                message.contributionId = String(object.contributionId);
             return message;
         };
 
@@ -11149,6 +11806,7 @@ $root.types = (function() {
                 object.message = "";
                 object.slashed = false;
                 object.slashReason = "";
+                object.contributionId = "";
             }
             if (message.endorsementId != null && message.hasOwnProperty("endorsementId"))
                 object.endorsementId = message.endorsementId;
@@ -11166,6 +11824,8 @@ $root.types = (function() {
                 object.slashed = message.slashed;
             if (message.slashReason != null && message.hasOwnProperty("slashReason"))
                 object.slashReason = message.slashReason;
+            if (message.contributionId != null && message.hasOwnProperty("contributionId"))
+                object.contributionId = message.contributionId;
             return object;
         };
 
@@ -11196,6 +11856,419 @@ $root.types = (function() {
         };
 
         return Endorsement;
+    })();
+
+    types.Contribution = (function() {
+
+        /**
+         * Properties of a Contribution.
+         * @memberof types
+         * @interface IContribution
+         * @property {string|null} [contributionId] Contribution contributionId
+         * @property {string|null} [circleId] Contribution circleId
+         * @property {Uint8Array|null} [authorAddress] Contribution authorAddress
+         * @property {string|null} [title] Contribution title
+         * @property {string|null} [description] Contribution description
+         * @property {string|null} [proofUrl] Contribution proofUrl
+         * @property {string|null} [category] Contribution category
+         * @property {number|Long|null} [endorsementCount] Contribution endorsementCount
+         * @property {boolean|null} [slashed] Contribution slashed
+         */
+
+        /**
+         * Constructs a new Contribution.
+         * @memberof types
+         * @classdesc Represents a Contribution.
+         * @implements IContribution
+         * @constructor
+         * @param {types.IContribution=} [properties] Properties to set
+         */
+        function Contribution(properties) {
+            if (properties)
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * Contribution contributionId.
+         * @member {string} contributionId
+         * @memberof types.Contribution
+         * @instance
+         */
+        Contribution.prototype.contributionId = "";
+
+        /**
+         * Contribution circleId.
+         * @member {string} circleId
+         * @memberof types.Contribution
+         * @instance
+         */
+        Contribution.prototype.circleId = "";
+
+        /**
+         * Contribution authorAddress.
+         * @member {Uint8Array} authorAddress
+         * @memberof types.Contribution
+         * @instance
+         */
+        Contribution.prototype.authorAddress = $util.newBuffer([]);
+
+        /**
+         * Contribution title.
+         * @member {string} title
+         * @memberof types.Contribution
+         * @instance
+         */
+        Contribution.prototype.title = "";
+
+        /**
+         * Contribution description.
+         * @member {string} description
+         * @memberof types.Contribution
+         * @instance
+         */
+        Contribution.prototype.description = "";
+
+        /**
+         * Contribution proofUrl.
+         * @member {string} proofUrl
+         * @memberof types.Contribution
+         * @instance
+         */
+        Contribution.prototype.proofUrl = "";
+
+        /**
+         * Contribution category.
+         * @member {string} category
+         * @memberof types.Contribution
+         * @instance
+         */
+        Contribution.prototype.category = "";
+
+        /**
+         * Contribution endorsementCount.
+         * @member {number|Long} endorsementCount
+         * @memberof types.Contribution
+         * @instance
+         */
+        Contribution.prototype.endorsementCount = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
+
+        /**
+         * Contribution slashed.
+         * @member {boolean} slashed
+         * @memberof types.Contribution
+         * @instance
+         */
+        Contribution.prototype.slashed = false;
+
+        /**
+         * Creates a new Contribution instance using the specified properties.
+         * @function create
+         * @memberof types.Contribution
+         * @static
+         * @param {types.IContribution=} [properties] Properties to set
+         * @returns {types.Contribution} Contribution instance
+         */
+        Contribution.create = function create(properties) {
+            return new Contribution(properties);
+        };
+
+        /**
+         * Encodes the specified Contribution message. Does not implicitly {@link types.Contribution.verify|verify} messages.
+         * @function encode
+         * @memberof types.Contribution
+         * @static
+         * @param {types.IContribution} message Contribution message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        Contribution.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.contributionId != null && Object.hasOwnProperty.call(message, "contributionId"))
+                writer.uint32(/* id 1, wireType 2 =*/10).string(message.contributionId);
+            if (message.circleId != null && Object.hasOwnProperty.call(message, "circleId"))
+                writer.uint32(/* id 2, wireType 2 =*/18).string(message.circleId);
+            if (message.authorAddress != null && Object.hasOwnProperty.call(message, "authorAddress"))
+                writer.uint32(/* id 3, wireType 2 =*/26).bytes(message.authorAddress);
+            if (message.title != null && Object.hasOwnProperty.call(message, "title"))
+                writer.uint32(/* id 4, wireType 2 =*/34).string(message.title);
+            if (message.description != null && Object.hasOwnProperty.call(message, "description"))
+                writer.uint32(/* id 5, wireType 2 =*/42).string(message.description);
+            if (message.proofUrl != null && Object.hasOwnProperty.call(message, "proofUrl"))
+                writer.uint32(/* id 6, wireType 2 =*/50).string(message.proofUrl);
+            if (message.category != null && Object.hasOwnProperty.call(message, "category"))
+                writer.uint32(/* id 7, wireType 2 =*/58).string(message.category);
+            if (message.endorsementCount != null && Object.hasOwnProperty.call(message, "endorsementCount"))
+                writer.uint32(/* id 8, wireType 0 =*/64).uint64(message.endorsementCount);
+            if (message.slashed != null && Object.hasOwnProperty.call(message, "slashed"))
+                writer.uint32(/* id 9, wireType 0 =*/72).bool(message.slashed);
+            return writer;
+        };
+
+        /**
+         * Encodes the specified Contribution message, length delimited. Does not implicitly {@link types.Contribution.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof types.Contribution
+         * @static
+         * @param {types.IContribution} message Contribution message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        Contribution.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a Contribution message from the specified reader or buffer.
+         * @function decode
+         * @memberof types.Contribution
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {types.Contribution} Contribution
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        Contribution.decode = function decode(reader, length, error) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.types.Contribution();
+            while (reader.pos < end) {
+                var tag = reader.uint32();
+                if (tag === error)
+                    break;
+                switch (tag >>> 3) {
+                case 1: {
+                        message.contributionId = reader.string();
+                        break;
+                    }
+                case 2: {
+                        message.circleId = reader.string();
+                        break;
+                    }
+                case 3: {
+                        message.authorAddress = reader.bytes();
+                        break;
+                    }
+                case 4: {
+                        message.title = reader.string();
+                        break;
+                    }
+                case 5: {
+                        message.description = reader.string();
+                        break;
+                    }
+                case 6: {
+                        message.proofUrl = reader.string();
+                        break;
+                    }
+                case 7: {
+                        message.category = reader.string();
+                        break;
+                    }
+                case 8: {
+                        message.endorsementCount = reader.uint64();
+                        break;
+                    }
+                case 9: {
+                        message.slashed = reader.bool();
+                        break;
+                    }
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a Contribution message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof types.Contribution
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {types.Contribution} Contribution
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        Contribution.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a Contribution message.
+         * @function verify
+         * @memberof types.Contribution
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        Contribution.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.contributionId != null && message.hasOwnProperty("contributionId"))
+                if (!$util.isString(message.contributionId))
+                    return "contributionId: string expected";
+            if (message.circleId != null && message.hasOwnProperty("circleId"))
+                if (!$util.isString(message.circleId))
+                    return "circleId: string expected";
+            if (message.authorAddress != null && message.hasOwnProperty("authorAddress"))
+                if (!(message.authorAddress && typeof message.authorAddress.length === "number" || $util.isString(message.authorAddress)))
+                    return "authorAddress: buffer expected";
+            if (message.title != null && message.hasOwnProperty("title"))
+                if (!$util.isString(message.title))
+                    return "title: string expected";
+            if (message.description != null && message.hasOwnProperty("description"))
+                if (!$util.isString(message.description))
+                    return "description: string expected";
+            if (message.proofUrl != null && message.hasOwnProperty("proofUrl"))
+                if (!$util.isString(message.proofUrl))
+                    return "proofUrl: string expected";
+            if (message.category != null && message.hasOwnProperty("category"))
+                if (!$util.isString(message.category))
+                    return "category: string expected";
+            if (message.endorsementCount != null && message.hasOwnProperty("endorsementCount"))
+                if (!$util.isInteger(message.endorsementCount) && !(message.endorsementCount && $util.isInteger(message.endorsementCount.low) && $util.isInteger(message.endorsementCount.high)))
+                    return "endorsementCount: integer|Long expected";
+            if (message.slashed != null && message.hasOwnProperty("slashed"))
+                if (typeof message.slashed !== "boolean")
+                    return "slashed: boolean expected";
+            return null;
+        };
+
+        /**
+         * Creates a Contribution message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof types.Contribution
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {types.Contribution} Contribution
+         */
+        Contribution.fromObject = function fromObject(object) {
+            if (object instanceof $root.types.Contribution)
+                return object;
+            var message = new $root.types.Contribution();
+            if (object.contributionId != null)
+                message.contributionId = String(object.contributionId);
+            if (object.circleId != null)
+                message.circleId = String(object.circleId);
+            if (object.authorAddress != null)
+                if (typeof object.authorAddress === "string")
+                    $util.base64.decode(object.authorAddress, message.authorAddress = $util.newBuffer($util.base64.length(object.authorAddress)), 0);
+                else if (object.authorAddress.length >= 0)
+                    message.authorAddress = object.authorAddress;
+            if (object.title != null)
+                message.title = String(object.title);
+            if (object.description != null)
+                message.description = String(object.description);
+            if (object.proofUrl != null)
+                message.proofUrl = String(object.proofUrl);
+            if (object.category != null)
+                message.category = String(object.category);
+            if (object.endorsementCount != null)
+                if ($util.Long)
+                    (message.endorsementCount = $util.Long.fromValue(object.endorsementCount)).unsigned = true;
+                else if (typeof object.endorsementCount === "string")
+                    message.endorsementCount = parseInt(object.endorsementCount, 10);
+                else if (typeof object.endorsementCount === "number")
+                    message.endorsementCount = object.endorsementCount;
+                else if (typeof object.endorsementCount === "object")
+                    message.endorsementCount = new $util.LongBits(object.endorsementCount.low >>> 0, object.endorsementCount.high >>> 0).toNumber(true);
+            if (object.slashed != null)
+                message.slashed = Boolean(object.slashed);
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a Contribution message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof types.Contribution
+         * @static
+         * @param {types.Contribution} message Contribution
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        Contribution.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            var object = {};
+            if (options.defaults) {
+                object.contributionId = "";
+                object.circleId = "";
+                if (options.bytes === String)
+                    object.authorAddress = "";
+                else {
+                    object.authorAddress = [];
+                    if (options.bytes !== Array)
+                        object.authorAddress = $util.newBuffer(object.authorAddress);
+                }
+                object.title = "";
+                object.description = "";
+                object.proofUrl = "";
+                object.category = "";
+                if ($util.Long) {
+                    var long = new $util.Long(0, 0, true);
+                    object.endorsementCount = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                } else
+                    object.endorsementCount = options.longs === String ? "0" : 0;
+                object.slashed = false;
+            }
+            if (message.contributionId != null && message.hasOwnProperty("contributionId"))
+                object.contributionId = message.contributionId;
+            if (message.circleId != null && message.hasOwnProperty("circleId"))
+                object.circleId = message.circleId;
+            if (message.authorAddress != null && message.hasOwnProperty("authorAddress"))
+                object.authorAddress = options.bytes === String ? $util.base64.encode(message.authorAddress, 0, message.authorAddress.length) : options.bytes === Array ? Array.prototype.slice.call(message.authorAddress) : message.authorAddress;
+            if (message.title != null && message.hasOwnProperty("title"))
+                object.title = message.title;
+            if (message.description != null && message.hasOwnProperty("description"))
+                object.description = message.description;
+            if (message.proofUrl != null && message.hasOwnProperty("proofUrl"))
+                object.proofUrl = message.proofUrl;
+            if (message.category != null && message.hasOwnProperty("category"))
+                object.category = message.category;
+            if (message.endorsementCount != null && message.hasOwnProperty("endorsementCount"))
+                if (typeof message.endorsementCount === "number")
+                    object.endorsementCount = options.longs === String ? String(message.endorsementCount) : message.endorsementCount;
+                else
+                    object.endorsementCount = options.longs === String ? $util.Long.prototype.toString.call(message.endorsementCount) : options.longs === Number ? new $util.LongBits(message.endorsementCount.low >>> 0, message.endorsementCount.high >>> 0).toNumber(true) : message.endorsementCount;
+            if (message.slashed != null && message.hasOwnProperty("slashed"))
+                object.slashed = message.slashed;
+            return object;
+        };
+
+        /**
+         * Converts this Contribution to JSON.
+         * @function toJSON
+         * @memberof types.Contribution
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        Contribution.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for Contribution
+         * @function getTypeUrl
+         * @memberof types.Contribution
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        Contribution.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/types.Contribution";
+        };
+
+        return Contribution;
     })();
 
     types.Role = (function() {

@@ -24,15 +24,15 @@ export default function RepuRingOverview(): JSX.Element {
                 Onchain trust circles for builders, communities, and reputation.
               </h1>
               <p className="max-w-2xl text-base leading-7 text-zinc-300">
-                Every profile, circle, endorsement, slash, and role claim is a signed custom transaction submitted to the local Canopy chain, then read back from committed RPC state.
+                Create a Web3 project community, post contribution proofs, endorse useful work, and build onchain reputation. Every action is a signed custom transaction submitted to the local Canopy chain, then read back from committed RPC state.
               </p>
             </div>
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               {[
                 ['01', 'Create profile', 'Register your builder identity onchain.'],
-                ['02', 'Join circle', 'Enter a trusted Social-Fi community.'],
-                ['03', 'Endorse trust', 'Give verifiable reputation to members.'],
-                ['04', 'Claim role', 'Unlock status from onchain score.'],
+                ['02', 'Join project', 'Enter a Web3 community circle.'],
+                ['03', 'Post proof', 'Publish contribution evidence.'],
+                ['04', 'Earn role', 'Unlock status from endorsed work.'],
               ].map(([step, title, copy]) => (
                 <div key={step} className="rounded-2xl border border-white/10 bg-black/20 p-4">
                   <div className="text-xs font-semibold text-emerald-300">{step}</div>
@@ -43,6 +43,7 @@ export default function RepuRingOverview(): JSX.Element {
             </div>
             <div className="flex flex-wrap gap-3">
               <Button to="/repuring/circles">Create profile / Circles</Button>
+              <Button to="/repuring/contributions" variant="secondary">Post contribution</Button>
               <Button to="/repuring/endorse" variant="secondary">Endorse</Button>
               <Button to="/repuring/leaderboard" variant="secondary">Leaderboard</Button>
             </div>
@@ -72,7 +73,7 @@ export default function RepuRingOverview(): JSX.Element {
       <section className="grid gap-4 lg:grid-cols-[1fr_1fr_1fr_1.2fr]">
         <StatCard label="Current account" value={shortAddress(currentAddress) || 'No account'} detail={currentAddress || 'Select a signing key before submitting transactions.'} />
         <StatCard label="Profile" value={profile?.username || 'Not created'} detail={profile?.bio || 'CreateProfileTx initializes your reputation at 0.'} />
-        <StatCard label="Reputation score" value={String(profile?.reputation || 0)} detail="Earned from member endorsements." />
+        <StatCard label="Reputation score" value={String(profile?.reputation || 0)} detail="Earned when members endorse useful contribution proofs." />
         <Panel className="space-y-3">
           <div className="flex items-center justify-between gap-3">
             <div>

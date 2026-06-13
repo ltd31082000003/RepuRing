@@ -10,7 +10,9 @@ const txs = [
   ['createProfile', 'MessageCreateProfile'],
   ['createCircle', 'MessageCreateCircle'],
   ['joinCircle', 'MessageJoinCircle'],
+  ['createContribution', 'MessageCreateContribution'],
   ['endorseUser', 'MessageEndorseUser'],
+  ['endorseContribution', 'MessageEndorseContribution'],
   ['slashEndorsement', 'MessageSlashEndorsement'],
   ['claimRole', 'MessageClaimRole'],
 ];
@@ -27,5 +29,22 @@ for (const [name, message] of txs) {
 for (const tag of ['builder', 'helper', 'creator', 'leader', 'trusted']) {
   assert(contract.includes(`'${tag}'`), `${tag} endorsement tag missing`);
 }
+
+for (const category of ['builder', 'helper', 'creator', 'researcher', 'tester', 'educator']) {
+  assert(contract.includes(`'${category}'`), `${category} contribution category missing`);
+}
+
+for (const route of [
+  '/v1/query/repuring/contribution',
+  '/v1/query/repuring/contributions-in-circle',
+  '/v1/query/repuring/contributions-for-user',
+]) {
+  const routes = fs.readFileSync(path.resolve(root, '../../cmd/rpc/routes.go'), 'utf8');
+  assert(routes.includes(route), `${route} missing from RPC routes`);
+}
+
+assert(proto.includes('message Contribution'), 'Contribution state message missing from tx.proto');
+assert(contract.includes('DeliverMessageCreateContribution'), 'CreateContributionTx DeliverTx missing');
+assert(contract.includes('DeliverMessageEndorseContribution'), 'EndorseContributionTx DeliverTx missing');
 
 console.log('RepuRing plugin structure test passed');

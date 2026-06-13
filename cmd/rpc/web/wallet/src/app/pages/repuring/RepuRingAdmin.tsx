@@ -27,7 +27,7 @@ export default function RepuRingAdmin(): JSX.Element {
       <PageHeader
         eyebrow="Admin and Roles"
         title="Claim status and moderate invalid endorsements."
-        copy="ClaimRoleTx converts reputation into a visible circle role. SlashEndorsementTx lets the circle creator/admin remove bad trust signals."
+        copy="ClaimRoleTx converts contribution reputation into a visible circle role. SlashEndorsementTx lets the circle creator/admin remove invalid contribution endorsements."
       />
 
       <div className="grid gap-5 xl:grid-cols-2">

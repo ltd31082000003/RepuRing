@@ -9,12 +9,12 @@ export default function RepuRingLeaderboard(): JSX.Element {
     <RepuRingPage>
       <PageHeader
         eyebrow="Leaderboard"
-        title="Reputation rankings for your onchain circle."
-        copy="The leaderboard turns endorsements into visible Social-Fi status: reputation points, role tiers, and ranked community standing."
+        title="Contribution rankings for your project circle."
+        copy="The leaderboard ranks contributors by endorsed contribution proofs and reputation, turning useful work into visible Social-Fi status."
       />
 
       <Panel className="grid gap-4 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
-        <Input label="Circle ID" value={circleId} onChange={setCircleId} placeholder="canopy-builders" />
+        <Input label="Circle ID" value={circleId} onChange={setCircleId} placeholder="pharos-builders" />
         <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
           <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">Loaded circle</p>
           <p className="mt-2 text-xl font-semibold text-white">{circle?.name || 'Circle not loaded'}</p>
@@ -36,7 +36,7 @@ export default function RepuRingLeaderboard(): JSX.Element {
             </thead>
             <tbody>
               {leaderboard.length === 0 ? (
-                <tr><td className="px-4 py-10" colSpan={5}><EmptyState title="No leaderboard data yet" copy="Create profiles, create or join a circle, endorse another member, then refresh committed chain state." /></td></tr>
+                <tr><td className="px-4 py-10" colSpan={5}><EmptyState title="No leaderboard data yet" copy="Create profiles, post a contribution proof, endorse it from another member, then refresh committed chain state." /></td></tr>
               ) : leaderboard.map((row, index) => (
                 <tr key={row.address} className="border-t border-white/10 bg-black/10">
                   <td className="px-4 py-4 font-mono text-zinc-400">#{index + 1}</td>
