@@ -8,8 +8,6 @@ export default function RepuRingCircles(): JSX.Element {
     password,
     setPassword,
     profile,
-    profileForm,
-    setProfileForm,
     circleId,
     setCircleId,
     circleForm,
@@ -33,15 +31,14 @@ export default function RepuRingCircles(): JSX.Element {
       <div className="grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
         <div className="space-y-5">
           {!profile && (
-            <Panel title="Create Profile" eyebrow="CreateProfileTx">
-              <div className="rounded-2xl border border-amber-300/20 bg-amber-300/10 p-4 text-sm text-amber-100">
-                A profile is required before creating or joining a circle.
+            <Panel title="Create a RepuRing profile first" eyebrow="Social-Fi identity required">
+              <div className="rounded-2xl border border-amber-300/20 bg-amber-300/10 p-4">
+                <p className="font-semibold text-amber-100">Profiles live in My Account because they represent your Social-Fi identity.</p>
+                <p className="mt-2 text-sm leading-6 text-amber-100/80">
+                  Create your profile before creating project circles, joining communities, or posting contribution proofs.
+                </p>
               </div>
-              <Input label="Signing key password" type="password" value={password} onChange={setPassword} placeholder="Used only for keystore signing" />
-              <Input label="Username" value={profileForm.username} onChange={(username) => setProfileForm({ ...profileForm, username })} placeholder="alice_builder" />
-              <Input label="Bio" value={profileForm.bio} onChange={(bio) => setProfileForm({ ...profileForm, bio })} placeholder="Pharos ecosystem contributor" multiline />
-              <Input label="Avatar URL" value={profileForm.avatarUrl} onChange={(avatarUrl) => setProfileForm({ ...profileForm, avatarUrl })} placeholder="https://..." />
-              <Button onClick={() => submit('createProfile', profileForm)}>Submit CreateProfileTx</Button>
+              <Button to="/key-management" variant="secondary">Open My Account</Button>
             </Panel>
           )}
 

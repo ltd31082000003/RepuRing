@@ -11,7 +11,7 @@ import RepuRingEndorse from '@/app/pages/repuring/RepuRingEndorse'
 import RepuRingLeaderboard from '@/app/pages/repuring/RepuRingLeaderboard'
 import RepuRingAdmin from '@/app/pages/repuring/RepuRingAdmin'
 
-function RepuRingRoutes(): JSX.Element {
+function AppRoutes(): JSX.Element {
     return (
         <RepuRingProvider>
             <Outlet />
@@ -23,22 +23,26 @@ const router = createBrowserRouter([
     {
         element: <MainLayout />,
         children: [
-            { path: '/', element: <Navigate to="/repuring" replace /> },
             {
-                path: '/repuring',
-                element: <RepuRingRoutes />,
+                element: <AppRoutes />,
                 children: [
-                    { index: true, element: <RepuRingOverview /> },
-                    { path: 'circles', element: <RepuRingCircles /> },
-                    { path: 'contributions', element: <RepuRingContributions /> },
-                    { path: 'endorse', element: <RepuRingEndorse /> },
-                    { path: 'leaderboard', element: <RepuRingLeaderboard /> },
-                    { path: 'admin', element: <RepuRingAdmin /> },
+                    { path: '/', element: <Navigate to="/repuring" replace /> },
+                    {
+                        path: '/repuring',
+                        children: [
+                            { index: true, element: <RepuRingOverview /> },
+                            { path: 'circles', element: <RepuRingCircles /> },
+                            { path: 'contributions', element: <RepuRingContributions /> },
+                            { path: 'endorse', element: <RepuRingEndorse /> },
+                            { path: 'leaderboard', element: <RepuRingLeaderboard /> },
+                            { path: 'admin', element: <RepuRingAdmin /> },
+                        ],
+                    },
+                    { path: '/key-management', element: <KeyManagement /> },
+                    { path: '/accounts', element: <Navigate to="/key-management" replace /> },
+                    { path: '/all-addresses', element: <Navigate to="/key-management" replace /> },
                 ],
             },
-            { path: '/key-management', element: <KeyManagement /> },
-            { path: '/accounts', element: <Navigate to="/key-management" replace /> },
-            { path: '/all-addresses', element: <Navigate to="/key-management" replace /> },
         ],
     },
 ], {

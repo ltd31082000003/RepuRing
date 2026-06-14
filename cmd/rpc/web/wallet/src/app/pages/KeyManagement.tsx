@@ -1,13 +1,18 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
+import { BadgeCheck, UserPlus } from 'lucide-react';
 import { CurrentWallet } from '@/components/key-management/CurrentWallet';
 import { ImportWallet } from '@/components/key-management/ImportWallet';
 import { NewKey } from '@/components/key-management/NewKey';
-import { Dialog, DialogContent } from '@/components/ui/Dialog';
+import { Button } from '@/components/ui/Button';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/Dialog';
 import { useDS } from '@/core/useDs';
 import { downloadJson } from '@/helpers/download';
 import { useToast } from '@/toast/ToastContext';
 import { PageHeader } from '@/components/layouts/PageHeader';
+import { useRepuRing } from '@/app/pages/repuring/useRepuRing';
+import { roleBadge, shortAddress } from '@/app/pages/repuring/components';
 
 type KeyManagementModal = 'import' | 'create' | null;
 
@@ -65,6 +70,7 @@ export const KeyManagement = (): JSX.Element => {
                 animate="visible"
             >
                 <CurrentWallet onDownloadFullKeystore={handleDownloadKeys} onOpenCreate={() => setActiveModal('create')} onOpenImport={() => setActiveModal('import')} />
+                <RepuRingProfileCard />
             </motion.div>
 
             <Dialog open={activeModal !== null} onOpenChange={(open) => !open && setActiveModal(null)}>
@@ -85,3 +91,170 @@ export const KeyManagement = (): JSX.Element => {
         </div>
     );
 };
+
+function RepuRingProfileCard(): JSX.Element {
+    const {
+        currentAddress,
+        password,
+        setPassword,
+        profile,
+        profileForm,
+        setProfileForm,
+        role,
+        status,
+        lastTx,
+        refreshState,
+        submit,
+    } = useRepuRing();
+    const [profileModalOpen, setProfileModalOpen] = React.useState(false);
+
+    React.useEffect(() => {
+        if (profile) setProfileModalOpen(false);
+    }, [profile]);
+
+    const initial = profile?.username?.slice(0, 1).toUpperCase() || currentAddress.slice(0, 1).toUpperCase() || 'R';
+
+    return (
+        <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="overflow-hidden rounded-3xl border border-white/10 bg-white/[0.045] shadow-[0_18px_48px_rgba(0,0,0,0.22)]"
+        >
+            <div className="border-b border-white/10 bg-gradient-to-br from-primary/10 via-transparent to-cyan-400/10 p-5 sm:p-6">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div className="flex items-start gap-4">
+                        <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-primary/25 bg-primary/10 text-xl font-bold text-primary">
+                            {profile?.avatarUrl ? (
+                                <img src={profile.avatarUrl} alt={profile.username} className="h-full w-full object-cover" />
+                            ) : (
+                                initial
+                            )}
+                        </div>
+                        <div>
+                            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">RepuRing Profile</p>
+                            <h2 className="mt-1 text-2xl font-semibold text-foreground">
+                                {profile ? profile.username : 'Create your RepuRing Profile'}
+                            </h2>
+                            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+                                {profile
+                                    ? profile.bio || 'Your onchain Social-Fi identity is active for circles, contributions, endorsements, and reputation.'
+                                    : 'Your profile is your onchain social identity for project circles, contributions, endorsements, and reputation.'}
+                            </p>
+                        </div>
+                    </div>
+                    {profile ? (
+                        <span className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                            <BadgeCheck className="h-3.5 w-3.5" />
+                            Profile active
+                        </span>
+                    ) : null}
+                </div>
+            </div>
+
+            <div className="grid gap-5 p-5 sm:p-6 lg:grid-cols-[1fr_auto] lg:items-end">
+                <div className="grid gap-3 sm:grid-cols-3">
+                    <ProfileMetric label="Wallet" value={shortAddress(currentAddress) || 'No account selected'} />
+                    <ProfileMetric label="Reputation" value={String(profile?.reputation ?? 0)} />
+                    <ProfileMetric label="Role" value={role ? roleBadge(role.role) : 'Not claimed'} />
+                </div>
+
+                {profile ? (
+                    <div className="flex flex-wrap gap-2">
+                        <Button asChild variant="outline" className="h-11">
+                            <Link to="/repuring/circles">Go to Circles</Link>
+                        </Button>
+                        <Button asChild className="h-11">
+                            <Link to="/repuring/contributions">Post Contribution</Link>
+                        </Button>
+                    </div>
+                ) : (
+                    <div className="flex flex-wrap gap-2">
+                        <Button className="h-11" onClick={() => setProfileModalOpen(true)} disabled={!currentAddress}>
+                            <UserPlus className="h-4 w-4" />
+                            Create Profile
+                        </Button>
+                        <span className="flex items-center text-xs text-muted-foreground">
+                            Required before joining circles or posting contributions.
+                        </span>
+                    </div>
+                )}
+            </div>
+
+            <div className="border-t border-white/10 bg-black/20 px-5 py-4 sm:px-6">
+                <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+                    <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Profile transaction status</p>
+                        <p className="mt-1 text-sm text-muted-foreground">{status}</p>
+                        {lastTx ? <p className="mt-1 break-all font-mono text-xs text-muted-foreground">{lastTx}</p> : null}
+                    </div>
+                    <Button type="button" variant="secondary" className="h-10 self-start lg:self-center" onClick={() => void refreshState()}>
+                        Refresh Profile
+                    </Button>
+                </div>
+            </div>
+
+            <Dialog open={profileModalOpen} onOpenChange={setProfileModalOpen}>
+                <DialogContent title="Create your RepuRing Profile" className="max-w-[min(96vw,34rem)] border-[#272729] bg-[#171717]">
+                    <DialogHeader>
+                        <DialogTitle>Create your RepuRing Profile</DialogTitle>
+                        <DialogDescription>
+                            This submits CreateProfileTx through the local Canopy RPC and stores your Social-Fi identity onchain.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                        <AccountInput label="Signing key password" type="password" value={password} onChange={setPassword} placeholder="Required for BLS signing" />
+                        <AccountInput label="Username" value={profileForm.username} onChange={(username) => setProfileForm({ ...profileForm, username })} placeholder="alice_builder" />
+                        <AccountInput label="Bio" value={profileForm.bio} onChange={(bio) => setProfileForm({ ...profileForm, bio })} placeholder="Pharos ecosystem contributor" multiline />
+                        <AccountInput label="Avatar URL" value={profileForm.avatarUrl} onChange={(avatarUrl) => setProfileForm({ ...profileForm, avatarUrl })} placeholder="https://..." />
+                        <div className="rounded-xl border border-white/10 bg-black/25 p-3">
+                            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Status</p>
+                            <p className="mt-1 text-sm text-muted-foreground">{status}</p>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button type="button" variant="secondary" onClick={() => setProfileModalOpen(false)}>Cancel</Button>
+                        <Button type="button" onClick={() => void submit('createProfile', profileForm)}>Submit CreateProfileTx</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        </motion.section>
+    );
+}
+
+function ProfileMetric({ label, value }: { label: string; value: string }) {
+    return (
+        <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
+            <p className="mt-2 break-all text-sm font-semibold text-foreground">{value}</p>
+        </div>
+    );
+}
+
+function AccountInput({
+    label,
+    value,
+    onChange,
+    type = 'text',
+    placeholder,
+    multiline = false,
+}: {
+    label: string;
+    value: string;
+    onChange: (value: string) => void;
+    type?: string;
+    placeholder?: string;
+    multiline?: boolean;
+}) {
+    const className = 'w-full rounded-xl border border-white/10 bg-black/35 px-3 py-2.5 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:border-primary/60 focus:ring-2 focus:ring-primary/20';
+    return (
+        <label className="block">
+            <span className="mb-2 block text-sm font-medium text-foreground/80">{label}</span>
+            {multiline ? (
+                <textarea className={`${className} min-h-24 resize-y`} value={value} placeholder={placeholder} onChange={(event) => onChange(event.target.value)} />
+            ) : (
+                <input className={className} type={type} value={value} placeholder={placeholder} onChange={(event) => onChange(event.target.value)} />
+            )}
+        </label>
+    );
+}

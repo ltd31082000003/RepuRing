@@ -112,12 +112,12 @@ The RepuRing UI is a route-based Social-Fi dApp:
 | Route | Purpose |
 | --- | --- |
 | `/repuring` | Overview dashboard, product story, RPC status, current profile/reputation/role. |
-| `/repuring/circles` | Create profile, create circle, join circle, and inspect members. |
+| `/repuring/circles` | Create circle, join a project community, and inspect members. |
 | `/repuring/contributions` | Post `CreateContributionTx` proof-of-work and browse the project contribution feed. |
 | `/repuring/endorse` | Select a contribution and submit `EndorseContributionTx`; `EndorseUserTx` remains available for compatibility. |
 | `/repuring/leaderboard` | View contribution reputation rankings and role badges. |
 | `/repuring/admin` | Submit `ClaimRoleTx` and `SlashEndorsementTx`. |
-| `/key-management` | Create/select local signing keys from the Canopy template wallet. |
+| `/key-management` | My Account: create/select local signing keys and create the RepuRing profile. |
 
 The RepuRing pages sign custom plugin transactions in the browser, submit them to `http://localhost:50002/v1/tx`, and refresh profile, circle, contribution, endorsement, role, and leaderboard state from the RepuRing query routes. They do not use a mocked transaction path for the main flow.
 
@@ -125,7 +125,7 @@ The RepuRing pages sign custom plugin transactions in the browser, submit them t
 
 1. Open `http://127.0.0.1:5173/repuring`.
 2. Create a signing key on `/key-management` if needed.
-3. Create a profile on `/repuring/circles`.
+3. Create your RepuRing profile on `/key-management`.
 4. Create or join a project community circle on `/repuring/circles`.
 5. Post contribution proof on `/repuring/contributions`.
 6. Endorse that contribution on `/repuring/endorse`.
@@ -195,7 +195,7 @@ Each query also accepts optional `{ "height": 123 }` to read historical state th
 2. Show `npm run build:all` passing in `plugin/typescript`.
 3. Show the overview at `/repuring`.
 4. Create/select wallet accounts in `/key-management`.
-5. Submit profile and circle transactions on `/repuring/circles`.
+5. Submit `CreateProfileTx` from My Account on `/key-management`, then submit circle transactions on `/repuring/circles`.
 6. Submit a contribution proof on `/repuring/contributions`.
 7. Submit a contribution endorsement on `/repuring/endorse`.
 8. Show returned transaction hashes from `/v1/tx`.
@@ -215,12 +215,13 @@ Manual route flow:
 
 - `/` redirects to `/repuring`.
 - `/repuring` shows the RepuRing overview.
-- `/repuring/circles` opens profile/circle membership UI.
+- `/key-management` opens My Account with local signing keys and RepuRing profile creation.
+- `/repuring/circles` opens circle membership UI.
 - `/repuring/contributions` opens the project contribution board.
 - `/repuring/endorse` opens contribution endorsement UI.
 - `/repuring/leaderboard` opens the leaderboard UI.
 - `/repuring/admin` opens role claim and moderation UI.
-- `/key-management` remains available for local signing keys.
+- `/key-management` remains available for My Account, local signing keys, and RepuRing profile creation.
 
 Live flow checklist:
 
