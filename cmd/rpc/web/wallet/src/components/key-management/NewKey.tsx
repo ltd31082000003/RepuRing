@@ -61,8 +61,9 @@ export const NewKey = ({ embedded = false, onSuccess }: { embedded?: boolean; on
             setNewKeyForm({ password: '', walletName: '' });
             onSuccess?.();
 
-            const newAddress = typeof response === 'string' ? response : (response as any)?.address;
+            const newAddress = typeof response === 'string' ? response.replace(/"/g, '') : (response as any)?.address;
             if (newAddress) {
+                switchAccount(newAddress);
                 setTimeout(() => {
                     queryClient.invalidateQueries({ queryKey: ['ds', 'keystore'] });
                 }, 500);

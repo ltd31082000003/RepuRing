@@ -8,11 +8,13 @@ type SelectedAccountContextValue = {
     selectedAccount: Account | null
     selectedAddress?: string
     switchAccount: (id: string | null) => void
+    disconnectAccount: () => void
 }
 
 const SelectedAccountContext = createContext<SelectedAccountContextValue | undefined>(undefined)
 
 const STORAGE_KEY = 'activeAccountId'
+const DISCONNECTED_KEY = 'accountManuallyDisconnected'
 
 export function SelectedAccountProvider({ children }: { children: React.ReactNode }) {
     const { accounts, isReady: accountsReady } = useAccountsList()
@@ -24,6 +26,11 @@ export function SelectedAccountProvider({ children }: { children: React.ReactNod
     useEffect(() => {
         try {
             const saved = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null
+            const disconnected = typeof window !== 'undefined' ? localStorage.getItem(DISCONNECTED_KEY) === 'true' : false
+            if (disconnected) {
+                setSelectedId(null)
+                return
+            }
             if (saved) setSelectedId(saved)
         } finally {
             setIsInitialized(true)
@@ -32,14 +39,17 @@ export function SelectedAccountProvider({ children }: { children: React.ReactNod
         // Listen for changes from other tabs
         const onStorage = (e: StorageEvent) => {
             if (e.key === STORAGE_KEY) setSelectedId(e.newValue ?? null)
+            if (e.key === DISCONNECTED_KEY && e.newValue === 'true') setSelectedId(null)
         }
         window.addEventListener('storage', onStorage)
         return () => window.removeEventListener('storage', onStorage)
     }, [])
 
-    // Auto-select first account if none selected
+    // Auto-select first account on initial load unless the user manually disconnected.
     useEffect(() => {
         if (!isInitialized || !accountsReady) return
+        const disconnected = typeof window !== 'undefined' && localStorage.getItem(DISCONNECTED_KEY) === 'true'
+        if (disconnected) return
         if (!selectedId && accounts.length > 0) {
             const first = accounts[0].id
             setSelectedId(first)
@@ -57,8 +67,20 @@ export function SelectedAccountProvider({ children }: { children: React.ReactNod
     const switchAccount = useCallback((id: string | null) => {
         setSelectedId(id)
         if (typeof window !== 'undefined') {
-            if (id) localStorage.setItem(STORAGE_KEY, id)
-            else localStorage.removeItem(STORAGE_KEY)
+            if (id) {
+                localStorage.setItem(STORAGE_KEY, id)
+                localStorage.removeItem(DISCONNECTED_KEY)
+            } else {
+                localStorage.removeItem(STORAGE_KEY)
+            }
+        }
+    }, [])
+
+    const disconnectAccount = useCallback(() => {
+        setSelectedId(null)
+        if (typeof window !== 'undefined') {
+            localStorage.removeItem(STORAGE_KEY)
+            localStorage.setItem(DISCONNECTED_KEY, 'true')
         }
     }, [])
 
@@ -67,7 +89,8 @@ export function SelectedAccountProvider({ children }: { children: React.ReactNod
         selectedAccount,
         selectedAddress,
         switchAccount,
-    }), [selectedId, selectedAccount, selectedAddress, switchAccount])
+        disconnectAccount,
+    }), [selectedId, selectedAccount, selectedAddress, switchAccount, disconnectAccount])
 
     return (
         <SelectedAccountContext.Provider value={value}>

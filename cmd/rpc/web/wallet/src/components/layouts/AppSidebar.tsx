@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { NavLink, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-    KeyRound,
+    UserCircle,
     BadgeCheck,
     Users,
     ClipboardCheck,
@@ -22,7 +22,7 @@ const navItems = [
     { name: 'Endorse', path: '/repuring/endorse', icon: HeartHandshake },
     { name: 'Leaderboard', path: '/repuring/leaderboard', icon: Trophy },
     { name: 'Admin', path: '/repuring/admin', icon: ShieldCheck },
-    { name: 'Keys', path: '/key-management', icon: KeyRound },
+    { name: 'Account', path: '/key-management', icon: UserCircle },
 ];
 
 /** Matches canopy-frontend `MainNav` + shell: rounded-xl rows, zinc borders, white/active pill. */

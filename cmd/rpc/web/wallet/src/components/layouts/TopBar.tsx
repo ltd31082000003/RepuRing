@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { BadgeCheck, Blocks, Key, RadioTower } from 'lucide-react';
+import { BadgeCheck, Blocks, RadioTower, UserCircle } from 'lucide-react';
 import { useDS } from '@/core/useDs';
 
 const topBarButtonClass =
@@ -50,8 +50,8 @@ export const TopBar = (): JSX.Element => {
                 <div className="hidden h-4 w-px bg-border/70 sm:block" />
 
                 <Link to="/key-management" className={topBarButtonClass}>
-                    <Key className="size-4 shrink-0" />
-                    Signing Keys
+                    <UserCircle className="size-4 shrink-0" />
+                    My Account
                 </Link>
             </div>
         </motion.header>

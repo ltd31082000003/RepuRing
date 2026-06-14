@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Key, Menu, X, Blocks } from 'lucide-react';
+import { Menu, X, Blocks, UserCircle } from 'lucide-react';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/Select";
 import { useAccounts } from "@/app/providers/AccountsProvider";
@@ -202,14 +202,14 @@ export const Navbar = (): JSX.Element => {
                                 </SelectContent>
                             </Select>
 
-                            {/* Key Management */}
+                            {/* Account */}
                             <Link
                                 to="/key-management"
                                 onClick={() => setIsMobileMenuOpen(false)}
                                 className="w-full h-11 bg-primary hover:bg-primary-light text-primary-foreground rounded-lg flex items-center justify-center gap-2 text-sm font-semibold transition-colors duration-150"
                             >
-                                <Key className="w-4 h-4" />
-                                Key Management
+                                <UserCircle className="w-4 h-4" />
+                                My Account
                             </Link>
                         </div>
                     </motion.div>

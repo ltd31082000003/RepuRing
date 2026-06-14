@@ -5,10 +5,17 @@ import {
   Download,
   Key,
   AlertTriangle,
+  CheckCircle2,
   Eye,
   EyeOff,
+  FileDown,
+  Import,
+  LogOut,
   Pencil,
+  PlusCircle,
   Trash2,
+  UserCircle,
+  WalletCards,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import {
@@ -26,8 +33,20 @@ import { useDS } from "@/core/useDs";
 import { downloadJson } from "@/helpers/download";
 import { useQueryClient } from "@tanstack/react-query";
 
-export const CurrentWallet = ({ embedded = false }: { embedded?: boolean }): JSX.Element => {
-  const { accounts, selectedAccount, switchAccount } = useAccounts();
+type CurrentWalletProps = {
+  embedded?: boolean;
+  onDownloadFullKeystore?: () => void;
+  onOpenCreate?: () => void;
+  onOpenImport?: () => void;
+};
+
+export const CurrentWallet = ({
+  embedded = false,
+  onDownloadFullKeystore,
+  onOpenCreate,
+  onOpenImport,
+}: CurrentWalletProps): JSX.Element => {
+  const { accounts, selectedAccount, switchAccount, disconnectAccount } = useAccounts();
 
   const [privateKey, setPrivateKey] = useState("");
   const [privateKeyVisible, setPrivateKeyVisible] = useState(false);
@@ -134,6 +153,16 @@ export const CurrentWallet = ({ embedded = false }: { embedded?: boolean }): JSX
     toast.success({
       title: "Download Started",
       description: "Your keyfile JSON is downloading.",
+    });
+  };
+
+  const handleDisconnect = () => {
+    disconnectAccount();
+    setPrivateKey("");
+    setPrivateKeyVisible(false);
+    toast.success({
+      title: "Disconnected",
+      description: "No account is currently selected.",
     });
   };
 
@@ -321,214 +350,258 @@ export const CurrentWallet = ({ embedded = false }: { embedded?: boolean }): JSX
   const content = (
     <>
       <div className="space-y-5">
-        <div>
-          <label className="block text-sm font-medium text-foreground/80 mb-2">
-            Wallet Name
-          </label>
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <Select
-                value={selectedAccount?.id || ""}
-                onValueChange={switchAccount}
-              >
-                <SelectTrigger className="w-full bg-muted border-border text-foreground h-11 rounded-lg focus:ring-2 focus:ring-primary/35">
-                  <SelectValue placeholder="Select wallet" />
+        <section className="rounded-2xl border border-white/10 bg-white/[0.045] p-5 shadow-[0_18px_48px_rgba(0,0,0,0.22)]">
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex items-start gap-3">
+              <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-primary/25 bg-primary/10 text-primary">
+                <UserCircle className="h-5 w-5" />
+              </span>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Connected Account</p>
+                <h2 className="mt-1 text-xl font-semibold text-foreground">
+                  {selectedAccount ? (selectedKeyEntry?.keyNickname || selectedAccount.nickname) : "No account connected"}
+                </h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {selectedAccount ? "Selected for RepuRing signing and local demo transactions." : "Select an existing account or create a new one to start using RepuRing."}
+                </p>
+              </div>
+            </div>
+            {selectedAccount ? (
+              <span className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                Selected
+              </span>
+            ) : null}
+          </div>
+
+          <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+            <div>
+              <label className="mb-2 block text-sm font-medium text-foreground/80">
+                Switch account
+              </label>
+              <Select value={selectedAccount?.id || ""} onValueChange={switchAccount}>
+                <SelectTrigger className="h-11 w-full rounded-xl border-border bg-muted text-foreground focus:ring-2 focus:ring-primary/35">
+                  <SelectValue placeholder={accounts.length ? "Select account" : "No local accounts"} />
                 </SelectTrigger>
-                <SelectContent className="bg-muted border-border">
+                <SelectContent className="border-border bg-muted">
                   {accounts.map((account) => (
-                    <SelectItem
-                      key={account.id}
-                      value={account.id}
-                      className="text-foreground"
-                    >
+                    <SelectItem key={account.id} value={account.id} className="text-foreground">
                       {account.nickname}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="h-11 px-3"
-                onClick={() => {
-                  setRenameNickname(selectedKeyEntry?.keyNickname || selectedAccount?.nickname || "");
-                  setIsRenameOpen((value) => !value);
-                }}
-                disabled={!selectedAccount || !selectedKeyEntry}
-              >
-                <Pencil className="h-4 w-4" />
-                Rename
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button type="button" variant="outline" className="h-11" onClick={() => selectedAccount && copyToClipboard(selectedAccount.address, "Wallet address")} disabled={!selectedAccount}>
+                <Copy className="h-4 w-4" />
+                Copy address
+              </Button>
+              <Button type="button" variant="secondary" className="h-11" onClick={handleDisconnect} disabled={!selectedAccount}>
+                <LogOut className="h-4 w-4" />
+                Disconnect
               </Button>
             </div>
+          </div>
 
-            {isRenameOpen && (
-              <div className="flex flex-col gap-2 rounded-lg border border-border bg-muted/40 p-3 sm:flex-row">
-                <input
-                  type="text"
-                  value={renameNickname}
-                  onChange={(e) => setRenameNickname(e.target.value)}
-                  placeholder="Wallet nickname"
-                  className="w-full rounded-lg border border-border bg-muted px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
-                  autoFocus
-                />
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    size="sm"
-                    className="h-10"
-                    onClick={handleRenameAccount}
-                    disabled={isRenaming}
+          {isRenameOpen && (
+            <div className="mt-3 flex flex-col gap-2 rounded-xl border border-border bg-muted/40 p-3 sm:flex-row">
+              <input
+                type="text"
+                value={renameNickname}
+                onChange={(e) => setRenameNickname(e.target.value)}
+                placeholder="Wallet nickname"
+                className="w-full rounded-lg border border-border bg-muted px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+                autoFocus
+              />
+              <div className="flex gap-2">
+                <Button type="button" size="sm" className="h-10" onClick={handleRenameAccount} disabled={isRenaming}>
+                  {isRenaming ? "Saving..." : "Save"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  className="h-10"
+                  onClick={() => {
+                    setIsRenameOpen(false);
+                    setRenameNickname(selectedKeyEntry?.keyNickname || selectedAccount?.nickname || "");
+                  }}
+                  disabled={isRenaming}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {selectedAccount ? (
+            <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div>
+                <label className="mb-2 block text-sm font-medium text-foreground/80">
+                  Wallet address
+                </label>
+                <div className="relative">
+                  <div className="min-w-0 rounded-xl border border-border bg-muted px-3 py-2.5 pr-11 text-sm text-foreground" title={selectedAccount.address}>
+                    <span className="block truncate font-mono">{truncateMiddle(selectedAccount.address, 14, 12)}</span>
+                  </div>
+                  <button
+                    onClick={() => copyToClipboard(selectedAccount.address, "Wallet address")}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-white/70 transition-colors hover:text-white"
+                    aria-label="Copy wallet address"
                   >
-                    {isRenaming ? "Saving..." : "Save"}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="sm"
-                    className="h-10"
-                    onClick={() => {
-                      setIsRenameOpen(false);
-                      setRenameNickname(selectedKeyEntry?.keyNickname || selectedAccount?.nickname || "");
-                    }}
-                    disabled={isRenaming}
-                  >
-                    Cancel
-                  </Button>
+                    <Copy className="h-4 w-4" />
+                  </button>
                 </div>
               </div>
-            )}
-          </div>
-        </div>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <div>
-            <label className="block text-sm font-medium text-foreground/80 mb-2">
-              Wallet Address
-            </label>
-            <div className="relative">
-              <div
-                className="min-w-0 rounded-lg border border-border bg-muted px-3 py-2.5 pr-11 text-sm text-foreground"
-                title={selectedAccount?.address || ""}
-              >
-                <span className="block truncate font-mono">
-                  {truncateMiddle(selectedAccount?.address || "", 12, 10)}
-                </span>
+              <div>
+                <label className="mb-2 block text-sm font-medium text-foreground/80">
+                  Public key
+                </label>
+                <div className="relative">
+                  <div className="min-w-0 rounded-xl border border-border bg-muted px-3 py-2.5 pr-11 text-sm text-foreground" title={selectedAccount.publicKey}>
+                    <span className="block truncate font-mono">{truncateMiddle(selectedAccount.publicKey, 14, 12)}</span>
+                  </div>
+                  <button
+                    onClick={() => copyToClipboard(selectedAccount.publicKey, "Public key")}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-white/70 transition-colors hover:text-white"
+                    aria-label="Copy public key"
+                  >
+                    <Copy className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
-              <button
-                onClick={() =>
-                  copyToClipboard(
-                    selectedAccount?.address || "",
-                    "Wallet address",
-                  )
-                }
-                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-white/70 transition-colors hover:text-white"
-              >
-                <Copy className="w-4 h-4" />
-              </button>
             </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-foreground/80 mb-2">
-              Public Key
-            </label>
-            <div className="relative">
-              <div
-                className="min-w-0 rounded-lg border border-border bg-muted px-3 py-2.5 pr-11 text-sm text-foreground"
-                title={selectedAccount?.publicKey || ""}
-              >
-                <span className="block truncate font-mono">
-                  {truncateMiddle(selectedAccount?.publicKey || "", 12, 10)}
-                </span>
-              </div>
-              <button
-                onClick={() =>
-                  copyToClipboard(selectedAccount?.publicKey || "", "Public key")
-                }
-                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-white/70 transition-colors hover:text-white"
-              >
-                <Copy className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-foreground/80 mb-2">
-            Private Key
-          </label>
-          <div className="relative flex items-center justify-between gap-2">
-            <input
-              type={privateKeyVisible ? "text" : "password"}
-              value={privateKeyVisible ? privateKey : ""}
-              readOnly
-              placeholder="Hidden until unlocked"
-              className="w-full bg-muted border border-border rounded-lg px-3 py-2.5 text-foreground pr-10 placeholder:text-muted-foreground"
-            />
-            {privateKeyVisible && (
-              <button
-                onClick={() => copyToClipboard(privateKey, "Private key")}
-                className="rounded-lg border border-[#272729] bg-[#0f0f0f] px-3 py-2.5 text-white/70 transition-colors hover:bg-[#272729] hover:text-white"
-              >
-                <Copy className="w-4 h-4" />
-              </button>
-            )}
-            <button
-              onClick={handleRevealPrivateKeys}
-              className="rounded-lg border border-[#272729] bg-[#0f0f0f] px-3 py-2 text-white/70 transition-colors hover:bg-[#272729] hover:text-white"
-            >
-              {privateKeyVisible ? (
-                <EyeOff className="text-foreground w-4 h-4" />
-              ) : (
-                <Eye className="text-foreground w-4 h-4" />
-              )}
-            </button>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-          <Button
-            onClick={handleDownloadKeyfile}
-            variant="default"
-            className="h-11 w-full"
-          >
-            <Download className="h-4 w-4" />
-            Download Keyfile
-          </Button>
-          <Button
-            onClick={handleRevealPrivateKeys}
-            variant="secondary"
-            className="h-11 w-full"
-          >
-            <Key className="h-4 w-4" />
-            {privateKeyVisible ? "Hide Private Key" : "Reveal Private Key"}
-          </Button>
-          <Button
-            onClick={handleDeleteAccount}
-            variant="secondary"
-            className="h-11 w-full border-[#ff1845]/30 bg-[#ff1845]/10 text-[#ff6b84] shadow-none hover:border-[#ff1845]/40 hover:bg-[#ff1845]/14 hover:text-[#ff7f96]"
-            disabled={!selectedAccount}
-          >
-            <Trash2 className="h-4 w-4" />
-            Delete Account
-          </Button>
-        </div>
-
-        <div className="rounded-lg border border-[#272729] bg-[#0f0f0f] p-4">
-          <div className="flex items-start gap-3">
-            <AlertTriangle className="mt-0.5 h-5 w-5 text-white/60" />
-            <div>
-              <h4 className="mb-1 font-medium text-foreground">
-                Security Warning
-              </h4>
-              <p className="text-sm text-muted-foreground">
-                Never share your private keys. Anyone with access to them can
-                control your funds.
+          ) : (
+            <div className="mt-4 rounded-2xl border border-dashed border-white/15 bg-black/20 p-5 text-center">
+              <p className="text-base font-semibold text-foreground">No account connected</p>
+              <p className="mx-auto mt-2 max-w-xl text-sm text-muted-foreground">
+                Select an existing account or create a new one to start using RepuRing.
               </p>
             </div>
+          )}
+        </section>
+
+        <section className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
+          <div className="rounded-2xl border border-primary/15 bg-primary/[0.06] p-5">
+            <div className="flex items-start gap-3">
+              <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-primary/25 bg-primary/10 text-primary">
+                <WalletCards className="h-5 w-5" />
+              </span>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">RepuRing Identity</p>
+                <h3 className="mt-1 text-lg font-semibold text-foreground">Social-Fi signing context</h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                  Use this account to create profiles, join project circles, post contributions, and endorse work.
+                </p>
+                <p className="mt-3 break-all rounded-xl border border-white/10 bg-black/20 px-3 py-2 font-mono text-xs text-foreground/80">
+                  {selectedAccount?.address || "No selected account address"}
+                </p>
+              </div>
+            </div>
           </div>
-        </div>
+
+          <div className="rounded-2xl border border-white/10 bg-white/[0.045] p-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Local Demo Wallet Tools</p>
+            <h3 className="mt-1 text-lg font-semibold text-foreground">Create or bring an identity</h3>
+            <div className="mt-4 grid gap-2 sm:grid-cols-3 xl:grid-cols-1">
+              <Button type="button" className="h-11 w-full justify-start" onClick={onOpenCreate}>
+                <PlusCircle className="h-4 w-4" />
+                Create New Key
+              </Button>
+              <Button type="button" variant="secondary" className="h-11 w-full justify-start" onClick={onOpenImport}>
+                <Import className="h-4 w-4" />
+                Import Wallet
+              </Button>
+              <Button type="button" variant="outline" className="h-11 w-full justify-start" onClick={handleDownloadKeyfile} disabled={!selectedAccount}>
+                <Download className="h-4 w-4" />
+                Download Keyfile
+              </Button>
+            </div>
+          </div>
+        </section>
+
+        <section className="rounded-2xl border border-[#ff1845]/25 bg-[#ff1845]/[0.045] p-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="mt-1 h-5 w-5 text-[#ff6b84]" />
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#ff6b84]">Advanced Security Tools</p>
+                <h3 className="mt-1 text-lg font-semibold text-foreground">Local demo only</h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                  Local demo only. Never reveal private keys in production.
+                </p>
+              </div>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              className="h-10 border-white/10 bg-black/20"
+              onClick={() => {
+                setRenameNickname(selectedKeyEntry?.keyNickname || selectedAccount?.nickname || "");
+                setIsRenameOpen((value) => !value);
+              }}
+              disabled={!selectedAccount || !selectedKeyEntry}
+            >
+              <Pencil className="h-4 w-4" />
+              Rename
+            </Button>
+          </div>
+
+          <div className="mt-4">
+            <label className="mb-2 block text-sm font-medium text-foreground/80">
+              Private key
+            </label>
+            <div className="relative flex items-center justify-between gap-2">
+              <input
+                type={privateKeyVisible ? "text" : "password"}
+                value={privateKeyVisible ? privateKey : ""}
+                readOnly
+                placeholder="Hidden until unlocked"
+                className="w-full rounded-xl border border-border bg-muted px-3 py-2.5 pr-10 text-foreground placeholder:text-muted-foreground"
+              />
+              {privateKeyVisible && (
+                <button
+                  onClick={() => copyToClipboard(privateKey, "Private key")}
+                  className="rounded-lg border border-[#272729] bg-[#0f0f0f] px-3 py-2.5 text-white/70 transition-colors hover:bg-[#272729] hover:text-white"
+                  aria-label="Copy private key"
+                >
+                  <Copy className="h-4 w-4" />
+                </button>
+              )}
+              <button
+                onClick={handleRevealPrivateKeys}
+                className="rounded-lg border border-[#272729] bg-[#0f0f0f] px-3 py-2 text-white/70 transition-colors hover:bg-[#272729] hover:text-white"
+                disabled={!selectedAccount}
+                aria-label={privateKeyVisible ? "Hide private key" : "Reveal private key"}
+              >
+                {privateKeyVisible ? <EyeOff className="h-4 w-4 text-foreground" /> : <Eye className="h-4 w-4 text-foreground" />}
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
+            <Button type="button" onClick={handleRevealPrivateKeys} variant="secondary" className="h-11 w-full" disabled={!selectedAccount}>
+              <Key className="h-4 w-4" />
+              {privateKeyVisible ? "Hide Private Key" : "Reveal Private Key"}
+            </Button>
+            <Button type="button" onClick={onDownloadFullKeystore} variant="secondary" className="h-11 w-full">
+              <FileDown className="h-4 w-4" />
+              Download Full Keystore
+            </Button>
+            <Button
+              type="button"
+              onClick={handleDeleteAccount}
+              variant="secondary"
+              className="h-11 w-full border-[#ff1845]/30 bg-[#ff1845]/10 text-[#ff6b84] shadow-none hover:border-[#ff1845]/40 hover:bg-[#ff1845]/14 hover:text-[#ff7f96]"
+              disabled={!selectedAccount}
+            >
+              <Trash2 className="h-4 w-4" />
+              Delete Account
+            </Button>
+          </div>
+        </section>
       </div>
 
       {showPasswordModal && (

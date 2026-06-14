@@ -21,6 +21,7 @@ type AccountsContextValue = {
     createNewAccount: (nickname: string, password: string) => Promise<string>
     deleteAccount: (accountId: string, password: string) => Promise<void>
     refetch: () => Promise<any>
+    disconnectAccount: () => void
 }
 
 /**
@@ -71,6 +72,7 @@ export function useAccounts(): AccountsContextValue {
         selectedAccount: selected.selectedAccount,
         selectedAddress: selected.selectedAddress,
         switchAccount: selected.switchAccount,
+        disconnectAccount: selected.disconnectAccount,
     }), [list, selected, deleteAccount])
 }
 
