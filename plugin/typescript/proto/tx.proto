@@ -23,6 +23,12 @@ message MessageCreateProfile {
   string avatar_url = 4; // @gotags: json:"avatarUrl"
 }
 
+message MessageUpdateProfile {
+  bytes sender_address = 1; // @gotags: json:"senderAddress"
+  string bio = 2;
+  string avatar_url = 3; // @gotags: json:"avatarUrl"
+}
+
 message MessageCreateCircle {
   bytes sender_address = 1; // @gotags: json:"senderAddress"
   string circle_id = 2; // @gotags: json:"circleId"

@@ -8,6 +8,7 @@ const proto = fs.readFileSync(path.join(root, 'proto/tx.proto'), 'utf8');
 
 const txs = [
   ['createProfile', 'MessageCreateProfile'],
+  ['updateProfile', 'MessageUpdateProfile'],
   ['createCircle', 'MessageCreateCircle'],
   ['joinCircle', 'MessageJoinCircle'],
   ['createContribution', 'MessageCreateContribution'],
@@ -44,6 +45,7 @@ for (const route of [
 }
 
 assert(proto.includes('message Contribution'), 'Contribution state message missing from tx.proto');
+assert(contract.includes('DeliverMessageUpdateProfile'), 'UpdateProfileTx DeliverTx missing');
 assert(contract.includes('DeliverMessageCreateContribution'), 'CreateContributionTx DeliverTx missing');
 assert(contract.includes('DeliverMessageEndorseContribution'), 'EndorseContributionTx DeliverTx missing');
 

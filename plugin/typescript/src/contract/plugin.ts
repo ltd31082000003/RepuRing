@@ -414,6 +414,9 @@ export function FromAny(any: any): [any | null, string | null, IPluginError | nu
         if (typeUrl.includes('MessageCreateProfile')) {
             return [types.MessageCreateProfile.decode(any.value), 'MessageCreateProfile', null];
         }
+        if (typeUrl.includes('MessageUpdateProfile')) {
+            return [types.MessageUpdateProfile.decode(any.value), 'MessageUpdateProfile', null];
+        }
         if (typeUrl.includes('MessageCreateCircle')) {
             return [types.MessageCreateCircle.decode(any.value), 'MessageCreateCircle', null];
         }

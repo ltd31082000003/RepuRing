@@ -106,7 +106,7 @@ export default function RepuRingEndorse(): JSX.Element {
               </select>
             </label>
             <Input label="Reason" value={endorse.message} onChange={(message) => setEndorse({ ...endorse, message })} multiline />
-            <Button onClick={() => submit('endorseContribution', { contributionId: selectedContributionId, ...endorse })}>Submit EndorseContributionTx</Button>
+            <Button onClick={() => { void submit('endorseContribution', { contributionId: selectedContributionId, ...endorse }); }}>Submit EndorseContributionTx</Button>
           </Panel>
         </div>
 
@@ -153,7 +153,7 @@ export default function RepuRingEndorse(): JSX.Element {
             <p className="text-sm leading-6 text-zinc-400">This keeps the original contest transaction available, but the main Social-Fi flow now endorses contribution proofs.</p>
             <Input label="Target address" value={targetAddress} onChange={setTargetAddress} placeholder="Hex address of another circle member" />
             <div><StatusPill tone={targetIsMember ? 'success' : 'neutral'}>{targetIsMember ? 'Target is member' : 'Membership not confirmed'}</StatusPill></div>
-            <Button variant="secondary" onClick={() => submit('endorseUser', { circleId, targetAddress, ...endorse })}>Submit EndorseUserTx</Button>
+            <Button variant="secondary" onClick={() => { void submit('endorseUser', { circleId, targetAddress, ...endorse }); }}>Submit EndorseUserTx</Button>
           </Panel>
         </div>
       </div>

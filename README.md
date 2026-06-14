@@ -31,6 +31,7 @@ This follows `plugin/typescript/AGENTS.md`: protobuf messages are registered in 
 | Transaction | State transition |
 | --- | --- |
 | `createProfile` | Stores profile under signer address and initializes reputation to `0`. |
+| `updateProfile` | Updates the profile bio and avatar URL while preserving username and reputation. |
 | `createCircle` | Stores a unique circle, sets creator/admin, and adds creator as first member. |
 | `joinCircle` | Adds signer to an existing circle member list. |
 | `createContribution` | Stores a contribution proof, indexes it by circle and author, and initializes endorsement count to `0`. |
@@ -117,7 +118,7 @@ The RepuRing UI is a route-based Social-Fi dApp:
 | `/repuring/endorse` | Select a contribution and submit `EndorseContributionTx`; `EndorseUserTx` remains available for compatibility. |
 | `/repuring/leaderboard` | View contribution reputation rankings and role badges. |
 | `/repuring/admin` | Submit `ClaimRoleTx` and `SlashEndorsementTx`. |
-| `/key-management` | My Account: create/select local signing keys and create the RepuRing profile. |
+| `/key-management` | My Account: create/select local signing keys, submit `CreateProfileTx`, and submit `UpdateProfileTx`. |
 
 The RepuRing pages sign custom plugin transactions in the browser, submit them to `http://localhost:50002/v1/tx`, and refresh profile, circle, contribution, endorsement, role, and leaderboard state from the RepuRing query routes. They do not use a mocked transaction path for the main flow.
 

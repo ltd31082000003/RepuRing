@@ -48,7 +48,7 @@ export default function RepuRingAdmin(): JSX.Element {
               <div className="mt-2"><StatusPill tone={role?.claimedRole ? 'success' : 'warning'}>{role?.claimedRole ? roleBadge(role.role) : 'Not claimed'}</StatusPill></div>
             </div>
           </div>
-          <Button onClick={() => submit('claimRole', { circleId })}>ClaimRoleTx</Button>
+          <Button onClick={() => { void submit('claimRole', { circleId }); }}>ClaimRoleTx</Button>
         </Panel>
 
         <Panel title="Slash Endorsement" eyebrow="SlashEndorsementTx">
@@ -62,7 +62,7 @@ export default function RepuRingAdmin(): JSX.Element {
           <Input label="Signing key password" type="password" value={password} onChange={setPassword} placeholder="Creator/admin signing key password" />
           <Input label="Endorsement ID" value={endorsementId} onChange={setEndorsementId} placeholder="Paste endorsement ID to slash" />
           <Input label="Slash reason" value={slashReason} onChange={setSlashReason} multiline />
-          <Button variant="danger" onClick={() => submit('slashEndorsement', { endorsementId, reason: slashReason })}>SlashEndorsementTx</Button>
+          <Button variant="danger" onClick={() => { void submit('slashEndorsement', { endorsementId, reason: slashReason }); }}>SlashEndorsementTx</Button>
         </Panel>
       </div>
 

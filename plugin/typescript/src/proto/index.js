@@ -8828,6 +8828,267 @@ $root.types = (function() {
         return MessageCreateProfile;
     })();
 
+    types.MessageUpdateProfile = (function() {
+
+        /**
+         * Properties of a MessageUpdateProfile.
+         * @memberof types
+         * @interface IMessageUpdateProfile
+         * @property {Uint8Array|null} [senderAddress] MessageUpdateProfile senderAddress
+         * @property {string|null} [bio] MessageUpdateProfile bio
+         * @property {string|null} [avatarUrl] MessageUpdateProfile avatarUrl
+         */
+
+        /**
+         * Constructs a new MessageUpdateProfile.
+         * @memberof types
+         * @classdesc Represents a MessageUpdateProfile.
+         * @implements IMessageUpdateProfile
+         * @constructor
+         * @param {types.IMessageUpdateProfile=} [properties] Properties to set
+         */
+        function MessageUpdateProfile(properties) {
+            if (properties)
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * MessageUpdateProfile senderAddress.
+         * @member {Uint8Array} senderAddress
+         * @memberof types.MessageUpdateProfile
+         * @instance
+         */
+        MessageUpdateProfile.prototype.senderAddress = $util.newBuffer([]);
+
+        /**
+         * MessageUpdateProfile bio.
+         * @member {string} bio
+         * @memberof types.MessageUpdateProfile
+         * @instance
+         */
+        MessageUpdateProfile.prototype.bio = "";
+
+        /**
+         * MessageUpdateProfile avatarUrl.
+         * @member {string} avatarUrl
+         * @memberof types.MessageUpdateProfile
+         * @instance
+         */
+        MessageUpdateProfile.prototype.avatarUrl = "";
+
+        /**
+         * Creates a new MessageUpdateProfile instance using the specified properties.
+         * @function create
+         * @memberof types.MessageUpdateProfile
+         * @static
+         * @param {types.IMessageUpdateProfile=} [properties] Properties to set
+         * @returns {types.MessageUpdateProfile} MessageUpdateProfile instance
+         */
+        MessageUpdateProfile.create = function create(properties) {
+            return new MessageUpdateProfile(properties);
+        };
+
+        /**
+         * Encodes the specified MessageUpdateProfile message. Does not implicitly {@link types.MessageUpdateProfile.verify|verify} messages.
+         * @function encode
+         * @memberof types.MessageUpdateProfile
+         * @static
+         * @param {types.IMessageUpdateProfile} message MessageUpdateProfile message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        MessageUpdateProfile.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.senderAddress != null && Object.hasOwnProperty.call(message, "senderAddress"))
+                writer.uint32(/* id 1, wireType 2 =*/10).bytes(message.senderAddress);
+            if (message.bio != null && Object.hasOwnProperty.call(message, "bio"))
+                writer.uint32(/* id 2, wireType 2 =*/18).string(message.bio);
+            if (message.avatarUrl != null && Object.hasOwnProperty.call(message, "avatarUrl"))
+                writer.uint32(/* id 3, wireType 2 =*/26).string(message.avatarUrl);
+            return writer;
+        };
+
+        /**
+         * Encodes the specified MessageUpdateProfile message, length delimited. Does not implicitly {@link types.MessageUpdateProfile.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof types.MessageUpdateProfile
+         * @static
+         * @param {types.IMessageUpdateProfile} message MessageUpdateProfile message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        MessageUpdateProfile.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a MessageUpdateProfile message from the specified reader or buffer.
+         * @function decode
+         * @memberof types.MessageUpdateProfile
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {types.MessageUpdateProfile} MessageUpdateProfile
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        MessageUpdateProfile.decode = function decode(reader, length, error) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.types.MessageUpdateProfile();
+            while (reader.pos < end) {
+                var tag = reader.uint32();
+                if (tag === error)
+                    break;
+                switch (tag >>> 3) {
+                case 1: {
+                        message.senderAddress = reader.bytes();
+                        break;
+                    }
+                case 2: {
+                        message.bio = reader.string();
+                        break;
+                    }
+                case 3: {
+                        message.avatarUrl = reader.string();
+                        break;
+                    }
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a MessageUpdateProfile message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof types.MessageUpdateProfile
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {types.MessageUpdateProfile} MessageUpdateProfile
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        MessageUpdateProfile.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a MessageUpdateProfile message.
+         * @function verify
+         * @memberof types.MessageUpdateProfile
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        MessageUpdateProfile.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.senderAddress != null && message.hasOwnProperty("senderAddress"))
+                if (!(message.senderAddress && typeof message.senderAddress.length === "number" || $util.isString(message.senderAddress)))
+                    return "senderAddress: buffer expected";
+            if (message.bio != null && message.hasOwnProperty("bio"))
+                if (!$util.isString(message.bio))
+                    return "bio: string expected";
+            if (message.avatarUrl != null && message.hasOwnProperty("avatarUrl"))
+                if (!$util.isString(message.avatarUrl))
+                    return "avatarUrl: string expected";
+            return null;
+        };
+
+        /**
+         * Creates a MessageUpdateProfile message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof types.MessageUpdateProfile
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {types.MessageUpdateProfile} MessageUpdateProfile
+         */
+        MessageUpdateProfile.fromObject = function fromObject(object) {
+            if (object instanceof $root.types.MessageUpdateProfile)
+                return object;
+            var message = new $root.types.MessageUpdateProfile();
+            if (object.senderAddress != null)
+                if (typeof object.senderAddress === "string")
+                    $util.base64.decode(object.senderAddress, message.senderAddress = $util.newBuffer($util.base64.length(object.senderAddress)), 0);
+                else if (object.senderAddress.length >= 0)
+                    message.senderAddress = object.senderAddress;
+            if (object.bio != null)
+                message.bio = String(object.bio);
+            if (object.avatarUrl != null)
+                message.avatarUrl = String(object.avatarUrl);
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a MessageUpdateProfile message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof types.MessageUpdateProfile
+         * @static
+         * @param {types.MessageUpdateProfile} message MessageUpdateProfile
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        MessageUpdateProfile.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            var object = {};
+            if (options.defaults) {
+                if (options.bytes === String)
+                    object.senderAddress = "";
+                else {
+                    object.senderAddress = [];
+                    if (options.bytes !== Array)
+                        object.senderAddress = $util.newBuffer(object.senderAddress);
+                }
+                object.bio = "";
+                object.avatarUrl = "";
+            }
+            if (message.senderAddress != null && message.hasOwnProperty("senderAddress"))
+                object.senderAddress = options.bytes === String ? $util.base64.encode(message.senderAddress, 0, message.senderAddress.length) : options.bytes === Array ? Array.prototype.slice.call(message.senderAddress) : message.senderAddress;
+            if (message.bio != null && message.hasOwnProperty("bio"))
+                object.bio = message.bio;
+            if (message.avatarUrl != null && message.hasOwnProperty("avatarUrl"))
+                object.avatarUrl = message.avatarUrl;
+            return object;
+        };
+
+        /**
+         * Converts this MessageUpdateProfile to JSON.
+         * @function toJSON
+         * @memberof types.MessageUpdateProfile
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        MessageUpdateProfile.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for MessageUpdateProfile
+         * @function getTypeUrl
+         * @memberof types.MessageUpdateProfile
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        MessageUpdateProfile.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/types.MessageUpdateProfile";
+        };
+
+        return MessageUpdateProfile;
+    })();
+
     types.MessageCreateCircle = (function() {
 
         /**

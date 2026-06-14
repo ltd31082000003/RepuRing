@@ -20,6 +20,7 @@ const FEE = 0;
 
 const txMeta: Record<TxKind, { typeUrl: string; message: string }> = {
   createProfile: { typeUrl: 'type.googleapis.com/types.MessageCreateProfile', message: 'MessageCreateProfile' },
+  updateProfile: { typeUrl: 'type.googleapis.com/types.MessageUpdateProfile', message: 'MessageUpdateProfile' },
   createCircle: { typeUrl: 'type.googleapis.com/types.MessageCreateCircle', message: 'MessageCreateCircle' },
   joinCircle: { typeUrl: 'type.googleapis.com/types.MessageJoinCircle', message: 'MessageJoinCircle' },
   createContribution: { typeUrl: 'type.googleapis.com/types.MessageCreateContribution', message: 'MessageCreateContribution' },
@@ -139,8 +140,10 @@ export function RepuRingProvider({ children }: { children: React.ReactNode }): J
       setLastTx(typeof response === 'string' ? response : JSON.stringify(response));
       setStatus(`${kind} submitted. Waiting for block, then refreshing state...`);
       await refreshAfterCommit(refreshState);
+      return true;
     } catch (e) {
       setStatus(`${kind} failed: ${e instanceof Error ? e.message : String(e)}`);
+      return false;
     }
   }
 
@@ -249,6 +252,8 @@ function encodeMessage(kind: TxKind, v: Record<string, unknown>): Uint8Array {
   switch (kind) {
     case 'createProfile':
       return concat([fieldBytes(1, sender), fieldString(2, v.username), fieldString(3, v.bio), fieldString(4, v.avatarUrl)]);
+    case 'updateProfile':
+      return concat([fieldBytes(1, sender), fieldString(2, v.bio), fieldString(3, v.avatarUrl)]);
     case 'createCircle':
       return concat([fieldBytes(1, sender), fieldString(2, v.circleId), fieldString(3, v.name), fieldString(4, v.description)]);
     case 'joinCircle':

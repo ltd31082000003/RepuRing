@@ -23,6 +23,7 @@ export const ContractConfig: any = {
     version: 1,
     supportedTransactions: [
         'createProfile',
+        'updateProfile',
         'createCircle',
         'joinCircle',
         'createContribution',
@@ -33,6 +34,7 @@ export const ContractConfig: any = {
     ],
     transactionTypeUrls: [
         'type.googleapis.com/types.MessageCreateProfile',
+        'type.googleapis.com/types.MessageUpdateProfile',
         'type.googleapis.com/types.MessageCreateCircle',
         'type.googleapis.com/types.MessageJoinCircle',
         'type.googleapis.com/types.MessageCreateContribution',
@@ -80,6 +82,12 @@ export class Contract {
     CheckMessageCreateProfile(msg: any): any {
         if (!isAddress(msg.senderAddress)) return { error: ErrInvalidAddress() };
         if (!clean(msg.username)) return { error: ErrRepuRing('username must not be empty') };
+        return signerResponse(msg.senderAddress);
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    CheckMessageUpdateProfile(msg: any): any {
+        if (!isAddress(msg.senderAddress)) return { error: ErrInvalidAddress() };
         return signerResponse(msg.senderAddress);
     }
 
@@ -160,6 +168,8 @@ export class ContractAsync {
         switch (msgType) {
             case 'MessageCreateProfile':
                 return contract.CheckMessageCreateProfile(msg);
+            case 'MessageUpdateProfile':
+                return contract.CheckMessageUpdateProfile(msg);
             case 'MessageCreateCircle':
                 return contract.CheckMessageCreateCircle(msg);
             case 'MessageJoinCircle':
@@ -189,6 +199,8 @@ export class ContractAsync {
         switch (msgType) {
             case 'MessageCreateProfile':
                 return ContractAsync.DeliverMessageCreateProfile(contract, msg);
+            case 'MessageUpdateProfile':
+                return ContractAsync.DeliverMessageUpdateProfile(contract, msg);
             case 'MessageCreateCircle':
                 return ContractAsync.DeliverMessageCreateCircle(contract, msg);
             case 'MessageJoinCircle':
@@ -235,6 +247,30 @@ export class ContractAsync {
         return write(contract, [
             { key: profileKey, value: profileBytes },
             { key: usernameKey, value: sender }
+        ]);
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    static async DeliverMessageUpdateProfile(contract: Contract, msg: any): Promise<any> {
+        const sender = msg.senderAddress as Uint8Array;
+        const profileKey = KeyForProfile(sender);
+        const [reads, err] = await readMany(contract, [
+            [profileKey, types.Profile]
+        ]);
+        if (err) return { error: err };
+
+        const profile = reads[0][0] as any | null;
+        if (!profile) return { error: ErrRepuRing('sender must create a profile first') };
+
+        const profileBytes = types.Profile.encode(
+            types.Profile.create({
+                ...profile,
+                bio: clean(msg.bio),
+                avatarUrl: clean(msg.avatarUrl)
+            })
+        ).finish();
+        return write(contract, [
+            { key: profileKey, value: profileBytes }
         ]);
     }
 

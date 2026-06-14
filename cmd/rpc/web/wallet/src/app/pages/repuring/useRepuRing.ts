@@ -2,6 +2,7 @@ import React from 'react';
 
 export type TxKind =
   | 'createProfile'
+  | 'updateProfile'
   | 'createCircle'
   | 'joinCircle'
   | 'createContribution'
@@ -60,7 +61,7 @@ export type RepuRingContextValue = {
   endorsements: EndorsementView[];
   leaderboard: LeaderboardRow[];
   refreshState: () => Promise<void>;
-  submit: (kind: TxKind, fields: Record<string, unknown>) => Promise<void>;
+  submit: (kind: TxKind, fields: Record<string, unknown>) => Promise<boolean>;
 };
 
 export const RepuRingContext = React.createContext<RepuRingContextValue | null>(null);

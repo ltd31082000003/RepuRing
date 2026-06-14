@@ -48,8 +48,8 @@ export default function RepuRingCircles(): JSX.Element {
             <Input label="Name" value={circleForm.name} onChange={(name) => setCircleForm({ ...circleForm, name })} />
             <Input label="Description" value={circleForm.description} onChange={(description) => setCircleForm({ ...circleForm, description })} multiline />
             <div className="flex flex-wrap gap-3">
-              <Button onClick={() => submit('createCircle', { circleId, ...circleForm })}>CreateCircleTx</Button>
-              <Button variant="secondary" onClick={() => submit('joinCircle', { circleId })}>JoinCircleTx</Button>
+              <Button onClick={() => { void submit('createCircle', { circleId, ...circleForm }); }}>CreateCircleTx</Button>
+              <Button variant="secondary" onClick={() => { void submit('joinCircle', { circleId }); }}>JoinCircleTx</Button>
             </div>
           </Panel>
         </div>

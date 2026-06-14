@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { BadgeCheck, UserPlus } from 'lucide-react';
+import { BadgeCheck, Pencil, UserPlus } from 'lucide-react';
 import { CurrentWallet } from '@/components/key-management/CurrentWallet';
 import { ImportWallet } from '@/components/key-management/ImportWallet';
 import { NewKey } from '@/components/key-management/NewKey';
@@ -107,10 +107,28 @@ function RepuRingProfileCard(): JSX.Element {
         submit,
     } = useRepuRing();
     const [profileModalOpen, setProfileModalOpen] = React.useState(false);
+    const [editModalOpen, setEditModalOpen] = React.useState(false);
+    const [editProfileForm, setEditProfileForm] = React.useState({ bio: '', avatarUrl: '' });
 
     React.useEffect(() => {
         if (profile) setProfileModalOpen(false);
     }, [profile]);
+
+    React.useEffect(() => {
+        if (!profile || editModalOpen) return;
+        setEditProfileForm({ bio: profile.bio || '', avatarUrl: profile.avatarUrl || '' });
+    }, [editModalOpen, profile]);
+
+    const openEditProfile = () => {
+        if (!profile) return;
+        setEditProfileForm({ bio: profile.bio || '', avatarUrl: profile.avatarUrl || '' });
+        setEditModalOpen(true);
+    };
+
+    const submitUpdateProfile = async () => {
+        const ok = await submit('updateProfile', editProfileForm);
+        if (ok) setEditModalOpen(false);
+    };
 
     const initial = profile?.username?.slice(0, 1).toUpperCase() || currentAddress.slice(0, 1).toUpperCase() || 'R';
 
@@ -161,6 +179,10 @@ function RepuRingProfileCard(): JSX.Element {
 
                 {profile ? (
                     <div className="flex flex-wrap gap-2">
+                        <Button type="button" variant="secondary" className="h-11" onClick={openEditProfile}>
+                            <Pencil className="h-4 w-4" />
+                            Edit Profile
+                        </Button>
                         <Button asChild variant="outline" className="h-11">
                             <Link to="/repuring/circles">Go to Circles</Link>
                         </Button>
@@ -218,6 +240,31 @@ function RepuRingProfileCard(): JSX.Element {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
+                <DialogContent title="Edit RepuRing Profile" className="max-w-[min(96vw,34rem)] border-[#272729] bg-[#171717]">
+                    <DialogHeader>
+                        <DialogTitle>Edit RepuRing Profile</DialogTitle>
+                        <DialogDescription>
+                            This submits UpdateProfileTx. Username and reputation stay unchanged for this demo.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                        <AccountInput label="Signing key password" type="password" value={password} onChange={setPassword} placeholder="Required for BLS signing" />
+                        <AccountInput label="Username" value={profile?.username || ''} onChange={() => undefined} disabled helperText="Username is permanent in this demo." />
+                        <AccountInput label="Bio" value={editProfileForm.bio} onChange={(bio) => setEditProfileForm({ ...editProfileForm, bio })} placeholder="Update your contributor bio" multiline />
+                        <AccountInput label="Avatar URL" value={editProfileForm.avatarUrl} onChange={(avatarUrl) => setEditProfileForm({ ...editProfileForm, avatarUrl })} placeholder="https://..." />
+                        <div className="rounded-xl border border-white/10 bg-black/25 p-3">
+                            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Status</p>
+                            <p className="mt-1 text-sm text-muted-foreground">{status}</p>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button type="button" variant="secondary" onClick={() => setEditModalOpen(false)}>Cancel</Button>
+                        <Button type="button" onClick={() => void submitUpdateProfile()}>Submit UpdateProfileTx</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </motion.section>
     );
 }
@@ -238,6 +285,8 @@ function AccountInput({
     type = 'text',
     placeholder,
     multiline = false,
+    disabled = false,
+    helperText,
 }: {
     label: string;
     value: string;
@@ -245,16 +294,19 @@ function AccountInput({
     type?: string;
     placeholder?: string;
     multiline?: boolean;
+    disabled?: boolean;
+    helperText?: string;
 }) {
-    const className = 'w-full rounded-xl border border-white/10 bg-black/35 px-3 py-2.5 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:border-primary/60 focus:ring-2 focus:ring-primary/20';
+    const className = 'w-full rounded-xl border border-white/10 bg-black/35 px-3 py-2.5 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:border-primary/60 focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-60';
     return (
         <label className="block">
             <span className="mb-2 block text-sm font-medium text-foreground/80">{label}</span>
             {multiline ? (
-                <textarea className={`${className} min-h-24 resize-y`} value={value} placeholder={placeholder} onChange={(event) => onChange(event.target.value)} />
+                <textarea className={`${className} min-h-24 resize-y`} value={value} placeholder={placeholder} disabled={disabled} onChange={(event) => onChange(event.target.value)} />
             ) : (
-                <input className={className} type={type} value={value} placeholder={placeholder} onChange={(event) => onChange(event.target.value)} />
+                <input className={className} type={type} value={value} placeholder={placeholder} disabled={disabled} onChange={(event) => onChange(event.target.value)} />
             )}
+            {helperText ? <span className="mt-2 block text-xs text-muted-foreground">{helperText}</span> : null}
         </label>
     );
 }

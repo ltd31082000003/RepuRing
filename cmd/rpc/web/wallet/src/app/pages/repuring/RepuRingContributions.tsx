@@ -63,7 +63,7 @@ export default function RepuRingContributions(): JSX.Element {
                 {categories.map((category) => <option key={category}>{category}</option>)}
               </select>
             </label>
-            <Button onClick={() => submit('createContribution', { circleId, ...contributionForm })}>Submit CreateContributionTx</Button>
+            <Button onClick={() => { void submit('createContribution', { circleId, ...contributionForm }); }}>Submit CreateContributionTx</Button>
           </Panel>
         </div>
 
