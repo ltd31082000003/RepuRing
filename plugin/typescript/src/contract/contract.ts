@@ -544,11 +544,11 @@ const endorsementPrefix = Buffer.from([85]);
 const circleEndorsementPrefix = Buffer.from([86]);
 const userEndorsementPrefix = Buffer.from([87]);
 const pairEndorsementPrefix = Buffer.from([88]);
-const contributionPrefix = Buffer.from([89]);
-const circleContributionPrefix = Buffer.from([90]);
-const userContributionPrefix = Buffer.from([91]);
-const contributionEndorsementPrefix = Buffer.from([92]);
-const contributionEndorsementIndexPrefix = Buffer.from([93]);
+const contributionPrefix = Buffer.from([70]);
+const circleContributionPrefix = Buffer.from([71]);
+const userContributionPrefix = Buffer.from([72]);
+const contributionEndorsementPrefix = Buffer.from([73]);
+const contributionEndorsementIndexPrefix = Buffer.from([74]);
 
 export function KeyForAccount(addr: Uint8Array): Uint8Array {
     return JoinLenPrefix(accountPrefix, Buffer.from(addr));

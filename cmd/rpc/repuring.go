@@ -19,9 +19,9 @@ const (
 	repuringEndorsementPrefix        byte = 85
 	repuringCircleEndorsementPrefix  byte = 86
 	repuringUserEndorsementPrefix    byte = 87
-	repuringContributionPrefix       byte = 89
-	repuringCircleContributionPrefix byte = 90
-	repuringUserContributionPrefix   byte = 91
+	repuringContributionPrefix       byte = 70
+	repuringCircleContributionPrefix byte = 71
+	repuringUserContributionPrefix   byte = 72
 )
 
 type repuringAddressRequest struct {

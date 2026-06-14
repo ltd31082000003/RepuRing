@@ -105,39 +105,43 @@ export function RepuRingProvider({ children }: { children: React.ReactNode }): J
   }, [contributions, selectedContributionId]);
 
   async function submit(kind: TxKind, fields: Record<string, unknown>) {
-    validateSubmit(kind, fields, currentAddress, password);
-    setStatus(`Submitting ${kind} through ${QUERY_RPC}/v1/tx...`);
-    const signer = await getSigner(currentAddress, password);
-    const height = await getHeight();
-    const msgBytes = encodeMessage(kind, { senderAddress: signer.address, ...fields });
-    const time = Date.now() * 1000;
-    const signBytes = encodeTransaction({
-      messageType: kind,
-      typeUrl: txMeta[kind].typeUrl,
-      msgBytes,
-      createdHeight: height,
-      time,
-      fee: FEE,
-      networkID: NETWORK_ID,
-      chainID: CHAIN_ID,
-    });
-    const signature = signBLS(signer.privateKey, signBytes);
-    const tx = {
-      type: kind,
-      msgTypeUrl: txMeta[kind].typeUrl,
-      msgBytes: bytesToHex(msgBytes),
-      signature: { publicKey: cleanHex(signer.publicKey), signature: bytesToHex(signature) },
-      time,
-      createdHeight: height,
-      fee: FEE,
-      memo: '',
-      networkID: NETWORK_ID,
-      chainID: CHAIN_ID,
-    };
-    const response = await postJSON(`${QUERY_RPC}/v1/tx`, tx);
-    setLastTx(typeof response === 'string' ? response : JSON.stringify(response));
-    setStatus(`${kind} submitted. Waiting for block, then refreshing state...`);
-    await refreshAfterCommit(refreshState);
+    try {
+      validateSubmit(kind, fields, currentAddress, password);
+      setStatus(`Submitting ${kind} through ${QUERY_RPC}/v1/tx...`);
+      const signer = await getSigner(currentAddress, password);
+      const height = await getHeight();
+      const msgBytes = encodeMessage(kind, { senderAddress: signer.address, ...fields });
+      const time = Date.now() * 1000;
+      const signBytes = encodeTransaction({
+        messageType: kind,
+        typeUrl: txMeta[kind].typeUrl,
+        msgBytes,
+        createdHeight: height,
+        time,
+        fee: FEE,
+        networkID: NETWORK_ID,
+        chainID: CHAIN_ID,
+      });
+      const signature = signBLS(signer.privateKey, signBytes);
+      const tx = {
+        type: kind,
+        msgTypeUrl: txMeta[kind].typeUrl,
+        msgBytes: bytesToHex(msgBytes),
+        signature: { publicKey: cleanHex(signer.publicKey), signature: bytesToHex(signature) },
+        time,
+        createdHeight: height,
+        fee: FEE,
+        memo: '',
+        networkID: NETWORK_ID,
+        chainID: CHAIN_ID,
+      };
+      const response = await postJSON(`${QUERY_RPC}/v1/tx`, tx);
+      setLastTx(typeof response === 'string' ? response : JSON.stringify(response));
+      setStatus(`${kind} submitted. Waiting for block, then refreshing state...`);
+      await refreshAfterCommit(refreshState);
+    } catch (e) {
+      setStatus(`${kind} failed: ${e instanceof Error ? e.message : String(e)}`);
+    }
   }
 
   return (
