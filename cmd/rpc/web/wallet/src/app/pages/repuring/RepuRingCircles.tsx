@@ -1,5 +1,5 @@
 import React from 'react';
-import { AddressList, Badge, Button, EmptyState, Input, PageHeader, Panel, RepuRingPage, StatusPill, TxStatusCard, shortAddress } from './components';
+import { Badge, Button, EmptyState, Input, MemberList, MetricCard, PageHeader, Panel, RepuRingPage, SectionHeader, StatusPill, TxStatusCard, shortAddress } from './components';
 import { useRepuRing } from './useRepuRing';
 
 export default function RepuRingCircles(): JSX.Element {
@@ -18,77 +18,92 @@ export default function RepuRingCircles(): JSX.Element {
     refreshState,
     submit,
   } = useRepuRing();
+  const [actionsOpen, setActionsOpen] = React.useState(!circle);
+  const memberCount = circle?.members?.length || 0;
+  const isMember = Boolean(currentAddress && circle?.members?.includes(currentAddress));
 
   return (
     <RepuRingPage>
       <PageHeader
-        eyebrow="Project community"
-        title="Create and join Web3 project circles."
-        copy="A project/community creates a circle, members join it, then contribution proofs and endorsements build reputation through real CreateCircleTx and JoinCircleTx transactions."
-        actions={<Button variant="secondary" onClick={refreshState}>Refresh</Button>}
+        eyebrow="Project circles"
+        title="Project communities for contribution reputation."
+        copy="Circles are Web3 project hubs where contributors join, post proofs, endorse work, and claim roles from reputation."
+        actions={<Button variant="secondary" onClick={refreshState}>Refresh circle</Button>}
       />
 
-      <div className="grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
-        <div className="space-y-5">
-          {!profile && (
-            <Panel title="Create a RepuRing profile first" eyebrow="Social-Fi identity required">
-              <div className="rounded-2xl border border-amber-300/20 bg-amber-300/10 p-4">
-                <p className="font-semibold text-amber-100">Profiles live in My Account because they represent your Social-Fi identity.</p>
-                <p className="mt-2 text-sm leading-6 text-amber-100/80">
-                  Create your profile before creating project circles, joining communities, or posting contribution proofs.
-                </p>
-              </div>
-              <Button to="/key-management" variant="secondary">Open My Account</Button>
-            </Panel>
-          )}
-
-          <Panel title="Circle Controls" eyebrow="CreateCircleTx + JoinCircleTx">
-            <Input label="Signing key password" type="password" value={password} onChange={setPassword} placeholder="Required for BLS signing" />
-            <Input label="Circle ID" value={circleId} onChange={setCircleId} placeholder="pharos-builders" />
-            <Input label="Name" value={circleForm.name} onChange={(name) => setCircleForm({ ...circleForm, name })} />
-            <Input label="Description" value={circleForm.description} onChange={(description) => setCircleForm({ ...circleForm, description })} multiline />
-            <div className="flex flex-wrap gap-3">
-              <Button onClick={() => { void submit('createCircle', { circleId, ...circleForm }); }}>CreateCircleTx</Button>
-              <Button variant="secondary" onClick={() => { void submit('joinCircle', { circleId }); }}>JoinCircleTx</Button>
+      {!profile && (
+        <Panel className="border-amber-300/20 bg-amber-300/10">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h2 className="text-xl font-semibold text-amber-100">Create your RepuRing profile first</h2>
+              <p className="mt-2 text-sm leading-6 text-amber-100/80">
+                Profiles live in My Account because they represent your Social-Fi identity.
+              </p>
             </div>
-          </Panel>
-        </div>
+            <Button to="/key-management" variant="secondary">Open My Account</Button>
+          </div>
+        </Panel>
+      )}
 
-        <Panel title="Current Circle" eyebrow={circle?.circleId || circleId || 'No circle selected'}>
-          {circle ? (
-            <>
-              <div className="rounded-2xl border border-white/10 bg-black/25 p-5">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <h2 className="text-2xl font-semibold text-white">{circle.name}</h2>
-                    <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">{circle.description || 'No description provided.'}</p>
-                  </div>
-                  <Badge>{circle.members?.length || 0} members</Badge>
-                </div>
-                <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                    <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">Creator</p>
-                    <p className="mt-2 font-mono text-sm text-zinc-200">{shortAddress(circle.creatorAddress)}</p>
-                  </div>
-                  <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                    <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">Selected account</p>
-                    <p className="mt-2 font-mono text-sm text-zinc-200">{shortAddress(currentAddress) || 'No key selected'}</p>
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <h3 className="font-semibold text-white">Members</h3>
-                <StatusPill tone={circle.members?.includes(currentAddress) ? 'success' : 'neutral'}>
-                  {circle.members?.includes(currentAddress) ? 'You are a member' : 'Not joined'}
-                </StatusPill>
-              </div>
-              <AddressList values={circle.members || []} />
-            </>
-          ) : (
-            <EmptyState title="Circle not loaded" copy="Enter a circle ID, create a new circle, or refresh after a circle transaction commits." />
+      <section className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
+        <Panel className="overflow-hidden">
+          <SectionHeader
+            eyebrow="Project context"
+            title={circle?.name || 'No project circle loaded'}
+            copy={circle?.description || 'Enter a circle ID and refresh, or create a new project circle from Circle Actions.'}
+            actions={<StatusPill tone={isMember ? 'success' : 'neutral'}>{isMember ? 'You are a member' : 'Not joined'}</StatusPill>}
+          />
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <MetricCard label="Circle ID" value={circle?.circleId || circleId || 'None'} detail="Shared project community key." tone="cyan" />
+            <MetricCard label="Members" value={String(memberCount)} detail="Profiles joined to this circle." tone="emerald" />
+            <MetricCard label="Creator" value={shortAddress(circle?.creatorAddress || '') || 'Unknown'} detail={circle?.creatorAddress || 'Create the circle to set admin.'} />
+            <MetricCard label="Selected account" value={shortAddress(currentAddress) || 'No account'} detail={currentAddress || 'Select a signing key in My Account.'} />
+          </div>
+          {!circle && (
+            <EmptyState title="No project circle loaded" copy="Create a new circle or load an existing circle ID to see project context and members." />
           )}
         </Panel>
-      </div>
+
+        <Panel>
+          <SectionHeader
+            eyebrow="Circle actions"
+            title="Create or join a project."
+            copy="Use real CreateCircleTx and JoinCircleTx transactions. Forms stay compact until needed."
+            actions={<Button variant="secondary" onClick={() => setActionsOpen((open) => !open)}>{actionsOpen ? 'Hide actions' : 'Open actions'}</Button>}
+          />
+          {actionsOpen ? (
+            <div className="space-y-4 rounded-3xl border border-white/10 bg-black/20 p-4">
+              <Input label="Signing key password" type="password" value={password} onChange={setPassword} placeholder="Required for BLS signing" />
+              <Input label="Circle ID" value={circleId} onChange={setCircleId} placeholder="pharos-builders" />
+              <Input label="Name" value={circleForm.name} onChange={(name) => setCircleForm({ ...circleForm, name })} placeholder="Pharos Builders" />
+              <Input label="Description" value={circleForm.description} onChange={(description) => setCircleForm({ ...circleForm, description })} multiline />
+              <div className="flex flex-wrap gap-3">
+                <Button onClick={() => { void submit('createCircle', { circleId, ...circleForm }); }}>CreateCircleTx</Button>
+                <Button variant="secondary" onClick={() => { void submit('joinCircle', { circleId }); }}>JoinCircleTx</Button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              <Badge tone="zinc">CreateCircleTx</Badge>
+              <Badge tone="zinc">JoinCircleTx</Badge>
+              <Badge tone="cyan">Circle ID: {circleId || 'not set'}</Badge>
+            </div>
+          )}
+        </Panel>
+      </section>
+
+      <Panel>
+        <SectionHeader
+          eyebrow="Members"
+          title="Circle member graph"
+          copy="Creator and current user badges help judges read the community state quickly during the demo."
+        />
+        {circle ? (
+          <MemberList values={circle.members || []} currentAddress={currentAddress} creatorAddress={circle.creatorAddress} />
+        ) : (
+          <EmptyState title="No members to show" copy="Load or create a project circle to see members here." />
+        )}
+      </Panel>
 
       <TxStatusCard status={status} lastTx={lastTx} onRefresh={refreshState} />
     </RepuRingPage>

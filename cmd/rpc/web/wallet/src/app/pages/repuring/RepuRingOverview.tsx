@@ -1,95 +1,97 @@
 import React from 'react';
-import { Badge, Button, Metric, Panel, RepuRingPage, StatCard, StatusPill, TxStatusCard, roleBadge, roleForReputation, rpcTone, shortAddress } from './components';
+import { AvatarFallback, Badge, Button, MetricCard, Panel, RepuRingPage, SectionHeader, StatusPill, TxStatusCard, roleBadge, roleForReputation, rpcTone, shortAddress } from './components';
 import { useRepuRing } from './useRepuRing';
 
+const flow = ['Profile', 'Circle', 'Contribution', 'Endorsement', 'Reputation', 'Role'];
+
 export default function RepuRingOverview(): JSX.Element {
-  const { currentAddress, profile, role, circle, circleForm, lastTx, status, refreshState } = useRepuRing();
-  const profileRole = role?.role || roleForReputation(profile?.reputation || 0);
+  const { currentAddress, profile, role, circle, circleId, lastTx, status, refreshState } = useRepuRing();
+  const derivedRole = role?.role || roleForReputation(profile?.reputation || 0);
   const tone = rpcTone(status);
 
   return (
     <RepuRingPage>
-      <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04] p-6 shadow-2xl shadow-black/40 backdrop-blur-xl lg:p-8">
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-400/10 via-transparent to-cyan-400/10" />
-        <div className="relative grid gap-8 lg:grid-cols-[1.25fr_0.75fr] lg:items-center">
+      <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.045] p-6 shadow-2xl shadow-black/40 backdrop-blur-xl lg:p-8">
+        <div className="absolute inset-0 bg-gradient-to-br from-emerald-400/15 via-transparent to-cyan-400/10" />
+        <div className="relative grid gap-8 xl:grid-cols-[1.2fr_0.8fr] xl:items-center">
           <div className="space-y-6">
             <div className="flex flex-wrap gap-2">
               <Badge>Social-Fi</Badge>
-              <Badge>Custom Canopy TXs</Badge>
-              <Badge>RPC 50002/50003</Badge>
+              <Badge tone="cyan">Contribution network</Badge>
+              <Badge tone="zinc">Canopy RPC 50002/50003</Badge>
             </div>
-            <div className="space-y-3">
-              <p className="text-sm font-semibold uppercase tracking-[0.28em] text-emerald-300">RepuRing</p>
-              <h1 className="max-w-4xl text-4xl font-semibold tracking-tight text-white md:text-6xl">
-                Onchain trust circles for builders, communities, and reputation.
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-300">RepuRing</p>
+              <h1 className="mt-4 max-w-4xl text-4xl font-semibold tracking-tight text-white md:text-6xl">
+                Onchain Social-Fi for Web3 project contributors.
               </h1>
-              <p className="max-w-2xl text-base leading-7 text-zinc-300">
-                Create a Web3 project community, post contribution proofs, endorse useful work, and build onchain reputation. Every action is a signed custom transaction submitted to the local Canopy chain, then read back from committed RPC state.
+              <p className="mt-5 max-w-2xl text-base leading-7 text-zinc-300">
+                Create a project circle, publish proof-of-work, endorse useful contributions, and turn reputation into visible community roles.
               </p>
             </div>
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              {[
-                ['01', 'Create profile', 'Register your builder identity onchain.'],
-                ['02', 'Join project', 'Enter a Web3 community circle.'],
-                ['03', 'Post proof', 'Publish contribution evidence.'],
-                ['04', 'Earn role', 'Unlock status from endorsed work.'],
-              ].map(([step, title, copy]) => (
-                <div key={step} className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                  <div className="text-xs font-semibold text-emerald-300">{step}</div>
-                  <div className="mt-2 font-semibold text-white">{title}</div>
-                  <div className="mt-1 text-xs leading-5 text-zinc-400">{copy}</div>
+            <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-6">
+              {flow.map((step, index) => (
+                <div key={step} className="rounded-2xl border border-white/10 bg-black/25 p-4">
+                  <p className="text-xs font-semibold text-emerald-300">{String(index + 1).padStart(2, '0')}</p>
+                  <p className="mt-2 text-sm font-semibold text-white">{step}</p>
                 </div>
               ))}
             </div>
-            <div className="flex flex-wrap gap-3">
-              <Button to="/repuring/circles">Create profile / Circles</Button>
-              <Button to="/repuring/contributions" variant="secondary">Post contribution</Button>
-              <Button to="/repuring/endorse" variant="secondary">Endorse</Button>
-              <Button to="/repuring/leaderboard" variant="secondary">Leaderboard</Button>
-            </div>
           </div>
-          <div className="rounded-3xl border border-emerald-300/20 bg-black/30 p-5 shadow-xl shadow-emerald-950/30">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-zinc-400">Live demo circle</p>
-                <h2 className="text-2xl font-semibold text-white">{circle?.name || circleForm.name}</h2>
+
+          <Panel className="border-emerald-300/20 bg-black/30">
+            <div className="flex items-center gap-4">
+              <AvatarFallback label={profile?.username || currentAddress} src={profile?.avatarUrl} />
+              <div className="min-w-0 flex-1">
+                <p className="text-sm text-zinc-400">Current profile</p>
+                <h2 className="truncate text-2xl font-semibold text-white">{profile?.username || 'Profile not created'}</h2>
               </div>
-              <StatusPill tone={tone}>{tone === 'danger' ? 'RPC issue' : tone === 'warning' ? 'Submitting' : 'RPC ready'}</StatusPill>
+              <StatusPill tone={profile ? 'success' : 'warning'}>{profile ? 'Active' : 'Needed'}</StatusPill>
             </div>
-            <div className="mt-6 grid grid-cols-2 gap-3">
-              <Metric label="Members" value={String(circle?.members?.length || 0)} />
-              <Metric label="Reputation" value={String(profile?.reputation || 0)} />
-              <Metric label="Role" value={roleBadge(profileRole)} />
-              <Metric label="Tx mode" value="Signed" />
+            <div className="grid gap-3 sm:grid-cols-2">
+              <MetricCard label="Selected wallet" value={shortAddress(currentAddress) || 'No wallet'} detail={currentAddress || 'Open My Account to select a local signing key.'} />
+              <MetricCard label="Current circle" value={circle?.name || circleId || 'No circle'} detail={circle ? `${circle.members?.length || 0} members` : 'Create or load a project community.'} tone="cyan" />
+              <MetricCard label="Reputation" value={String(profile?.reputation || 0)} detail="Earned from endorsed contribution proofs." tone="emerald" />
+              <MetricCard label="Role" value={roleBadge(derivedRole)} detail={role?.claimedRole ? 'Claimed onchain' : 'Claim role from the Admin page.'} />
             </div>
-            <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">Last transaction</p>
-              <p className="mt-2 break-all font-mono text-xs text-zinc-300">{lastTx || 'No transaction submitted yet'}</p>
-            </div>
-          </div>
+          </Panel>
         </div>
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-[1fr_1fr_1fr_1.2fr]">
-        <StatCard label="Current account" value={shortAddress(currentAddress) || 'No account'} detail={currentAddress || 'Select a signing key before submitting transactions.'} />
-        <StatCard label="Profile" value={profile?.username || 'Not created'} detail={profile?.bio || 'CreateProfileTx initializes your reputation at 0.'} />
-        <StatCard label="Reputation score" value={String(profile?.reputation || 0)} detail="Earned when members endorse useful contribution proofs." />
-        <Panel className="space-y-3">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">Role badge</p>
-              <p className="mt-1 text-xl font-semibold text-white">{roleBadge(profileRole)}</p>
-            </div>
-            <StatusPill tone={role?.claimedRole ? 'success' : 'warning'}>{role?.claimedRole ? 'Claimed' : 'Claimable'}</StatusPill>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <Metric label="Circle members" value={String(circle?.members?.length || 0)} />
-            <Metric label="RPC status" value={tone === 'danger' ? 'Issue' : 'Live'} />
-          </div>
-        </Panel>
-      </section>
+      <Panel>
+        <SectionHeader
+          eyebrow="Quick actions"
+          title="Move through the demo like a Social-Fi product."
+          copy="Each action opens a route that keeps the real Canopy transaction and query flow."
+        />
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+          <QuickAction title="My Account" copy="Create or edit your RepuRing identity." to="/key-management" />
+          <QuickAction title="Join/Create Circle" copy="Set up a project community." to="/repuring/circles" />
+          <QuickAction title="Post Contribution" copy="Publish proof-of-work to the feed." to="/repuring/contributions" />
+          <QuickAction title="Endorse Work" copy="Review and endorse useful proofs." to="/repuring/endorse" />
+          <QuickAction title="View Leaderboard" copy="See reputation and role rankings." to="/repuring/leaderboard" />
+        </div>
+      </Panel>
 
-      <TxStatusCard status={status} lastTx={lastTx} onRefresh={refreshState} />
+      <Panel>
+        <SectionHeader
+          eyebrow="RPC"
+          title="Live chain state"
+          copy="The dashboard reflects the current provider state loaded from RepuRing RPC query routes."
+          actions={<StatusPill tone={tone === 'danger' ? 'danger' : tone === 'warning' ? 'warning' : 'success'}>{tone === 'danger' ? 'RPC issue' : tone === 'warning' ? 'Submitting' : 'State refreshed'}</StatusPill>}
+        />
+        <TxStatusCard status={status} lastTx={lastTx} onRefresh={refreshState} />
+      </Panel>
     </RepuRingPage>
+  );
+}
+
+function QuickAction({ title, copy, to }: { title: string; copy: string; to: string }) {
+  return (
+    <div className="rounded-3xl border border-white/10 bg-black/25 p-5">
+      <h3 className="text-lg font-semibold text-white">{title}</h3>
+      <p className="mt-2 min-h-12 text-sm leading-6 text-zinc-400">{copy}</p>
+      <Button to={to} variant="secondary" className="mt-4 w-full">Open</Button>
+    </div>
   );
 }

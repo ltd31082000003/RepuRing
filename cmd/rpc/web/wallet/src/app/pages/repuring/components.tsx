@@ -31,6 +31,19 @@ export function PageHeader({ eyebrow, title, copy, actions }: { eyebrow: string;
   );
 }
 
+export function SectionHeader({ eyebrow, title, copy, actions }: { eyebrow?: string; title: string; copy?: string; actions?: React.ReactNode }) {
+  return (
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        {eyebrow && <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-300">{eyebrow}</p>}
+        <h2 className="mt-1 text-2xl font-semibold text-white">{title}</h2>
+        {copy && <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">{copy}</p>}
+      </div>
+      {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
+    </div>
+  );
+}
+
 export function Panel({ id, title, eyebrow, className = '', children }: { id?: string; title?: string; eyebrow?: string; className?: string; children: React.ReactNode }) {
   return (
     <section id={id} className={`scroll-mt-20 rounded-3xl border border-white/10 bg-white/[0.045] p-5 shadow-xl shadow-black/20 backdrop-blur-xl ${className}`}>
@@ -45,6 +58,14 @@ export function Panel({ id, title, eyebrow, className = '', children }: { id?: s
   );
 }
 
+export function SocialCard({ children, selected = false, className = '' }: { children: React.ReactNode; selected?: boolean; className?: string }) {
+  return (
+    <article className={`rounded-3xl border p-5 shadow-xl shadow-black/20 backdrop-blur-xl transition ${selected ? 'border-emerald-300/40 bg-emerald-300/10' : 'border-white/10 bg-white/[0.04]'} ${className}`}>
+      {children}
+    </article>
+  );
+}
+
 export function StatCard({ label, value, detail }: { label: string; value: string; detail: string }) {
   return (
     <Panel>
@@ -55,11 +76,36 @@ export function StatCard({ label, value, detail }: { label: string; value: strin
   );
 }
 
+export function MetricCard({ label, value, detail, tone = 'neutral' }: { label: string; value: string; detail?: string; tone?: 'neutral' | 'emerald' | 'cyan' | 'red' }) {
+  const tones = {
+    neutral: 'from-white/[0.055] to-white/[0.025] border-white/10',
+    emerald: 'from-emerald-400/15 to-white/[0.025] border-emerald-300/20',
+    cyan: 'from-cyan-400/15 to-white/[0.025] border-cyan-300/20',
+    red: 'from-red-400/15 to-white/[0.025] border-red-300/20',
+  };
+  return (
+    <div className={`rounded-3xl border bg-gradient-to-br p-4 shadow-lg shadow-black/20 ${tones[tone]}`}>
+      <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">{label}</p>
+      <p className="mt-2 break-all text-2xl font-semibold text-white">{value}</p>
+      {detail && <p className="mt-2 line-clamp-2 break-all text-sm text-zinc-400">{detail}</p>}
+    </div>
+  );
+}
+
 export function Metric({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-4">
       <p className="text-xs text-zinc-500">{label}</p>
       <p className="mt-1 break-all text-lg font-semibold text-white">{value}</p>
+    </div>
+  );
+}
+
+export function AvatarFallback({ label, src }: { label?: string; src?: string }) {
+  const initial = (label || 'R').trim().slice(0, 1).toUpperCase() || 'R';
+  return (
+    <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-emerald-300/20 bg-gradient-to-br from-emerald-300/20 to-cyan-300/10 text-sm font-bold text-emerald-100">
+      {src ? <img src={src} alt={label || 'avatar'} className="h-full w-full object-cover" /> : initial}
     </div>
   );
 }
@@ -74,6 +120,23 @@ export function Badge({ children, tone = 'emerald' }: { children: React.ReactNod
   return <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${tones[tone]}`}>{children}</span>;
 }
 
+export function CategoryBadge({ category }: { category: string }) {
+  const normalized = category || 'builder';
+  const tones: Record<string, 'emerald' | 'cyan' | 'zinc'> = {
+    builder: 'emerald',
+    helper: 'cyan',
+    creator: 'emerald',
+    researcher: 'cyan',
+    tester: 'zinc',
+    educator: 'emerald',
+  };
+  return <Badge tone={tones[normalized] || 'zinc'}>{normalized}</Badge>;
+}
+
+export function ReputationBadge({ value }: { value: number }) {
+  return <Badge tone={value > 0 ? 'emerald' : 'zinc'}>{value} reputation</Badge>;
+}
+
 export function StatusPill({ children, tone }: { children: React.ReactNode; tone: 'success' | 'warning' | 'danger' | 'neutral' }) {
   const tones = {
     success: 'border-emerald-300/30 bg-emerald-400/10 text-emerald-200',
@@ -86,9 +149,18 @@ export function StatusPill({ children, tone }: { children: React.ReactNode; tone
 
 export function EmptyState({ title, copy }: { title: string; copy: string }) {
   return (
-    <div className="rounded-2xl border border-dashed border-white/10 bg-black/20 p-6 text-center">
+    <div className="rounded-3xl border border-dashed border-white/10 bg-black/20 p-8 text-center">
+      <div className="mx-auto mb-4 h-12 w-12 rounded-2xl border border-white/10 bg-white/[0.04]" />
       <p className="font-semibold text-white">{title}</p>
       <p className="mt-2 text-sm text-zinc-500">{copy}</p>
+    </div>
+  );
+}
+
+export function DangerPanel({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="rounded-3xl border border-red-300/25 bg-gradient-to-br from-red-500/15 to-black/20 p-5 shadow-xl shadow-red-950/20">
+      {children}
     </div>
   );
 }
@@ -107,16 +179,16 @@ export function Input({ label, value, onChange, type = 'text', placeholder, mult
   );
 }
 
-export function Button({ children, onClick, variant = 'primary', to }: { children: React.ReactNode; onClick?: () => Promise<void> | void; variant?: 'primary' | 'secondary' | 'danger'; to?: string }) {
+export function Button({ children, onClick, variant = 'primary', to, className = '' }: { children: React.ReactNode; onClick?: () => Promise<void> | void; variant?: 'primary' | 'secondary' | 'danger'; to?: string; className?: string }) {
   const variants = {
     primary: 'border-emerald-300/30 bg-gradient-to-r from-emerald-300 to-cyan-300 text-slate-950 hover:shadow-emerald-500/20',
     secondary: 'border-white/10 bg-white/[0.08] text-white hover:bg-white/[0.12]',
     danger: 'border-red-300/30 bg-red-500/15 text-red-100 hover:bg-red-500/25',
   };
-  const className = `inline-flex items-center justify-center rounded-2xl border px-5 py-3 text-sm font-semibold shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl ${variants[variant]}`;
-  if (to) return <Link className={className} to={to}>{children}</Link>;
+  const buttonClass = `inline-flex items-center justify-center rounded-2xl border px-5 py-3 text-sm font-semibold shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl ${variants[variant]} ${className}`;
+  if (to) return <Link className={buttonClass} to={to}>{children}</Link>;
   return (
-    <button className={className} onClick={() => void Promise.resolve(onClick?.()).catch((e) => alert(e.message || String(e)))}>
+    <button className={buttonClass} onClick={() => void Promise.resolve(onClick?.()).catch((e) => alert(e.message || String(e)))}>
       {children}
     </button>
   );
@@ -132,6 +204,32 @@ export function AddressList({ values }: { values: string[] }) {
           <span className="font-mono text-zinc-600">{cleanHex(value).slice(-8)}</span>
         </div>
       ))}
+    </div>
+  );
+}
+
+export function MemberList({ values, currentAddress, creatorAddress }: { values: string[]; currentAddress: string; creatorAddress: string }) {
+  if (values.length === 0) return <EmptyState title="No members loaded" copy="Circle members will appear after CreateCircleTx or JoinCircleTx is committed." />;
+  return (
+    <div className="grid gap-3 sm:grid-cols-2">
+      {values.map((value) => {
+        const clean = cleanHex(value);
+        const isCurrent = clean === cleanHex(currentAddress);
+        const isCreator = clean === cleanHex(creatorAddress);
+        return (
+          <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-black/25 p-4" key={value}>
+            <AvatarFallback label={clean} />
+            <div className="min-w-0 flex-1">
+              <p className="font-mono text-sm text-zinc-200">{shortAddress(value)}</p>
+              <p className="mt-1 font-mono text-xs text-zinc-600">{clean.slice(-12)}</p>
+            </div>
+            <div className="flex flex-col gap-1">
+              {isCurrent && <Badge tone="cyan">You</Badge>}
+              {isCreator && <Badge>Creator</Badge>}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -158,8 +256,8 @@ export function roleForReputation(reputation: number) {
 
 export function roleBadge(roleName: string) {
   const role = roleName || 'Newbie';
-  const icon = role === 'Circle Leader' ? '👑' : role === 'Core Member' ? '🛠' : role === 'Trusted' ? '🔰' : '🌱';
-  return `${icon} ${role}`;
+  const icon = role === 'Circle Leader' ? 'Leader' : role === 'Core Member' ? 'Core' : role === 'Trusted' ? 'Trusted' : 'Newbie';
+  return `${icon} · ${role}`;
 }
 
 export function shortAddress(value: string) {

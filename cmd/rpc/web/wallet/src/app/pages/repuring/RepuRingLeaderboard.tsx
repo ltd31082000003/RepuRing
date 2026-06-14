@@ -1,54 +1,104 @@
 import React from 'react';
-import { Badge, EmptyState, Input, PageHeader, Panel, RepuRingPage, TxStatusCard, roleBadge, roleForReputation, shortAddress } from './components';
+import { AvatarFallback, Badge, Button, EmptyState, Input, MetricCard, PageHeader, Panel, ReputationBadge, RepuRingPage, SectionHeader, TxStatusCard, roleBadge, roleForReputation, shortAddress } from './components';
 import { useRepuRing } from './useRepuRing';
 
 export default function RepuRingLeaderboard(): JSX.Element {
-  const { circleId, setCircleId, leaderboard, circle, status, lastTx, refreshState } = useRepuRing();
+  const { currentAddress, circleId, setCircleId, leaderboard, circle, status, lastTx, refreshState } = useRepuRing();
+  const currentRank = leaderboard.findIndex((row) => row.address === currentAddress) + 1;
+  const topReputation = leaderboard[0]?.reputation || 0;
+  const podium = leaderboard.slice(0, 3);
 
   return (
     <RepuRingPage>
       <PageHeader
-        eyebrow="Leaderboard"
-        title="Contribution rankings for your project circle."
-        copy="The leaderboard ranks contributors by endorsed contribution proofs and reputation, turning useful work into visible Social-Fi status."
+        eyebrow="Reputation rankings"
+        title="Contribution Leaderboard"
+        copy="Rank contributors by endorsed contribution proofs and reputation inside a project community."
+        actions={<Button variant="secondary" onClick={refreshState}>Refresh rankings</Button>}
       />
 
-      <Panel className="grid gap-4 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
-        <Input label="Circle ID" value={circleId} onChange={setCircleId} placeholder="pharos-builders" />
-        <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
-          <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">Loaded circle</p>
-          <p className="mt-2 text-xl font-semibold text-white">{circle?.name || 'Circle not loaded'}</p>
-          <p className="mt-1 text-sm text-zinc-400">{circle ? `${circle.members?.length || 0} members` : 'Create or select a circle, then refresh.'}</p>
+      <Panel>
+        <SectionHeader eyebrow="Circle selector" title="Choose project leaderboard" copy="Leaderboard rows are loaded from RepuRing RPC state for the selected circle." />
+        <div className="grid gap-4 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
+          <Input label="Circle ID" value={circleId} onChange={setCircleId} placeholder="pharos-builders" />
+          <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
+            <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">Loaded circle</p>
+            <p className="mt-2 text-xl font-semibold text-white">{circle?.name || 'Circle not loaded'}</p>
+            <p className="mt-1 text-sm text-zinc-400">{circle ? `${circle.members?.length || 0} members` : 'Create or select a circle, then refresh.'}</p>
+          </div>
         </div>
       </Panel>
 
-      <Panel title="Circle Leaderboard" eyebrow="Ranked by reputation">
-        <div className="overflow-hidden rounded-2xl border border-white/10">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-white/[0.04] text-xs uppercase tracking-[0.18em] text-zinc-500">
-              <tr>
-                <th className="px-4 py-3">Rank</th>
-                <th className="px-4 py-3">Username</th>
-                <th className="px-4 py-3">Reputation</th>
-                <th className="px-4 py-3">Role</th>
-                <th className="px-4 py-3">Address</th>
-              </tr>
-            </thead>
-            <tbody>
-              {leaderboard.length === 0 ? (
-                <tr><td className="px-4 py-10" colSpan={5}><EmptyState title="No leaderboard data yet" copy="Create profiles, post a contribution proof, endorse it from another member, then refresh committed chain state." /></td></tr>
-              ) : leaderboard.map((row, index) => (
-                <tr key={row.address} className="border-t border-white/10 bg-black/10">
-                  <td className="px-4 py-4 font-mono text-zinc-400">#{index + 1}</td>
-                  <td className="px-4 py-4 font-semibold text-white">{row.username || 'Unnamed'}</td>
-                  <td className="px-4 py-4"><Badge>{row.reputation} rep</Badge></td>
-                  <td className="px-4 py-4"><Badge tone="cyan">{roleBadge(row.role || roleForReputation(row.reputation))}</Badge></td>
-                  <td className="px-4 py-4 font-mono text-xs text-zinc-500">{shortAddress(row.address)}</td>
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <MetricCard label="Ranked members" value={String(leaderboard.length)} detail="Profiles with reputation in this circle." tone="emerald" />
+        <MetricCard label="Selected circle" value={circle?.name || circleId || 'None'} detail={circle?.description || 'Load a project community.'} tone="cyan" />
+        <MetricCard label="Your rank" value={currentRank > 0 ? `#${currentRank}` : 'Unranked'} detail={currentAddress ? shortAddress(currentAddress) : 'No account selected.'} />
+        <MetricCard label="Top reputation" value={String(topReputation)} detail="Highest score currently visible." />
+      </section>
+
+      {podium.length >= 3 && (
+        <Panel>
+          <SectionHeader eyebrow="Top contributors" title="Podium" copy="A quick demo-friendly view of the top three contributors." />
+          <div className="grid gap-4 md:grid-cols-3">
+            {podium.map((row, index) => (
+              <div key={row.address} className={`rounded-3xl border p-5 text-center ${index === 0 ? 'border-emerald-300/30 bg-emerald-300/10' : 'border-white/10 bg-black/25'}`}>
+                <div className="mx-auto w-fit"><AvatarFallback label={row.username || row.address} /></div>
+                <p className="mt-4 text-sm text-zinc-500">Rank #{index + 1}</p>
+                <h3 className="mt-1 text-xl font-semibold text-white">{row.username || 'Unnamed'}</h3>
+                <p className="mt-2 font-mono text-xs text-zinc-500">{shortAddress(row.address)}</p>
+                <div className="mt-4 flex justify-center"><ReputationBadge value={row.reputation} /></div>
+              </div>
+            ))}
+          </div>
+        </Panel>
+      )}
+
+      <Panel>
+        <SectionHeader
+          eyebrow="Ranked by reputation"
+          title="Main leaderboard"
+          copy="Current user rows are highlighted when the selected wallet appears in the ranking."
+          actions={<><Button to="/repuring/contributions" variant="secondary">Post Contribution</Button><Button to="/repuring/endorse">Endorse Work</Button></>}
+        />
+        {leaderboard.length === 0 ? (
+          <EmptyState title="No reputation yet" copy="No reputation yet. Endorse contributions to populate the leaderboard." />
+        ) : (
+          <div className="overflow-hidden rounded-3xl border border-white/10">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-white/[0.04] text-xs uppercase tracking-[0.18em] text-zinc-500">
+                <tr>
+                  <th className="px-4 py-3">Rank</th>
+                  <th className="px-4 py-3">Contributor</th>
+                  <th className="px-4 py-3">Reputation</th>
+                  <th className="px-4 py-3">Role</th>
+                  <th className="px-4 py-3">Address</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {leaderboard.map((row, index) => {
+                  const isCurrent = row.address === currentAddress;
+                  return (
+                    <tr key={row.address} className={`border-t border-white/10 ${isCurrent ? 'bg-emerald-300/10' : 'bg-black/10'}`}>
+                      <td className="px-4 py-4 font-mono text-zinc-400">#{index + 1}</td>
+                      <td className="px-4 py-4">
+                        <div className="flex items-center gap-3">
+                          <AvatarFallback label={row.username || row.address} />
+                          <div>
+                            <p className="font-semibold text-white">{row.username || 'Unnamed'}</p>
+                            {isCurrent && <p className="text-xs text-emerald-200">Current account</p>}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-4"><ReputationBadge value={row.reputation} /></td>
+                      <td className="px-4 py-4"><Badge tone="cyan">{roleBadge(row.role || roleForReputation(row.reputation))}</Badge></td>
+                      <td className="px-4 py-4 font-mono text-xs text-zinc-500">{shortAddress(row.address)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </Panel>
 
       <TxStatusCard status={status} lastTx={lastTx} onRefresh={refreshState} />

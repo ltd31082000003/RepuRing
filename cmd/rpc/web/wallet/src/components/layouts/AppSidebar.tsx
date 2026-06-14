@@ -33,7 +33,7 @@ function navLinkClass(isActive: boolean, collapsed: boolean): string {
         ? 'w-[57px] flex-col items-center justify-center gap-1 py-2'
         : 'items-center gap-3 px-3 py-2';
     const state = isActive
-        ? 'text-white bg-white/[0.08]'
+        ? 'text-white bg-primary/[0.12] ring-1 ring-primary/25 shadow-[0_0_22px_rgba(69,202,70,0.16)]'
         : 'text-zinc-400 bg-transparent hover:text-white hover:bg-white/5';
     return `${base} ${layout} ${state}`;
 }

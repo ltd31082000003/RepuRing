@@ -1,8 +1,9 @@
 import React from 'react';
-import { Badge, Button, EmptyState, Input, PageHeader, Panel, RepuRingPage, StatusPill, TxStatusCard, shortAddress } from './components';
+import { AvatarFallback, Badge, Button, CategoryBadge, EmptyState, Input, MetricCard, PageHeader, Panel, RepuRingPage, SectionHeader, SocialCard, StatusPill, TxStatusCard, shortAddress } from './components';
 import { useRepuRing } from './useRepuRing';
 
 const categories = ['builder', 'helper', 'creator', 'researcher', 'tester', 'educator'];
+const filterChips = ['all', ...categories];
 
 export default function RepuRingContributions(): JSX.Element {
   const {
@@ -22,89 +23,128 @@ export default function RepuRingContributions(): JSX.Element {
     refreshState,
     submit,
   } = useRepuRing();
+  const [composerOpen, setComposerOpen] = React.useState(contributions.length === 0);
+  const [filter, setFilter] = React.useState('all');
   const isMember = Boolean(currentAddress && circle?.members?.includes(currentAddress));
+  const visibleContributions = filter === 'all' ? contributions : contributions.filter((item) => item.category === filter);
 
   return (
     <RepuRingPage>
       <PageHeader
-        eyebrow="Contribution Feed"
-        title="Project Contribution Board"
-        copy="Members post proof-of-work for a Web3 project community. Useful contributions can be endorsed onchain and turned into reputation."
-        actions={<Button variant="secondary" onClick={refreshState}>Refresh board</Button>}
+        eyebrow="Contribution feed"
+        title="Project Contribution Feed"
+        copy="Members post proof-of-work for a Web3 project community. Endorsements turn useful work into onchain reputation."
+        actions={<Button variant="secondary" onClick={refreshState}>Refresh feed</Button>}
       />
 
-      <div className="grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
+      <section className="grid gap-5 xl:grid-cols-[0.85fr_1.15fr]">
         <div className="space-y-5">
-          <Panel title="Board Context" eyebrow="Project community">
-            <Input label="Circle ID" value={circleId} onChange={setCircleId} placeholder="pharos-builders" />
+          <Panel>
+            <SectionHeader
+              eyebrow="Composer"
+              title="Post proof-of-work"
+              copy="CreateContributionTx publishes a contribution proof into the selected project circle."
+              actions={<Button onClick={() => setComposerOpen((open) => !open)}>{composerOpen ? 'Close composer' : 'Create Contribution'}</Button>}
+            />
             <div className="grid gap-3 sm:grid-cols-2">
-              <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
-                <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">Selected project</p>
-                <p className="mt-2 font-semibold text-white">{circle?.name || 'Circle not loaded'}</p>
-                <p className="mt-1 text-sm text-zinc-400">{circle?.description || 'Create or load a circle first.'}</p>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
-                <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">Posting account</p>
-                <p className="mt-2 font-mono text-sm text-zinc-200">{shortAddress(currentAddress) || 'No key selected'}</p>
-                <div className="mt-3"><StatusPill tone={isMember ? 'success' : 'warning'}>{isMember ? 'Can post proof' : 'Join circle first'}</StatusPill></div>
-              </div>
+              <MetricCard label="Circle" value={circle?.name || circleId || 'Not selected'} detail={circle?.description || 'Select or create a project circle.'} tone="cyan" />
+              <MetricCard label="Posting status" value={isMember ? 'Ready' : 'Join first'} detail={isMember ? 'Selected account is a circle member.' : 'Join the circle before posting contribution proofs.'} tone={isMember ? 'emerald' : 'neutral'} />
             </div>
+            {composerOpen && (
+              <div className="space-y-4 rounded-3xl border border-white/10 bg-black/20 p-4">
+                <Input label="Signing key password" type="password" value={password} onChange={setPassword} placeholder="Required for BLS signing" />
+                <Input label="Circle ID" value={circleId} onChange={setCircleId} placeholder="pharos-builders" />
+                <Input label="Contribution ID" value={contributionForm.contributionId} onChange={(contributionId) => setContributionForm({ ...contributionForm, contributionId })} placeholder="pharos-guide-v1" />
+                <Input label="Title" value={contributionForm.title} onChange={(title) => setContributionForm({ ...contributionForm, title })} placeholder="Wrote Pharos testnet guide" />
+                <Input label="Description" value={contributionForm.description} onChange={(description) => setContributionForm({ ...contributionForm, description })} multiline />
+                <Input label="Proof URL" value={contributionForm.proofUrl} onChange={(proofUrl) => setContributionForm({ ...contributionForm, proofUrl })} placeholder="https://..." />
+                <label className="block">
+                  <span className="mb-2 block text-sm font-medium text-zinc-300">Category</span>
+                  <select className="w-full rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-sm text-white outline-none transition focus:border-emerald-300/60 focus:ring-2 focus:ring-emerald-400/20" value={contributionForm.category} onChange={(e) => setContributionForm({ ...contributionForm, category: e.target.value })}>
+                    {categories.map((category) => <option key={category}>{category}</option>)}
+                  </select>
+                </label>
+                <Button onClick={() => { void submit('createContribution', { circleId, ...contributionForm }); }}>Submit CreateContributionTx</Button>
+              </div>
+            )}
           </Panel>
 
-          <Panel title="Post Contribution Proof" eyebrow="CreateContributionTx">
-            <Input label="Signing key password" type="password" value={password} onChange={setPassword} placeholder="Required for BLS signing" />
-            <Input label="Contribution ID" value={contributionForm.contributionId} onChange={(contributionId) => setContributionForm({ ...contributionForm, contributionId })} placeholder="pharos-guide-v1" />
-            <Input label="Title" value={contributionForm.title} onChange={(title) => setContributionForm({ ...contributionForm, title })} placeholder="Wrote Pharos testnet guide" />
-            <Input label="Description" value={contributionForm.description} onChange={(description) => setContributionForm({ ...contributionForm, description })} multiline />
-            <Input label="Proof URL" value={contributionForm.proofUrl} onChange={(proofUrl) => setContributionForm({ ...contributionForm, proofUrl })} placeholder="https://..." />
-            <label className="block">
-              <span className="mb-2 block text-sm font-medium text-zinc-300">Category</span>
-              <select className="w-full rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-sm text-white outline-none transition focus:border-emerald-300/60 focus:ring-2 focus:ring-emerald-400/20" value={contributionForm.category} onChange={(e) => setContributionForm({ ...contributionForm, category: e.target.value })}>
-                {categories.map((category) => <option key={category}>{category}</option>)}
-              </select>
-            </label>
-            <Button onClick={() => { void submit('createContribution', { circleId, ...contributionForm }); }}>Submit CreateContributionTx</Button>
+          <Panel>
+            <SectionHeader eyebrow="Filters" title="Browse contribution categories" copy="These chips filter the already-loaded feed locally." />
+            <div className="flex flex-wrap gap-2">
+              {filterChips.map((chip) => (
+                <button
+                  key={chip}
+                  type="button"
+                  onClick={() => setFilter(chip)}
+                  className={`rounded-full border px-3 py-1 text-xs font-semibold capitalize transition ${filter === chip ? 'border-emerald-300/40 bg-emerald-300/15 text-emerald-100' : 'border-white/10 bg-white/5 text-zinc-400 hover:bg-white/[0.08]'}`}
+                >
+                  {chip}
+                </button>
+              ))}
+            </div>
           </Panel>
         </div>
 
-        <Panel title="Contribution Feed" eyebrow={circleId || 'Select a circle'} className="h-fit">
-          {contributions.length === 0 ? (
-            <EmptyState title="No contributions yet" copy="Create the first proof-of-work post for this project community, then endorse it from the Endorse page." />
+        <Panel className="h-fit">
+          <SectionHeader
+            eyebrow={circleId || 'Select a circle'}
+            title="Contribution feed"
+            copy="Social proof cards show author, category, proof URL, endorsement count, and status."
+          />
+          {visibleContributions.length === 0 ? (
+            <EmptyState title="No contributions yet" copy="No contributions yet. Be the first to post proof-of-work for this project." />
           ) : (
             <div className="grid gap-4">
-              {contributions.map((item) => {
+              {visibleContributions.map((item) => {
                 const selected = selectedContributionId === item.contributionId;
                 return (
-                  <article key={item.contributionId} className={`rounded-3xl border p-5 transition ${selected ? 'border-emerald-300/40 bg-emerald-300/10' : 'border-white/10 bg-black/25'}`}>
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div>
-                        <h3 className="text-lg font-semibold text-white">{item.title}</h3>
-                        <p className="mt-1 text-sm text-zinc-400">by {item.authorUsername || shortAddress(item.authorAddress)}</p>
+                  <SocialCard key={item.contributionId} selected={selected}>
+                    <div className="flex flex-wrap items-start justify-between gap-4">
+                      <div className="flex min-w-0 gap-3">
+                        <AvatarFallback label={item.authorUsername || item.authorAddress} />
+                        <div className="min-w-0">
+                          <p className="font-semibold text-white">{item.authorUsername || shortAddress(item.authorAddress)}</p>
+                          <p className="font-mono text-xs text-zinc-500">{shortAddress(item.authorAddress)}</p>
+                        </div>
                       </div>
                       <div className="flex flex-wrap gap-2">
-                        <Badge>{item.category}</Badge>
+                        <CategoryBadge category={item.category} />
                         <StatusPill tone={item.slashed ? 'danger' : 'success'}>{item.slashed ? 'Slashed' : 'Active'}</StatusPill>
                       </div>
                     </div>
-                    <p className="mt-4 text-sm leading-6 text-zinc-300">{item.description || 'No description provided.'}</p>
-                    <div className="mt-4 grid gap-2 text-xs text-zinc-500">
-                      <div>Proof <span className="break-all font-mono text-zinc-300">{item.proofUrl || 'optional proof URL not provided'}</span></div>
-                      <div>Endorsements <span className="font-semibold text-emerald-200">{item.endorsementCount}</span></div>
-                      <div>ID <span className="break-all font-mono text-zinc-300">{item.contributionId}</span></div>
-                      <div>Author <span className="font-mono text-zinc-300">{shortAddress(item.authorAddress)}</span></div>
+                    <h3 className="mt-5 text-xl font-semibold text-white">{item.title}</h3>
+                    <p className="mt-3 text-sm leading-6 text-zinc-300">{item.description || 'No description provided.'}</p>
+                    <div className="mt-5 grid gap-3 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm">
+                      <div className="flex flex-wrap justify-between gap-2">
+                        <span className="text-zinc-500">Proof</span>
+                        {item.proofUrl ? (
+                          <a className="break-all font-mono text-cyan-200 underline-offset-4 hover:underline" href={item.proofUrl} target="_blank" rel="noreferrer">External proof link</a>
+                        ) : (
+                          <span className="text-zinc-500">Not provided</span>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap justify-between gap-2">
+                        <span className="text-zinc-500">Endorsements</span>
+                        <Badge>{item.endorsementCount}</Badge>
+                      </div>
+                      <div className="flex flex-wrap justify-between gap-2">
+                        <span className="text-zinc-500">Contribution ID</span>
+                        <span className="break-all font-mono text-xs text-zinc-300">{item.contributionId}</span>
+                      </div>
                     </div>
-                    <div className="mt-4 flex flex-wrap gap-3">
+                    <div className="mt-5">
                       <Button variant={selected ? 'primary' : 'secondary'} onClick={() => setSelectedContributionId(item.contributionId)}>
-                        {selected ? 'Selected for endorsement' : 'Select for EndorseContributionTx'}
+                        {selected ? 'Selected for Endorsement' : 'Select for Endorsement'}
                       </Button>
                     </div>
-                  </article>
+                  </SocialCard>
                 );
               })}
             </div>
           )}
         </Panel>
-      </div>
+      </section>
 
       <TxStatusCard status={status} lastTx={lastTx} onRefresh={refreshState} />
     </RepuRingPage>
