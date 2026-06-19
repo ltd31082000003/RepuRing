@@ -43,7 +43,7 @@ export default function RepuRingContributions(): JSX.Element {
             <SectionHeader
               eyebrow="Composer"
               title="Post proof-of-work"
-              copy="CreateContributionTx publishes a contribution proof into the selected project circle."
+              copy="Publish proof-of-work with a selected wallet that has already joined this project circle."
               actions={<Button onClick={() => setComposerOpen((open) => !open)}>{composerOpen ? 'Close composer' : 'Create Contribution'}</Button>}
             />
             <div className="grid gap-3 sm:grid-cols-2">
@@ -64,7 +64,10 @@ export default function RepuRingContributions(): JSX.Element {
                     {categories.map((category) => <option key={category}>{category}</option>)}
                   </select>
                 </label>
-                <Button onClick={() => { void submit('createContribution', { circleId, ...contributionForm }); }}>Submit CreateContributionTx</Button>
+                <div className="flex flex-wrap items-center gap-3">
+                  <Button onClick={() => { void submit('createContribution', { circleId, ...contributionForm }); }}>Post proof-of-work</Button>
+                  <Badge tone="zinc">CreateContributionTx</Badge>
+                </div>
               </div>
             )}
           </Panel>
@@ -93,7 +96,11 @@ export default function RepuRingContributions(): JSX.Element {
             copy="Social proof cards show author, category, proof URL, endorsement count, and status."
           />
           {visibleContributions.length === 0 ? (
-            <EmptyState title="No contributions yet" copy="No contributions yet. Be the first to post proof-of-work for this project." />
+            <EmptyState
+              title="No contributions yet"
+              copy="Be the first member to post proof-of-work for this project. A profile, circle membership, selected wallet, and signing password are required."
+              actions={<Button onClick={() => setComposerOpen(true)}>Post first proof-of-work</Button>}
+            />
           ) : (
             <div className="grid gap-4">
               {visibleContributions.map((item) => {

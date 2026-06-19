@@ -13,7 +13,7 @@ export default function RepuRingLeaderboard(): JSX.Element {
       <PageHeader
         eyebrow="Reputation rankings"
         title="Contribution Leaderboard"
-        copy="Rank contributors by endorsed contribution proofs and reputation inside a project community."
+        copy="Explore the selected circle leaderboard using profile reputation earned from endorsed contribution proofs."
         actions={<Button variant="secondary" onClick={refreshState}>Refresh rankings</Button>}
       />
 
@@ -61,7 +61,11 @@ export default function RepuRingLeaderboard(): JSX.Element {
           actions={<><Button to="/repuring/contributions" variant="secondary">Post Contribution</Button><Button to="/repuring/endorse">Endorse Work</Button></>}
         />
         {leaderboard.length === 0 ? (
-          <EmptyState title="No reputation yet" copy="No reputation yet. Endorse contributions to populate the leaderboard." />
+          <EmptyState
+            title="No reputation yet"
+            copy="Reputation appears after another circle member endorses a contribution proof. Post work or review a contribution to activate this ranking."
+            actions={<><Button to="/repuring/contributions" variant="secondary">Post proof-of-work</Button><Button to="/repuring/endorse">Endorse work</Button></>}
+          />
         ) : (
           <div className="overflow-hidden rounded-3xl border border-white/10">
             <table className="w-full text-left text-sm">

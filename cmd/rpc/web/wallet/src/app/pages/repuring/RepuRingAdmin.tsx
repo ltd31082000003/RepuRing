@@ -37,7 +37,7 @@ export default function RepuRingAdmin(): JSX.Element {
           <SectionHeader
             eyebrow="ClaimRoleTx"
             title="Role Claim"
-            copy="ClaimRoleTx maps your current reputation to a circle role."
+            copy="Map profile reputation to community status for the selected circle."
           />
           <div className="grid gap-3 md:grid-cols-3">
             <MetricCard label="Reputation" value={String(profile?.reputation || 0)} detail="Current account profile score." tone="emerald" />
@@ -47,7 +47,10 @@ export default function RepuRingAdmin(): JSX.Element {
           <div className="space-y-4 rounded-3xl border border-white/10 bg-black/20 p-4">
             <Input label="Signing key password" type="password" value={password} onChange={setPassword} placeholder="Required for BLS signing" />
             <Input label="Circle ID" value={circleId} onChange={setCircleId} />
-            <Button onClick={() => { void submit('claimRole', { circleId }); }}>Claim / Refresh Role</Button>
+            <div className="flex flex-wrap items-center gap-3">
+              <Button onClick={() => { void submit('claimRole', { circleId }); }}>Claim role</Button>
+              <Badge tone="zinc">ClaimRoleTx</Badge>
+            </div>
           </div>
         </Panel>
 
@@ -68,7 +71,10 @@ export default function RepuRingAdmin(): JSX.Element {
           <Input label="Signing key password" type="password" value={password} onChange={setPassword} placeholder="Creator/admin signing key password" />
           <Input label="Endorsement ID" value={endorsementId} onChange={setEndorsementId} placeholder="Paste endorsement ID to slash" />
           <Input label="Slash reason" value={slashReason} onChange={setSlashReason} multiline />
-          <Button variant="danger" onClick={() => { void submit('slashEndorsement', { endorsementId, reason: slashReason }); }}>Slash Endorsement</Button>
+          <div className="flex flex-wrap items-center gap-3">
+            <Button variant="danger" onClick={() => { void submit('slashEndorsement', { endorsementId, reason: slashReason }); }}>Slash invalid endorsement</Button>
+            <Badge tone="red">SlashEndorsementTx</Badge>
+          </div>
         </DangerPanel>
       </section>
 
@@ -79,7 +85,11 @@ export default function RepuRingAdmin(): JSX.Element {
           copy="Click a card to fill the slash form without copying IDs manually."
         />
         {endorsements.length === 0 ? (
-          <EmptyState title="No endorsements loaded" copy="Create or load contribution endorsements, then refresh this page to see slash candidates." />
+          <EmptyState
+            title="No endorsements loaded"
+            copy="Endorse a contribution from another member account, then return as the circle creator/admin to review moderation candidates."
+            actions={<Button to="/repuring/endorse" variant="secondary">Open endorsement review</Button>}
+          />
         ) : (
           <div className="grid gap-3 lg:grid-cols-2">
             {endorsements.map((item) => (

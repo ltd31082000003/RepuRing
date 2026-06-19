@@ -1,13 +1,14 @@
 import React from 'react';
-import { AvatarFallback, Badge, Button, MetricCard, Panel, RepuRingPage, SectionHeader, StatusPill, TxStatusCard, roleBadge, roleForReputation, rpcTone, shortAddress } from './components';
+import { AvatarFallback, Badge, Button, MetricCard, Panel, RepuRingPage, SectionHeader, SocialFiJourney, StatusPill, TxStatusCard, roleBadge, roleForReputation, rpcTone, shortAddress } from './components';
 import { useRepuRing } from './useRepuRing';
 
 const flow = ['Profile', 'Circle', 'Contribution', 'Endorsement', 'Reputation', 'Role'];
 
 export default function RepuRingOverview(): JSX.Element {
-  const { currentAddress, profile, role, circle, circleId, lastTx, status, refreshState } = useRepuRing();
+  const { currentAddress, profile, role, circle, circleId, contributions, selectedContributionId, leaderboard, endorsements, lastTx, status, refreshState } = useRepuRing();
   const derivedRole = role?.role || roleForReputation(profile?.reputation || 0);
   const tone = rpcTone(status);
+  const rpcLabel = tone === 'danger' ? 'RPC issue' : tone === 'warning' ? (status.toLowerCase().includes('submitting') ? 'Submitting' : 'RPC required') : 'State refreshed';
 
   return (
     <RepuRingPage>
@@ -60,6 +61,40 @@ export default function RepuRingOverview(): JSX.Element {
 
       <Panel>
         <SectionHeader
+          eyebrow="How RepuRing works"
+          title="One contribution graph, six clear Social-Fi objects"
+          copy="Reputation is profile-level today and is used to derive the role shown for the selected circle."
+        />
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
+          {[
+            ['Profile', 'Onchain contributor identity'],
+            ['Circle', 'Web3 project community'],
+            ['Contribution', 'Proof-of-work post'],
+            ['Endorsement', 'Peer validation'],
+            ['Reputation', 'Earned from endorsed work'],
+            ['Role', 'Circle status from reputation'],
+          ].map(([title, copy]) => (
+            <div key={title} className="rounded-2xl border border-white/10 bg-black/25 p-4">
+              <p className="font-semibold text-white">{title}</p>
+              <p className="mt-2 text-xs leading-5 text-zinc-400">{copy}</p>
+            </div>
+          ))}
+        </div>
+      </Panel>
+
+      <SocialFiJourney
+        currentAddress={currentAddress}
+        profile={profile}
+        circle={circle}
+        contributions={contributions}
+        selectedContributionId={selectedContributionId}
+        leaderboard={leaderboard}
+        role={role}
+        endorsements={endorsements}
+      />
+
+      <Panel>
+        <SectionHeader
           eyebrow="Quick actions"
           title="Move through the demo like a Social-Fi product."
           copy="Each action opens a route that keeps the real Canopy transaction and query flow."
@@ -78,7 +113,7 @@ export default function RepuRingOverview(): JSX.Element {
           eyebrow="RPC"
           title="Live chain state"
           copy="The dashboard reflects the current provider state loaded from RepuRing RPC query routes."
-          actions={<StatusPill tone={tone === 'danger' ? 'danger' : tone === 'warning' ? 'warning' : 'success'}>{tone === 'danger' ? 'RPC issue' : tone === 'warning' ? 'Submitting' : 'State refreshed'}</StatusPill>}
+          actions={<StatusPill tone={tone === 'danger' ? 'danger' : tone === 'warning' ? 'warning' : 'success'}>{rpcLabel}</StatusPill>}
         />
         <TxStatusCard status={status} lastTx={lastTx} onRefresh={refreshState} />
       </Panel>

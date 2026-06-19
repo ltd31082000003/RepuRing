@@ -75,12 +75,21 @@ export default function RepuRingEndorse(): JSX.Element {
                 </div>
               </SocialCard>
             ) : (
-              <EmptyState title="No contribution selected" copy="Choose a proof from the selector or Contribution Feed before endorsing." />
+              <EmptyState
+                title="No contribution selected"
+                copy="Choose a proof below or open the Contribution Feed. Endorsements must come from another circle member, not the contribution author."
+                actions={<Button to="/repuring/contributions" variant="secondary">Browse contribution feed</Button>}
+              />
             )}
           </Panel>
 
           <Panel>
-            <SectionHeader eyebrow="EndorseContributionTx" title="Write a contribution endorsement" copy="Select a trust tag and explain why this work helps the project." />
+            <SectionHeader
+              eyebrow="Peer validation"
+              title="Write a contribution endorsement"
+              copy="Use another circle member wallet, enter its signing password, then explain why this work helps the project."
+              actions={<Badge tone="zinc">EndorseContributionTx</Badge>}
+            />
             <Input label="Signing key password" type="password" value={password} onChange={setPassword} placeholder="Required for BLS signing" />
             <div>
               <p className="mb-2 text-sm font-medium text-zinc-300">Tag</p>
@@ -99,7 +108,7 @@ export default function RepuRingEndorse(): JSX.Element {
             </div>
             <Input label="Review message" value={endorse.message} onChange={(message) => setEndorse({ ...endorse, message })} multiline />
             <Button onClick={() => { void submit('endorseContribution', { contributionId: selectedContributionId, ...endorse }); }}>
-              Endorse Contribution
+              Endorse contribution
             </Button>
           </Panel>
         </div>
@@ -119,7 +128,11 @@ export default function RepuRingEndorse(): JSX.Element {
             <SectionHeader eyebrow={circleId || 'Select circle'} title="Contribution selector" copy="Pick work to review without leaving this page." />
             <Input label="Circle ID" value={circleId} onChange={setCircleId} />
             {contributions.length === 0 ? (
-              <EmptyState title="No contribution proofs loaded" copy="Post a contribution on the Contribution Feed or refresh after selecting a circle." />
+              <EmptyState
+                title="No contribution proofs loaded"
+                copy="Post the first proof-of-work in this circle, then return with another member wallet to endorse it."
+                actions={<Button to="/repuring/contributions" variant="secondary">Post proof-of-work</Button>}
+              />
             ) : (
               <div className="grid gap-3">
                 {contributions.map((item) => (
@@ -146,7 +159,11 @@ export default function RepuRingEndorse(): JSX.Element {
       <Panel>
         <SectionHeader eyebrow="Activity" title="Recent endorsements" copy="Endorsement records from the current account or selected circle." />
         {endorsements.length === 0 ? (
-          <EmptyState title="No endorsements yet" copy="Post a contribution, then submit EndorseContributionTx from another member to populate this feed." />
+          <EmptyState
+            title="No endorsements yet"
+            copy="Select a contribution and endorse it from another circle member account. Self-endorsement is rejected onchain."
+            actions={<Button to="/repuring/contributions" variant="secondary">Choose contribution</Button>}
+          />
         ) : (
           <div className="grid gap-3 lg:grid-cols-2">
             {endorsements.map((item) => (
@@ -192,7 +209,7 @@ export default function RepuRingEndorse(): JSX.Element {
 function Rule({ checked, text }: { checked: boolean; text: string }) {
   return (
     <div className={`rounded-2xl border p-4 text-sm ${checked ? 'border-emerald-300/20 bg-emerald-300/10 text-emerald-100' : 'border-white/10 bg-white/[0.03] text-zinc-400'}`}>
-      {checked ? 'Ready' : 'Check'} · {text}
+      {checked ? 'Ready' : 'Check'} - {text}
     </div>
   );
 }

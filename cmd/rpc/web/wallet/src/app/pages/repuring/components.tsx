@@ -147,13 +147,113 @@ export function StatusPill({ children, tone }: { children: React.ReactNode; tone
   return <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${tones[tone]}`}>{children}</span>;
 }
 
-export function EmptyState({ title, copy }: { title: string; copy: string }) {
+export function EmptyState({ title, copy, actions }: { title: string; copy: string; actions?: React.ReactNode }) {
   return (
     <div className="rounded-3xl border border-dashed border-white/10 bg-black/20 p-8 text-center">
       <div className="mx-auto mb-4 h-12 w-12 rounded-2xl border border-white/10 bg-white/[0.04]" />
       <p className="font-semibold text-white">{title}</p>
       <p className="mt-2 text-sm text-zinc-500">{copy}</p>
+      {actions && <div className="mt-5 flex flex-wrap justify-center gap-2">{actions}</div>}
     </div>
+  );
+}
+
+type JourneyStatus = 'done' | 'current' | 'blocked' | 'optional';
+
+export function SocialFiJourney({
+  currentAddress,
+  profile,
+  circle,
+  contributions,
+  selectedContributionId,
+  leaderboard,
+  role,
+  endorsements,
+}: {
+  currentAddress: string;
+  profile: { reputation: number } | null;
+  circle: { members?: string[] } | null;
+  contributions: Array<{ contributionId: string }>;
+  selectedContributionId: string;
+  leaderboard: Array<unknown>;
+  role: { claimedRole?: boolean; role?: string } | null;
+  endorsements: Array<unknown>;
+}) {
+  const memberReady = Boolean(
+    currentAddress && circle?.members?.some((address) => cleanHex(address) === cleanHex(currentAddress)),
+  );
+  const completion = [
+    Boolean(currentAddress),
+    Boolean(profile),
+    Boolean(circle),
+    memberReady,
+    contributions.length > 0,
+    Boolean(selectedContributionId),
+    Boolean((profile?.reputation || 0) > 0 || leaderboard.length > 0),
+    Boolean(role?.claimedRole || role?.role),
+  ];
+  const firstPending = completion.findIndex((done) => !done);
+  const statusFor = (index: number): JourneyStatus => completion[index]
+    ? 'done'
+    : index === firstPending
+      ? 'current'
+      : 'blocked';
+  const steps: Array<{ title: string; copy: string; status: JourneyStatus; to: string; tx?: string }> = [
+    { title: 'Wallet selected', copy: 'Select a local signing key before submitting Social-Fi transactions.', status: statusFor(0), to: '/key-management' },
+    { title: 'Profile created', copy: 'Activate your onchain contributor identity.', status: statusFor(1), to: '/key-management', tx: 'CreateProfileTx' },
+    { title: 'Project circle loaded', copy: 'Create or load a Web3 project community.', status: statusFor(2), to: '/repuring/circles', tx: 'CreateCircleTx' },
+    { title: 'Member ready', copy: 'Join the selected circle before posting work.', status: statusFor(3), to: '/repuring/circles', tx: 'JoinCircleTx' },
+    { title: 'Proof-of-work posted', copy: 'Publish a contribution proof into the selected circle.', status: statusFor(4), to: '/repuring/contributions', tx: 'CreateContributionTx' },
+    { title: 'Contribution review ready', copy: 'Select useful work and switch to another member account to endorse it.', status: statusFor(5), to: '/repuring/endorse', tx: 'EndorseContributionTx' },
+    { title: 'Reputation visible', copy: 'Endorsed contribution proofs increase profile reputation.', status: statusFor(6), to: '/repuring/leaderboard' },
+    { title: 'Role claimed', copy: 'Turn profile reputation into status for the selected circle.', status: statusFor(7), to: '/repuring/admin', tx: 'ClaimRoleTx' },
+    { title: 'Moderation ready', copy: 'The circle creator/admin can review and slash invalid endorsements.', status: endorsements.length > 0 ? 'done' : 'optional', to: '/repuring/admin', tx: 'SlashEndorsementTx' },
+  ];
+  const statusStyles: Record<JourneyStatus, string> = {
+    done: 'border-emerald-300/30 bg-emerald-300/10',
+    current: 'border-cyan-300/40 bg-cyan-300/10 ring-1 ring-cyan-300/20',
+    blocked: 'border-white/10 bg-black/20 opacity-70',
+    optional: 'border-amber-300/20 bg-amber-300/[0.06]',
+  };
+  const statusLabels: Record<JourneyStatus, string> = {
+    done: 'Done',
+    current: 'Next',
+    blocked: 'Locked',
+    optional: 'Optional',
+  };
+
+  return (
+    <Panel>
+      <SectionHeader
+        eyebrow="Demo journey"
+        title="From identity to trusted community role"
+        copy="Follow the live onchain flow in order. Every transaction step uses the selected local wallet and Canopy RPC."
+      />
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        {steps.map((step, index) => (
+          <Link key={step.title} to={step.to} className={['group rounded-2xl border p-4 transition hover:-translate-y-0.5 hover:border-emerald-300/30', statusStyles[step.status]].join(' ')}>
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex min-w-0 gap-3">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-black/30 text-xs font-bold text-emerald-200">
+                  {step.status === 'done' ? 'OK' : String(index + 1).padStart(2, '0')}
+                </span>
+                <div>
+                  <h3 className="font-semibold text-white">{step.title}</h3>
+                  <p className="mt-1 text-xs leading-5 text-zinc-400">{step.copy}</p>
+                </div>
+              </div>
+              <StatusPill tone={step.status === 'done' ? 'success' : step.status === 'current' ? 'warning' : 'neutral'}>
+                {statusLabels[step.status]}
+              </StatusPill>
+            </div>
+            {step.tx && <div className="mt-3 pl-11"><Badge tone="zinc">{step.tx}</Badge></div>}
+          </Link>
+        ))}
+      </div>
+      <div className="rounded-2xl border border-cyan-300/20 bg-cyan-300/[0.06] p-4 text-sm leading-6 text-cyan-100/80">
+        Demo setup: run local RPC on <span className="font-mono text-cyan-100">50002</span> and admin keystore RPC on <span className="font-mono text-cyan-100">50003</span>. Select a wallet, then enter its password when signing. Contribution endorsement requires a second circle member account.
+      </div>
+    </Panel>
   );
 }
 
@@ -269,6 +369,6 @@ export function shortAddress(value: string) {
 export function rpcTone(status: string): 'success' | 'warning' | 'danger' {
   const lower = status.toLowerCase();
   if (lower.includes('failed') || lower.includes('offline')) return 'danger';
-  if (lower.includes('submitting') || lower.includes('waiting')) return 'warning';
+  if (lower.includes('submitting') || lower.includes('waiting') || lower.includes('start local')) return 'warning';
   return 'success';
 }

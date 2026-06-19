@@ -60,7 +60,11 @@ export default function RepuRingCircles(): JSX.Element {
             <MetricCard label="Selected account" value={shortAddress(currentAddress) || 'No account'} detail={currentAddress || 'Select a signing key in My Account.'} />
           </div>
           {!circle && (
-            <EmptyState title="No project circle loaded" copy="Create a new circle or load an existing circle ID to see project context and members." />
+            <EmptyState
+              title="No project circle loaded"
+              copy="Enter an existing circle ID and refresh, or open Circle Actions to create a Web3 project community."
+              actions={<Button variant="secondary" onClick={() => setActionsOpen(true)}>Open circle actions</Button>}
+            />
           )}
         </Panel>
 
@@ -68,7 +72,7 @@ export default function RepuRingCircles(): JSX.Element {
           <SectionHeader
             eyebrow="Circle actions"
             title="Create or join a project."
-            copy="Use real CreateCircleTx and JoinCircleTx transactions. Forms stay compact until needed."
+            copy="Select a local wallet and enter its password to sign real circle transactions through RPC 50002/50003."
             actions={<Button variant="secondary" onClick={() => setActionsOpen((open) => !open)}>{actionsOpen ? 'Hide actions' : 'Open actions'}</Button>}
           />
           {actionsOpen ? (
@@ -78,8 +82,12 @@ export default function RepuRingCircles(): JSX.Element {
               <Input label="Name" value={circleForm.name} onChange={(name) => setCircleForm({ ...circleForm, name })} placeholder="Pharos Builders" />
               <Input label="Description" value={circleForm.description} onChange={(description) => setCircleForm({ ...circleForm, description })} multiline />
               <div className="flex flex-wrap gap-3">
-                <Button onClick={() => { void submit('createCircle', { circleId, ...circleForm }); }}>CreateCircleTx</Button>
-                <Button variant="secondary" onClick={() => { void submit('joinCircle', { circleId }); }}>JoinCircleTx</Button>
+                <Button onClick={() => { void submit('createCircle', { circleId, ...circleForm }); }}>Create project circle</Button>
+                <Button variant="secondary" onClick={() => { void submit('joinCircle', { circleId }); }}>Join project circle</Button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Badge tone="zinc">CreateCircleTx</Badge>
+                <Badge tone="zinc">JoinCircleTx</Badge>
               </div>
             </div>
           ) : (
@@ -101,7 +109,11 @@ export default function RepuRingCircles(): JSX.Element {
         {circle ? (
           <MemberList values={circle.members || []} currentAddress={currentAddress} creatorAddress={circle.creatorAddress} />
         ) : (
-          <EmptyState title="No members to show" copy="Load or create a project circle to see members here." />
+          <EmptyState
+            title="No members to show"
+            copy="Load or create a project circle, then join it with a second wallet to prepare the contribution endorsement demo."
+            actions={<Button variant="secondary" onClick={refreshState}>Refresh members</Button>}
+          />
         )}
       </Panel>
 

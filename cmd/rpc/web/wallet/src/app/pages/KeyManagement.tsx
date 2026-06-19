@@ -236,7 +236,7 @@ function RepuRingProfileCard(): JSX.Element {
                     </div>
                     <DialogFooter>
                         <Button type="button" variant="secondary" onClick={() => setProfileModalOpen(false)}>Cancel</Button>
-                        <Button type="button" onClick={() => void submit('createProfile', profileForm)}>Submit CreateProfileTx</Button>
+                        <Button type="button" onClick={() => void submit('createProfile', profileForm)}>Create onchain profile</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
@@ -261,7 +261,7 @@ function RepuRingProfileCard(): JSX.Element {
                     </div>
                     <DialogFooter>
                         <Button type="button" variant="secondary" onClick={() => setEditModalOpen(false)}>Cancel</Button>
-                        <Button type="button" onClick={() => void submitUpdateProfile()}>Submit UpdateProfileTx</Button>
+                        <Button type="button" onClick={() => void submitUpdateProfile()}>Save profile changes</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
