@@ -1,5 +1,5 @@
 import React from 'react';
-import { AvatarFallback, Badge, Button, MetricCard, Panel, RepuRingPage, SectionHeader, SocialFiJourney, StatusPill, TxStatusCard, roleBadge, roleForReputation, rpcTone, shortAddress } from './components';
+import { AvatarFallback, Badge, Button, DemoReadinessCard, MetricCard, Panel, RepuRingPage, RoleProgressCard, SectionHeader, SocialFiJourney, StatusPill, roleBadge, roleForReputation, shortAddress } from './components';
 import { useRepuRing } from './useRepuRing';
 
 const flow = ['Profile', 'Circle', 'Contribution', 'Endorsement', 'Reputation', 'Role'];
@@ -7,8 +7,6 @@ const flow = ['Profile', 'Circle', 'Contribution', 'Endorsement', 'Reputation', 
 export default function RepuRingOverview(): JSX.Element {
   const { currentAddress, profile, role, circle, circleId, contributions, selectedContributionId, leaderboard, endorsements, lastTx, status, refreshState } = useRepuRing();
   const derivedRole = role?.role || roleForReputation(profile?.reputation || 0);
-  const tone = rpcTone(status);
-  const rpcLabel = tone === 'danger' ? 'RPC issue' : tone === 'warning' ? (status.toLowerCase().includes('submitting') ? 'Submitting' : 'RPC required') : 'State refreshed';
 
   return (
     <RepuRingPage>
@@ -59,6 +57,19 @@ export default function RepuRingOverview(): JSX.Element {
         </div>
       </section>
 
+      <DemoReadinessCard
+        currentAddress={currentAddress}
+        profile={profile}
+        circle={circle}
+        circleId={circleId}
+        contributions={contributions}
+        endorsements={endorsements}
+        status={status}
+        lastTx={lastTx}
+        onRefresh={refreshState}
+      />
+
+      <RoleProgressCard reputation={profile?.reputation || 0} />
       <Panel>
         <SectionHeader
           eyebrow="How RepuRing works"
@@ -108,15 +119,6 @@ export default function RepuRingOverview(): JSX.Element {
         </div>
       </Panel>
 
-      <Panel>
-        <SectionHeader
-          eyebrow="RPC"
-          title="Live chain state"
-          copy="The dashboard reflects the current provider state loaded from RepuRing RPC query routes."
-          actions={<StatusPill tone={tone === 'danger' ? 'danger' : tone === 'warning' ? 'warning' : 'success'}>{rpcLabel}</StatusPill>}
-        />
-        <TxStatusCard status={status} lastTx={lastTx} onRefresh={refreshState} />
-      </Panel>
     </RepuRingPage>
   );
 }

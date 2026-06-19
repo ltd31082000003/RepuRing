@@ -1,5 +1,6 @@
 import React from 'react';
 import { AvatarFallback, Badge, Button, CategoryBadge, EmptyState, Input, PageHeader, Panel, RepuRingPage, SectionHeader, SocialCard, StatusPill, TxStatusCard, shortAddress } from './components';
+import { cleanHex } from './RepuRingProvider';
 import { useRepuRing } from './useRepuRing';
 
 const tags = ['builder', 'helper', 'creator', 'leader', 'trusted'];
@@ -26,17 +27,17 @@ export default function RepuRingEndorse(): JSX.Element {
     submit,
   } = useRepuRing();
   const [legacyOpen, setLegacyOpen] = React.useState(false);
-  const isMember = Boolean(currentAddress && circle?.members?.includes(currentAddress));
-  const targetIsMember = Boolean(targetAddress && circle?.members?.includes(targetAddress.toLowerCase()));
+  const isMember = Boolean(currentAddress && circle?.members?.some((address) => cleanHex(address) === cleanHex(currentAddress)));
+  const targetIsMember = Boolean(targetAddress && circle?.members?.some((address) => cleanHex(address) === cleanHex(targetAddress)));
   const selectedContribution = contributions.find((item) => item.contributionId === selectedContributionId) || null;
-  const selectedAuthorIsSelf = Boolean(selectedContribution && selectedContribution.authorAddress === currentAddress);
+  const selectedAuthorIsSelf = Boolean(selectedContribution && cleanHex(selectedContribution.authorAddress) === cleanHex(currentAddress));
 
   return (
     <RepuRingPage>
       <PageHeader
         eyebrow="Contribution review"
         title="Endorse Useful Work"
-        copy="Review proof-of-work, endorse useful contributions, and increase the author's onchain reputation through EndorseContributionTx."
+        copy="Review proof-of-work from another circle member. The author cannot endorse their own proof; use a second member wallet for EndorseContributionTx."
         actions={<Button variant="secondary" onClick={refreshState}>Refresh work</Button>}
       />
 
@@ -49,7 +50,11 @@ export default function RepuRingEndorse(): JSX.Element {
               copy="Endorse this contribution and increase the author's reputation."
               actions={<StatusPill tone={!selectedContribution ? 'warning' : selectedAuthorIsSelf ? 'danger' : 'success'}>{!selectedContribution ? 'No selection' : selectedAuthorIsSelf ? 'Own work' : 'Review ready'}</StatusPill>}
             />
-            {selectedContribution ? (
+            {selectedAuthorIsSelf && (
+              <div className="rounded-2xl border border-amber-300/30 bg-amber-300/10 p-4 text-sm font-medium leading-6 text-amber-100">
+                Switch to another circle member account to endorse this proof. The contribution author cannot self-endorse.
+              </div>
+            )}            {selectedContribution ? (
               <SocialCard selected>
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div className="flex min-w-0 gap-3">
@@ -117,10 +122,10 @@ export default function RepuRingEndorse(): JSX.Element {
           <Panel>
             <SectionHeader eyebrow="Circle readiness" title="Validation checklist" copy="These are the onchain checks enforced by the RepuRing plugin." />
             <div className="grid gap-3">
-              <Rule checked={isMember} text="Endorser is a member of the selected circle." />
-              <Rule checked={Boolean(selectedContribution)} text="Contribution exists and is selected." />
-              <Rule checked={!selectedAuthorIsSelf && Boolean(selectedContribution)} text="Sender is not endorsing their own contribution." />
-              <Rule checked={Boolean(selectedContribution && !selectedContribution.slashed)} text="Contribution is active and not slashed." />
+              <Rule checked={isMember} text="Selected endorser wallet is a member of this circle." />
+              <Rule checked={Boolean(selectedContribution)} text="A contribution proof exists and is selected for review." />
+              <Rule checked={!selectedAuthorIsSelf && Boolean(selectedContribution)} text="Selected wallet belongs to another member, not the contribution author." />
+              <Rule checked={Boolean(selectedContribution && !selectedContribution.slashed)} text="Contribution is active and has not been slashed." />
             </div>
           </Panel>
 

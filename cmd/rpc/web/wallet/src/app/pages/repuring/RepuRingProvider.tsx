@@ -30,6 +30,18 @@ const txMeta: Record<TxKind, { typeUrl: string; message: string }> = {
   claimRole: { typeUrl: 'type.googleapis.com/types.MessageClaimRole', message: 'MessageClaimRole' },
 };
 
+const submittedStatus: Record<TxKind, string> = {
+  createProfile: 'Profile transaction submitted. Your onchain contributor identity will refresh after the next block.',
+  updateProfile: 'Profile update submitted. Bio and avatar will refresh after the next block; username and reputation stay unchanged.',
+  createCircle: 'Project circle transaction submitted. Refreshing community state after commit.',
+  joinCircle: 'Join request submitted. Membership will appear after commit.',
+  createContribution: 'Proof-of-work submitted. Contribution feed will refresh after commit.',
+  endorseContribution: 'Endorsement submitted. Author reputation and endorsement count will refresh after commit.',
+  endorseUser: 'Legacy member endorsement submitted. This path is kept for compatibility.',
+  claimRole: 'Role claim submitted. Your community role will refresh after commit.',
+  slashEndorsement: 'Slash submitted. Endorsement status and target reputation will refresh after commit.',
+};
+
 export function RepuRingProvider({ children }: { children: React.ReactNode }): JSX.Element {
   const { selectedAccount } = useSelectedAccount();
   const [password, setPassword] = React.useState('');
@@ -138,7 +150,7 @@ export function RepuRingProvider({ children }: { children: React.ReactNode }): J
       };
       const response = await postJSON(`${QUERY_RPC}/v1/tx`, tx);
       setLastTx(typeof response === 'string' ? response : JSON.stringify(response));
-      setStatus(`${kind} submitted. Waiting for block, then refreshing state...`);
+      setStatus(submittedStatus[kind]);
       await refreshAfterCommit(refreshState);
       return true;
     } catch (e) {

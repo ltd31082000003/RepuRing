@@ -1,10 +1,11 @@
 import React from 'react';
-import { AvatarFallback, Badge, Button, EmptyState, Input, MetricCard, PageHeader, Panel, ReputationBadge, RepuRingPage, SectionHeader, TxStatusCard, roleBadge, roleForReputation, shortAddress } from './components';
+import { AvatarFallback, Badge, Button, EmptyState, Input, MetricCard, PageHeader, Panel, ReputationBadge, RepuRingPage, RoleProgressCard, SectionHeader, TxStatusCard, roleBadge, roleForReputation, shortAddress } from './components';
+import { cleanHex } from './RepuRingProvider';
 import { useRepuRing } from './useRepuRing';
 
 export default function RepuRingLeaderboard(): JSX.Element {
-  const { currentAddress, circleId, setCircleId, leaderboard, circle, status, lastTx, refreshState } = useRepuRing();
-  const currentRank = leaderboard.findIndex((row) => row.address === currentAddress) + 1;
+  const { currentAddress, profile, circleId, setCircleId, leaderboard, circle, status, lastTx, refreshState } = useRepuRing();
+  const currentRank = leaderboard.findIndex((row) => cleanHex(row.address) === cleanHex(currentAddress)) + 1;
   const topReputation = leaderboard[0]?.reputation || 0;
   const podium = leaderboard.slice(0, 3);
 
@@ -30,12 +31,35 @@ export default function RepuRingLeaderboard(): JSX.Element {
       </Panel>
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <MetricCard label="Ranked members" value={String(leaderboard.length)} detail="Profiles with reputation in this circle." tone="emerald" />
+        <MetricCard label="Ranked members" value={String(leaderboard.length)} detail="Rows returned for the selected circle leaderboard." tone="emerald" />
         <MetricCard label="Selected circle" value={circle?.name || circleId || 'None'} detail={circle?.description || 'Load a project community.'} tone="cyan" />
         <MetricCard label="Your rank" value={currentRank > 0 ? `#${currentRank}` : 'Unranked'} detail={currentAddress ? shortAddress(currentAddress) : 'No account selected.'} />
-        <MetricCard label="Top reputation" value={String(topReputation)} detail="Highest score currently visible." />
+        <MetricCard label="Top reputation" value={String(topReputation)} detail="Highest profile reputation currently visible." />
       </section>
 
+      <RoleProgressCard reputation={profile?.reputation || 0} />
+
+      <Panel>
+        <SectionHeader
+          eyebrow="How rankings work"
+          title="Peer-endorsed work powers the leaderboard"
+          copy="The selected circle leaderboard helps compare members while preserving the current profile-level reputation model."
+        />
+        <div className="grid gap-3 md:grid-cols-3">
+          <div className="rounded-2xl border border-emerald-300/20 bg-emerald-300/[0.07] p-4">
+            <p className="font-semibold text-white">1. Earn reputation</p>
+            <p className="mt-2 text-sm leading-6 text-zinc-400">Another circle member endorses an active contribution proof through EndorseContributionTx.</p>
+          </div>
+          <div className="rounded-2xl border border-cyan-300/20 bg-cyan-300/[0.07] p-4">
+            <p className="font-semibold text-white">2. Enter the ranking</p>
+            <p className="mt-2 text-sm leading-6 text-zinc-400">Profile reputation is displayed in the selected circle leaderboard; it is not yet fully project-scoped.</p>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+            <p className="font-semibold text-white">3. Show role status</p>
+            <p className="mt-2 text-sm leading-6 text-zinc-400">Role labels may be derived from reputation or stored after ClaimRoleTx, depending on the loaded state.</p>
+          </div>
+        </div>
+      </Panel>
       {podium.length >= 3 && (
         <Panel>
           <SectionHeader eyebrow="Top contributors" title="Podium" copy="A quick demo-friendly view of the top three contributors." />
@@ -80,7 +104,7 @@ export default function RepuRingLeaderboard(): JSX.Element {
               </thead>
               <tbody>
                 {leaderboard.map((row, index) => {
-                  const isCurrent = row.address === currentAddress;
+                  const isCurrent = cleanHex(row.address) === cleanHex(currentAddress);
                   return (
                     <tr key={row.address} className={`border-t border-white/10 ${isCurrent ? 'bg-emerald-300/10' : 'bg-black/10'}`}>
                       <td className="px-4 py-4 font-mono text-zinc-400">#{index + 1}</td>

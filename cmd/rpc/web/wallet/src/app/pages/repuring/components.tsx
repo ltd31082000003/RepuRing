@@ -257,6 +257,132 @@ export function SocialFiJourney({
   );
 }
 
+export function DemoReadinessCard({
+  currentAddress,
+  profile,
+  circle,
+  circleId,
+  contributions,
+  endorsements,
+  status,
+  lastTx,
+  onRefresh,
+}: {
+  currentAddress: string;
+  profile: object | null;
+  circle: { name?: string; creatorAddress?: string; members?: string[] } | null;
+  circleId: string;
+  contributions: Array<unknown>;
+  endorsements: Array<unknown>;
+  status: string;
+  lastTx: string;
+  onRefresh: () => Promise<void>;
+}) {
+  const rpcReady = status.toLowerCase().includes('state refreshed');
+  const memberCount = circle?.members?.length || 0;
+  const creatorReady = Boolean(
+    currentAddress && circle?.creatorAddress && cleanHex(currentAddress) === cleanHex(circle.creatorAddress),
+  );
+  const items = [
+    { label: 'Local RPC', ready: rpcReady, detail: rpcReady ? 'Chain state refreshed.' : 'Start both local RPC services.' },
+    { label: 'Signing wallet', ready: Boolean(currentAddress), detail: currentAddress ? shortAddress(currentAddress) : 'Select a local wallet in My Account.' },
+    { label: 'Onchain profile', ready: Boolean(profile), detail: profile ? 'Contributor identity active.' : 'Create a profile before joining or posting.' },
+    { label: 'Project circle', ready: Boolean(circle), detail: circle?.name || circleId || 'Create or load a project circle.' },
+    { label: 'Contribution proof', ready: contributions.length > 0, detail: contributions.length > 0 ? String(contributions.length) + ' proof(s) loaded.' : 'Post proof-of-work as a circle member.' },
+    { label: 'Peer endorsement', ready: contributions.length > 0 && memberCount > 1, detail: memberCount > 1 ? 'A second member can review work.' : 'Add a second circle member; self-endorsement is blocked.' },
+    { label: 'Admin moderation', ready: creatorReady && endorsements.length > 0, detail: creatorReady ? (endorsements.length > 0 ? 'Slash candidates available.' : 'Create an endorsement before moderation.') : 'Select the circle creator/admin wallet.' },
+  ];
+
+  return (
+    <Panel>
+      <SectionHeader
+        eyebrow="Demo readiness"
+        title="Local environment and onchain prerequisites"
+        copy="See what is ready before recording. Passwords are requested only when the selected local wallet signs a transaction."
+        actions={<StatusPill tone={rpcReady ? 'success' : 'warning'}>{rpcReady ? 'RPC connected' : 'Setup required'}</StatusPill>}
+      />
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {items.map((item) => (
+          <div key={item.label} className={['rounded-2xl border p-4', item.ready ? 'border-emerald-300/25 bg-emerald-300/10' : 'border-white/10 bg-black/20'].join(' ')}>
+            <div className="flex items-center justify-between gap-3">
+              <p className="font-semibold text-white">{item.label}</p>
+              <StatusPill tone={item.ready ? 'success' : 'neutral'}>{item.ready ? 'Ready' : 'Missing'}</StatusPill>
+            </div>
+            <p className="mt-2 text-xs leading-5 text-zinc-400">{item.detail}</p>
+          </div>
+        ))}
+      </div>
+      <div className="grid gap-3 rounded-2xl border border-cyan-300/20 bg-cyan-300/[0.06] p-4 text-sm md:grid-cols-2">
+        <div>
+          <p className="text-xs uppercase tracking-[0.18em] text-cyan-200/70">Query and transaction RPC</p>
+          <p className="mt-1 font-mono text-cyan-100">http://localhost:50002</p>
+        </div>
+        <div>
+          <p className="text-xs uppercase tracking-[0.18em] text-cyan-200/70">Admin and keystore RPC</p>
+          <p className="mt-1 font-mono text-cyan-100">http://localhost:50003</p>
+        </div>
+      </div>
+      <div className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-black/20 p-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <p className="text-xs uppercase tracking-[0.18em] text-zinc-500">Live status</p>
+          <p className="mt-1 text-sm text-zinc-300">{status}</p>
+          <p className="mt-1 break-all font-mono text-xs text-zinc-600">{lastTx || 'No transaction submitted yet'}</p>
+        </div>
+        <Button variant="secondary" onClick={onRefresh}>Refresh readiness</Button>
+      </div>
+    </Panel>
+  );
+}
+
+const roleThresholds = [
+  { name: 'Newbie', min: 0, max: 4 },
+  { name: 'Trusted', min: 5, max: 14 },
+  { name: 'Core Member', min: 15, max: 29 },
+  { name: 'Circle Leader', min: 30, max: null },
+] as const;
+
+export function RoleProgressCard({ reputation, embedded = false }: { reputation: number; embedded?: boolean }) {
+  const currentRole = roleForReputation(reputation);
+  const nextThreshold = roleThresholds.find((threshold) => threshold.min > reputation);
+  const needed = nextThreshold ? nextThreshold.min - reputation : 0;
+  const content = (
+    <>
+      <SectionHeader
+        eyebrow="Reputation path"
+        title="From contribution proof to community role"
+        copy="Profile reputation is earned from endorsed contribution proofs and is used to derive role status for the selected circle."
+        actions={<Badge tone="cyan">{roleBadge(currentRole)}</Badge>}
+      />
+      <div className="grid gap-3 md:grid-cols-3">
+        <MetricCard label="Current reputation" value={String(reputation)} detail="Profile-level reputation from endorsed work." tone="emerald" />
+        <MetricCard label="Current role" value={currentRole} detail="Derived from the unchanged role thresholds." tone="cyan" />
+        <MetricCard
+          label="Next milestone"
+          value={nextThreshold ? nextThreshold.name : 'Top role reached'}
+          detail={nextThreshold ? 'Need ' + String(needed) + ' more reputation.' : 'Circle Leader is the highest role.'}
+        />
+      </div>
+      <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+        {roleThresholds.map((threshold) => {
+          const active = reputation >= threshold.min;
+          const range = threshold.max === null ? String(threshold.min) + '+' : String(threshold.min) + '..' + String(threshold.max);
+          return (
+            <div key={threshold.name} className={['rounded-2xl border p-3', active ? 'border-emerald-300/25 bg-emerald-300/10' : 'border-white/10 bg-black/20'].join(' ')}>
+              <div className="flex items-center justify-between gap-2">
+                <p className="font-semibold text-white">{threshold.name}</p>
+                <Badge tone={active ? 'emerald' : 'zinc'}>{range}</Badge>
+              </div>
+              <p className="mt-2 text-xs text-zinc-500">{currentRole === threshold.name ? 'Current derived role' : active ? 'Milestone reached' : 'Not reached'}</p>
+            </div>
+          );
+        })}
+      </div>
+    </>
+  );
+
+  if (embedded) return <div className="space-y-4">{content}</div>;
+  return <Panel>{content}</Panel>;
+}
 export function DangerPanel({ children }: { children: React.ReactNode }) {
   return (
     <div className="rounded-3xl border border-red-300/25 bg-gradient-to-br from-red-500/15 to-black/20 p-5 shadow-xl shadow-red-950/20">

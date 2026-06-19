@@ -1,9 +1,11 @@
 import React from 'react';
-import { Badge, Button, DangerPanel, EmptyState, Input, MetricCard, PageHeader, Panel, RepuRingPage, SectionHeader, SocialCard, StatusPill, TxStatusCard, roleBadge, roleForReputation, shortAddress } from './components';
+import { Badge, Button, DangerPanel, EmptyState, Input, MetricCard, PageHeader, Panel, RepuRingPage, RoleProgressCard, SectionHeader, SocialCard, StatusPill, TxStatusCard, roleBadge, roleForReputation, shortAddress } from './components';
+import { cleanHex } from './RepuRingProvider';
 import { useRepuRing } from './useRepuRing';
 
 export default function RepuRingAdmin(): JSX.Element {
   const {
+    currentAddress,
     password,
     setPassword,
     circleId,
@@ -22,6 +24,7 @@ export default function RepuRingAdmin(): JSX.Element {
     submit,
   } = useRepuRing();
   const claimableRole = roleForReputation(profile?.reputation || 0);
+  const creatorSelected = Boolean(currentAddress && circle?.creatorAddress && cleanHex(currentAddress) === cleanHex(circle.creatorAddress));
 
   return (
     <RepuRingPage>
@@ -37,8 +40,9 @@ export default function RepuRingAdmin(): JSX.Element {
           <SectionHeader
             eyebrow="ClaimRoleTx"
             title="Role Claim"
-            copy="Map profile reputation to community status for the selected circle."
+            copy="ClaimRoleTx safely maps current profile reputation to role status for the selected circle; it does not change reputation."
           />
+          <RoleProgressCard reputation={profile?.reputation || 0} embedded />
           <div className="grid gap-3 md:grid-cols-3">
             <MetricCard label="Reputation" value={String(profile?.reputation || 0)} detail="Current account profile score." tone="emerald" />
             <MetricCard label="Claimable role" value={roleBadge(claimableRole)} detail="Calculated from reputation thresholds." tone="cyan" />
@@ -58,15 +62,15 @@ export default function RepuRingAdmin(): JSX.Element {
           <SectionHeader
             eyebrow="SlashEndorsementTx"
             title="Slash Endorsement Danger Zone"
-            copy="Only the circle creator/admin can slash invalid endorsements. A slash marks the endorsement and reduces the target reputation."
+            copy="Only the circle creator/admin can submit this danger action. Slashing marks the endorsement, reduces target reputation by 2 floored at 0, and decrements a linked contribution endorsement count when applicable."
             actions={<Badge tone="red">Danger action</Badge>}
           />
           <div className="rounded-2xl border border-red-300/20 bg-red-500/10 p-4 text-sm leading-6 text-red-100">
-            Use this only when an endorsement or contribution proof is invalid. The transaction remains real and goes through the same local Canopy RPC signing path.
+            Use this only for an invalid endorsement. The change is committed onchain and cannot be treated like a UI-only moderation toggle.
           </div>
           <div className="flex flex-wrap gap-2">
             <Badge tone="zinc">Circle: {circle?.name || circleId || 'not loaded'}</Badge>
-            <StatusPill tone="warning">Creator/admin required</StatusPill>
+            <StatusPill tone={creatorSelected ? 'success' : 'warning'}>{creatorSelected ? 'Creator wallet selected' : 'Creator/admin required'}</StatusPill>
           </div>
           <Input label="Signing key password" type="password" value={password} onChange={setPassword} placeholder="Creator/admin signing key password" />
           <Input label="Endorsement ID" value={endorsementId} onChange={setEndorsementId} placeholder="Paste endorsement ID to slash" />
