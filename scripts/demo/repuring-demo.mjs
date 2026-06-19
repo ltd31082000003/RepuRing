@@ -83,6 +83,12 @@ async function main() {
     return Number(reputation?.reputation || 0) >= 1 ? reputation : false;
   });
   console.log(`Bob reputation after contribution endorsement: ${bobAfterEndorse.reputation}`);
+  const contributionAfterEndorse = await queryMaybe('/v1/query/repuring/contribution', { contributionId });
+  if (contributionAfterEndorse) {
+    console.log('Contribution endorsement count after endorsement: ' + contributionAfterEndorse.endorsementCount);
+  } else {
+    console.log('Contribution endorsement count query was unavailable.');
+  }
   await send(bob, 'claimRole', { senderAddress: hexToBytes(bob.address), circleId });
   const bobRole = await waitFor(`Bob role in ${circleId}`, async () => {
     const role = await queryMaybe('/v1/query/repuring/role', { address: bob.address, circleId });
@@ -94,6 +100,7 @@ async function main() {
     return Array.isArray(rows) && rows.some((row) => cleanHex(row.address) === bob.address) ? rows : false;
   });
   console.log('Leaderboard:', leaderboard.map((row, index) => `${index + 1}. ${row.username} (${row.reputation})`).join(' | '));
+  console.log('Endorsement ID used for slash: ' + endorsementId);
   await send(alice, 'slashEndorsement', { senderAddress: hexToBytes(alice.address), endorsementId, reason: 'demo slash by circle creator' });
   const bobAfterSlash = await waitFor(`Bob reputation after slash`, async () => {
     const reputation = await queryMaybe('/v1/query/repuring/reputation', { address: bob.address });
@@ -105,7 +112,23 @@ async function main() {
   console.log(`Circle ID: ${circleId}`);
   console.log(`Contribution ID: ${contributionId}`);
   console.log(`Contribution endorsement ID: ${endorsementId}`);
+  console.log('Expected Bob reputation transition: 0 -> 1 -> 0');
   console.log('Verified Bob reputation transition through RPC query state.');
+  console.log('\nFinal QA checklist:');
+  for (const item of [
+    'profiles created',
+    'circle created',
+    'Bob joined',
+    'contribution posted',
+    'contribution endorsed',
+    'reputation increased',
+    'role claimed',
+    'leaderboard returned Bob',
+    'endorsement slashed',
+    'reputation decreased',
+  ]) {
+    console.log('[x] ' + item);
+  }
 }
 
 async function send(signer, kind, msg) {

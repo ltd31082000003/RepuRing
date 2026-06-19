@@ -231,6 +231,37 @@ Live flow checklist:
 - Submit `CreateProfileTx`, `CreateCircleTx`, `JoinCircleTx`, `CreateContributionTx`, `EndorseContributionTx`, `ClaimRoleTx`, and `SlashEndorsementTx`.
 - Confirm leaderboard and reputation changes come from RepuRing RPC query state.
 
+## Manual QA Checklist
+
+### Happy Path
+
+- Create or select a local signing wallet and confirm it remains selected across RepuRing routes.
+- Create a profile and verify username, bio, avatar, and initial reputation 0.
+- Create a project circle as Alice.
+- Switch to Bob, create Bob's profile, and join the same circle.
+- Post a contribution proof as Bob and confirm it appears in the selected circle feed.
+- Switch to Alice and endorse Bob's contribution with EndorseContributionTx.
+- Confirm Bob's profile reputation increases and the contribution endorsement count increases.
+- Confirm the selected circle leaderboard returns Bob with the updated reputation and derived role.
+- Switch to Bob and submit ClaimRoleTx; confirm the stored role matches the thresholds.
+- Switch to Alice as circle creator/admin and slash the endorsement.
+- Confirm the endorsement is slashed, Bob's reputation decreases by 2 floored at 0, and the linked contribution endorsement count decreases.
+
+### Failure And Edge Cases
+
+- Submit without a selected wallet.
+- Submit with a missing or incorrect signing password.
+- Create a profile without a username.
+- Reuse an existing username from another wallet.
+- Reuse an existing circle ID.
+- Join the same circle twice.
+- Post a contribution before joining the selected circle.
+- Reuse an existing contribution ID.
+- Endorse the current wallet's own contribution.
+- Endorse the same contribution twice from the same wallet.
+- Attempt to slash as a non-admin member.
+- Attempt to slash an already-slashed endorsement.
+- Update a profile and confirm username and reputation remain unchanged while bio/avatar update.
 ## Future Work
 
 - Project-scoped reputation so each community can weight contributor standing independently.
