@@ -141,7 +141,7 @@ function RepuRingProfileCard(): JSX.Element {
         >
             <div className="border-b border-white/10 bg-gradient-to-br from-primary/10 via-transparent to-cyan-400/10 p-5 sm:p-6">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                    <div className="flex items-start gap-4">
+                    <div className="flex min-w-0 items-start gap-4">
                         <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-primary/25 bg-primary/10 text-xl font-bold text-primary">
                             {profile?.avatarUrl ? (
                                 <img src={profile.avatarUrl} alt={profile.username} className="h-full w-full object-cover" />
@@ -151,7 +151,7 @@ function RepuRingProfileCard(): JSX.Element {
                         </div>
                         <div>
                             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">RepuRing Profile</p>
-                            <h2 className="mt-1 text-2xl font-semibold text-foreground">
+                            <h2 className="mt-1 break-words text-2xl font-semibold text-foreground">
                                 {profile ? profile.username : 'Create your RepuRing Profile'}
                             </h2>
                             <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
@@ -162,7 +162,7 @@ function RepuRingProfileCard(): JSX.Element {
                         </div>
                     </div>
                     {profile ? (
-                        <span className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                        <span className="inline-flex shrink-0 items-center gap-2 rounded-full border border-primary/25 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
                             <BadgeCheck className="h-3.5 w-3.5" />
                             Profile active
                         </span>
@@ -178,21 +178,21 @@ function RepuRingProfileCard(): JSX.Element {
                 </div>
 
                 {profile ? (
-                    <div className="flex flex-wrap gap-2">
-                        <Button type="button" variant="secondary" className="h-11" onClick={openEditProfile}>
+                    <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                        <Button type="button" variant="secondary" className="h-11 w-full sm:w-auto" onClick={openEditProfile}>
                             <Pencil className="h-4 w-4" />
                             Edit Profile
                         </Button>
-                        <Button asChild variant="outline" className="h-11">
+                        <Button asChild variant="outline" className="h-11 w-full sm:w-auto">
                             <Link to="/repuring/circles">Go to Circles</Link>
                         </Button>
-                        <Button asChild className="h-11">
+                        <Button asChild className="h-11 w-full sm:w-auto">
                             <Link to="/repuring/contributions">Post Contribution</Link>
                         </Button>
                     </div>
                 ) : (
-                    <div className="flex flex-wrap gap-2">
-                        <Button className="h-11" onClick={() => setProfileModalOpen(true)} disabled={!currentAddress}>
+                    <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                        <Button className="h-11 w-full sm:w-auto" onClick={() => setProfileModalOpen(true)} disabled={!currentAddress}>
                             <UserPlus className="h-4 w-4" />
                             Create Profile
                         </Button>
@@ -205,9 +205,9 @@ function RepuRingProfileCard(): JSX.Element {
 
             <div className="border-t border-white/10 bg-black/20 px-5 py-4 sm:px-6">
                 <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
-                    <div>
+                    <div className="min-w-0" aria-live="polite">
                         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Profile transaction status</p>
-                        <p className="mt-1 text-sm text-muted-foreground">{status}</p>
+                        <p className="mt-1 break-words text-sm text-muted-foreground">{status}</p>
                         {lastTx ? <p className="mt-1 break-all font-mono text-xs text-muted-foreground">{lastTx}</p> : null}
                     </div>
                     <Button type="button" variant="secondary" className="h-10 self-start lg:self-center" onClick={() => void refreshState()}>
@@ -231,7 +231,7 @@ function RepuRingProfileCard(): JSX.Element {
                         <AccountInput label="Avatar URL" value={profileForm.avatarUrl} onChange={(avatarUrl) => setProfileForm({ ...profileForm, avatarUrl })} placeholder="https://..." />
                         <div className="rounded-xl border border-white/10 bg-black/25 p-3">
                             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Status</p>
-                            <p className="mt-1 text-sm text-muted-foreground">{status}</p>
+                            <p className="mt-1 break-words text-sm text-muted-foreground">{status}</p>
                         </div>
                     </div>
                     <DialogFooter>
@@ -256,7 +256,7 @@ function RepuRingProfileCard(): JSX.Element {
                         <AccountInput label="Avatar URL" value={editProfileForm.avatarUrl} onChange={(avatarUrl) => setEditProfileForm({ ...editProfileForm, avatarUrl })} placeholder="https://..." />
                         <div className="rounded-xl border border-white/10 bg-black/25 p-3">
                             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Status</p>
-                            <p className="mt-1 text-sm text-muted-foreground">{status}</p>
+                            <p className="mt-1 break-words text-sm text-muted-foreground">{status}</p>
                         </div>
                     </div>
                     <DialogFooter>
@@ -271,7 +271,7 @@ function RepuRingProfileCard(): JSX.Element {
 
 function ProfileMetric({ label, value }: { label: string; value: string }) {
     return (
-        <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
+        <div className="min-w-0 rounded-2xl border border-white/10 bg-black/25 p-4">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
             <p className="mt-2 break-all text-sm font-semibold text-foreground">{value}</p>
         </div>

@@ -65,7 +65,7 @@ export default function RepuRingAdmin(): JSX.Element {
             copy="Only the circle creator/admin can submit this danger action. Slashing marks the endorsement, reduces target reputation by 2 floored at 0, and decrements a linked contribution endorsement count when applicable."
             actions={<Badge tone="red">Danger action</Badge>}
           />
-          <div className="rounded-2xl border border-red-300/20 bg-red-500/10 p-4 text-sm leading-6 text-red-100">
+          <div className="break-words rounded-2xl border border-red-300/20 bg-red-500/10 p-4 text-sm leading-6 text-red-100">
             This writes permanent plugin state: the endorsement is marked slashed, target profile reputation decreases by 2 with a floor of 0, and a linked contribution count decreases when applicable.
           </div>
           <div className="flex flex-wrap gap-2">
@@ -102,14 +102,14 @@ export default function RepuRingAdmin(): JSX.Element {
                   <Badge>{item.tag}</Badge>
                   <StatusPill tone={item.slashed ? 'danger' : 'success'}>{item.slashed ? 'Slashed' : 'Active'}</StatusPill>
                 </div>
-                <p className="mt-3 text-sm leading-6 text-zinc-300">{item.message || 'No message provided.'}</p>
+                <p className="mt-3 break-words text-sm leading-6 text-zinc-300">{item.message || 'No message provided.'}</p>
                 <div className="mt-4 grid gap-2 text-xs text-zinc-500">
                   <div>ID <span className="break-all font-mono text-zinc-300">{item.endorsementId}</span></div>
-                  {item.contributionId && <div>Contribution <span className="font-mono text-zinc-300">{item.contributionId}</span></div>}
+                  {item.contributionId && <div>Contribution <span className="break-all font-mono text-zinc-300">{item.contributionId}</span></div>}
                   <div>From <span className="font-mono text-zinc-300">{shortAddress(item.fromAddress)}</span></div>
                   <div>Target <span className="font-mono text-zinc-300">{shortAddress(item.targetAddress)}</span></div>
                 </div>
-                <Button variant="secondary" className="mt-4" onClick={() => setEndorsementId(item.endorsementId)}>Use this ID</Button>
+                <Button variant="secondary" className="mt-4 w-full sm:w-auto" onClick={() => setEndorsementId(item.endorsementId)}>Use this endorsement ID</Button>
               </SocialCard>
             ))}
           </div>

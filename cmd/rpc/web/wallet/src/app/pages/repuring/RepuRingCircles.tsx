@@ -1,5 +1,6 @@
 import React from 'react';
 import { Badge, Button, EmptyState, Input, MemberList, MetricCard, PageHeader, Panel, RepuRingPage, SectionHeader, StatusPill, TxStatusCard, shortAddress } from './components';
+import { cleanHex } from './RepuRingProvider';
 import { useRepuRing } from './useRepuRing';
 
 export default function RepuRingCircles(): JSX.Element {
@@ -20,7 +21,7 @@ export default function RepuRingCircles(): JSX.Element {
   } = useRepuRing();
   const [actionsOpen, setActionsOpen] = React.useState(!circle);
   const memberCount = circle?.members?.length || 0;
-  const isMember = Boolean(currentAddress && circle?.members?.includes(currentAddress));
+  const isMember = Boolean(currentAddress && circle?.members?.some((address) => cleanHex(address) === cleanHex(currentAddress)));
 
   return (
     <RepuRingPage>
@@ -83,7 +84,7 @@ export default function RepuRingCircles(): JSX.Element {
               <Input label="Description" value={circleForm.description} onChange={(description) => setCircleForm({ ...circleForm, description })} multiline />
               <div className="flex flex-wrap gap-3">
                 <Button onClick={() => { void submit('createCircle', { circleId, ...circleForm }); }}>Create project circle</Button>
-                <Button variant="secondary" onClick={() => { void submit('joinCircle', { circleId }); }}>Join project circle</Button>
+                <Button variant="secondary" className="w-full sm:w-auto" onClick={() => { void submit('joinCircle', { circleId }); }}>Join project circle</Button>
               </div>
               <div className="flex flex-wrap gap-2">
                 <Badge tone="zinc">CreateCircleTx</Badge>

@@ -60,7 +60,7 @@ export default function RepuRingEndorse(): JSX.Element {
                   <div className="flex min-w-0 gap-3">
                     <AvatarFallback label={selectedContribution.authorUsername || selectedContribution.authorAddress} />
                     <div>
-                      <p className="font-semibold text-white">{selectedContribution.authorUsername || shortAddress(selectedContribution.authorAddress)}</p>
+                      <p className="break-words font-semibold text-white">{selectedContribution.authorUsername || shortAddress(selectedContribution.authorAddress)}</p>
                       <p className="font-mono text-xs text-zinc-500">{shortAddress(selectedContribution.authorAddress)}</p>
                     </div>
                   </div>
@@ -69,7 +69,7 @@ export default function RepuRingEndorse(): JSX.Element {
                     <Badge>{selectedContribution.endorsementCount} endorsements</Badge>
                   </div>
                 </div>
-                <p className="mt-4 text-sm leading-6 text-zinc-300">{selectedContribution.description || 'No description provided.'}</p>
+                <p className="mt-4 break-words text-sm leading-6 text-zinc-300">{selectedContribution.description || 'No description provided.'}</p>
                 <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm">
                   <p className="text-zinc-500">Proof URL</p>
                   {selectedContribution.proofUrl ? (
@@ -104,7 +104,8 @@ export default function RepuRingEndorse(): JSX.Element {
                     key={tag}
                     type="button"
                     onClick={() => setEndorse({ ...endorse, tag })}
-                    className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${endorse.tag === tag ? 'border-emerald-300/40 bg-emerald-300/15 text-emerald-100' : 'border-white/10 bg-white/5 text-zinc-400 hover:bg-white/[0.08]'}`}
+                    aria-pressed={endorse.tag === tag}
+                    className={`rounded-full border px-4 py-2 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/60 ${endorse.tag === tag ? 'border-emerald-300/40 bg-emerald-300/15 text-emerald-100' : 'border-white/10 bg-white/5 text-zinc-400 hover:bg-white/[0.08]'}`}
                   >
                     {tag}
                   </button>
@@ -112,9 +113,12 @@ export default function RepuRingEndorse(): JSX.Element {
               </div>
             </div>
             <Input label="Review message" value={endorse.message} onChange={(message) => setEndorse({ ...endorse, message })} multiline />
-            <Button onClick={() => { void submit('endorseContribution', { contributionId: selectedContributionId, ...endorse }); }}>
-              Endorse contribution
-            </Button>
+            <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
+              <Button className="w-full sm:w-auto" onClick={() => { void submit('endorseContribution', { contributionId: selectedContributionId, ...endorse }); }}>
+                Endorse contribution
+              </Button>
+              <Badge tone="zinc">EndorseContributionTx</Badge>
+            </div>
           </Panel>
         </div>
 
@@ -145,13 +149,14 @@ export default function RepuRingEndorse(): JSX.Element {
                     key={item.contributionId}
                     type="button"
                     onClick={() => setSelectedContributionId(item.contributionId)}
-                    className={`rounded-2xl border p-4 text-left transition ${item.contributionId === selectedContributionId ? 'border-emerald-300/40 bg-emerald-300/10' : 'border-white/10 bg-black/25 hover:bg-white/[0.08]'}`}
+                    aria-pressed={item.contributionId === selectedContributionId}
+                    className={`min-w-0 rounded-2xl border p-4 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/60 ${item.contributionId === selectedContributionId ? 'border-emerald-300/40 bg-emerald-300/10' : 'border-white/10 bg-black/25 hover:bg-white/[0.08]'}`}
                   >
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <span className="font-semibold text-white">{item.title}</span>
+                      <span className="min-w-0 break-words font-semibold text-white">{item.title}</span>
                       <CategoryBadge category={item.category} />
                     </div>
-                    <p className="mt-2 line-clamp-2 text-sm text-zinc-400">{item.description}</p>
+                    <p className="mt-2 line-clamp-2 break-words text-sm text-zinc-400">{item.description}</p>
                     <p className="mt-3 text-xs text-zinc-500">Author <span className="font-mono text-zinc-300">{item.authorUsername || shortAddress(item.authorAddress)}</span></p>
                   </button>
                 ))}
@@ -177,9 +182,9 @@ export default function RepuRingEndorse(): JSX.Element {
                   <Badge>{item.tag}</Badge>
                   <StatusPill tone={item.slashed ? 'danger' : 'success'}>{item.slashed ? 'Slashed' : 'Active'}</StatusPill>
                 </div>
-                <p className="mt-3 text-sm leading-6 text-zinc-300">{item.message || 'No message'}</p>
+                <p className="mt-3 break-words text-sm leading-6 text-zinc-300">{item.message || 'No message'}</p>
                 <div className="mt-4 grid gap-2 text-xs text-zinc-500">
-                  {item.contributionId && <div>Contribution <span className="font-mono text-zinc-300">{item.contributionId}</span></div>}
+                  {item.contributionId && <div>Contribution <span className="break-all font-mono text-zinc-300">{item.contributionId}</span></div>}
                   <div>From <span className="font-mono text-zinc-300">{shortAddress(item.fromAddress)}</span></div>
                   <div>Target <span className="font-mono text-zinc-300">{shortAddress(item.targetAddress)}</span></div>
                   <div>ID <span className="break-all font-mono text-zinc-300">{item.endorsementId}</span></div>
@@ -201,7 +206,7 @@ export default function RepuRingEndorse(): JSX.Element {
           <div className="space-y-4 rounded-3xl border border-white/10 bg-black/20 p-4">
             <Input label="Target address" value={targetAddress} onChange={setTargetAddress} placeholder="Hex address of another circle member" />
             <StatusPill tone={targetIsMember ? 'success' : 'neutral'}>{targetIsMember ? 'Target is member' : 'Membership not confirmed'}</StatusPill>
-            <Button variant="secondary" onClick={() => { void submit('endorseUser', { circleId, targetAddress, ...endorse }); }}>Submit EndorseUserTx</Button>
+            <div className="flex flex-wrap items-center gap-3"><Button variant="secondary" onClick={() => { void submit('endorseUser', { circleId, targetAddress, ...endorse }); }}>Endorse member (legacy)</Button><Badge tone="zinc">EndorseUserTx</Badge></div>
           </div>
         )}
       </Panel>

@@ -10,7 +10,7 @@ export default function RepuRingOverview(): JSX.Element {
 
   return (
     <RepuRingPage>
-      <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.045] p-6 shadow-2xl shadow-black/40 backdrop-blur-xl lg:p-8">
+      <section className="relative min-w-0 overflow-hidden rounded-3xl border border-white/10 bg-white/[0.045] p-5 sm:p-6 shadow-2xl shadow-black/40 backdrop-blur-xl lg:p-8">
         <div className="absolute inset-0 bg-gradient-to-br from-emerald-400/15 via-transparent to-cyan-400/10" />
         <div className="relative grid gap-8 xl:grid-cols-[1.2fr_0.8fr] xl:items-center">
           <div className="space-y-6">
@@ -21,16 +21,16 @@ export default function RepuRingOverview(): JSX.Element {
             </div>
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-300">RepuRing</p>
-              <h1 className="mt-4 max-w-4xl text-4xl font-semibold tracking-tight text-white md:text-6xl">
+              <h1 className="mt-4 max-w-4xl break-words text-3xl font-semibold tracking-tight text-white sm:text-4xl md:text-6xl">
                 Onchain Social-Fi for Web3 project contributors.
               </h1>
               <p className="mt-5 max-w-2xl text-base leading-7 text-zinc-300">
                 Create an onchain contributor identity, join a project circle, post proof-of-work, earn peer endorsements, and claim a role from profile reputation.
               </p>
             </div>
-            <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-6">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
               {flow.map((step, index) => (
-                <div key={step} className="rounded-2xl border border-white/10 bg-black/25 p-4">
+                <div key={step} className="min-w-0 rounded-2xl border border-white/10 bg-black/25 p-4">
                   <p className="text-xs font-semibold text-emerald-300">{String(index + 1).padStart(2, '0')}</p>
                   <p className="mt-2 text-sm font-semibold text-white">{step}</p>
                 </div>
@@ -39,13 +39,13 @@ export default function RepuRingOverview(): JSX.Element {
           </div>
 
           <Panel className="border-emerald-300/20 bg-black/30">
-            <div className="flex items-center gap-4">
+            <div className="flex min-w-0 flex-wrap items-center gap-4 sm:flex-nowrap">
               <AvatarFallback label={profile?.username || currentAddress} src={profile?.avatarUrl} />
               <div className="min-w-0 flex-1">
                 <p className="text-sm text-zinc-400">Current profile</p>
                 <h2 className="truncate text-2xl font-semibold text-white">{profile?.username || 'Profile not created'}</h2>
               </div>
-              <StatusPill tone={profile ? 'success' : 'warning'}>{profile ? 'Active' : 'Needed'}</StatusPill>
+              <div className="shrink-0"><StatusPill tone={profile ? 'success' : 'warning'}>{profile ? 'Active' : 'Needed'}</StatusPill></div>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <MetricCard label="Selected wallet" value={shortAddress(currentAddress) || 'No wallet'} detail={currentAddress || 'Open My Account to select a local signing key.'} />

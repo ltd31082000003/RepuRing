@@ -4,28 +4,28 @@ import { cleanHex } from './RepuRingProvider';
 
 export function RepuRingPage({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen overflow-hidden bg-[#070b14] text-zinc-100">
+    <div className="min-h-screen overflow-x-hidden bg-[#070b14] text-zinc-100">
       <div className="pointer-events-none fixed inset-0 -z-10">
         <div className="absolute left-[-10%] top-[-12%] h-80 w-80 rounded-full bg-emerald-500/20 blur-3xl" />
         <div className="absolute right-[-8%] top-[18%] h-96 w-96 rounded-full bg-cyan-500/10 blur-3xl" />
         <div className="absolute bottom-[-20%] left-[28%] h-96 w-96 rounded-full bg-violet-500/10 blur-3xl" />
       </div>
-      <main className="mx-auto max-w-7xl space-y-6 p-4 lg:p-8">{children}</main>
+      <main className="mx-auto min-w-0 max-w-7xl space-y-6 p-4 sm:p-6 lg:p-8">{children}</main>
     </div>
   );
 }
 
 export function PageHeader({ eyebrow, title, copy, actions }: { eyebrow: string; title: string; copy: string; actions?: React.ReactNode }) {
   return (
-    <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.045] p-6 shadow-2xl shadow-black/30 backdrop-blur-xl lg:p-8">
+    <section className="relative min-w-0 overflow-hidden rounded-3xl border border-white/10 bg-white/[0.045] p-5 shadow-2xl shadow-black/30 backdrop-blur-xl sm:p-6 lg:p-8">
       <div className="absolute inset-0 bg-gradient-to-br from-emerald-400/10 via-transparent to-cyan-400/10" />
       <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-        <div className="max-w-3xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-300">{eyebrow}</p>
-          <h1 className="mt-3 text-3xl font-semibold tracking-tight text-white md:text-5xl">{title}</h1>
-          <p className="mt-4 text-base leading-7 text-zinc-300">{copy}</p>
+        <div className="min-w-0 max-w-3xl">
+          <p className="break-words text-xs font-semibold uppercase tracking-[0.28em] text-emerald-300">{eyebrow}</p>
+          <h1 className="mt-3 break-words text-3xl font-semibold tracking-tight text-white md:text-5xl">{title}</h1>
+          <p className="mt-4 break-words text-base leading-7 text-zinc-300">{copy}</p>
         </div>
-        {actions && <div className="flex flex-wrap gap-3">{actions}</div>}
+        {actions && <div className="flex w-full flex-wrap gap-3 sm:w-auto">{actions}</div>}
       </div>
     </section>
   );
@@ -33,20 +33,20 @@ export function PageHeader({ eyebrow, title, copy, actions }: { eyebrow: string;
 
 export function SectionHeader({ eyebrow, title, copy, actions }: { eyebrow?: string; title: string; copy?: string; actions?: React.ReactNode }) {
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-      <div>
-        {eyebrow && <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-300">{eyebrow}</p>}
-        <h2 className="mt-1 text-2xl font-semibold text-white">{title}</h2>
-        {copy && <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">{copy}</p>}
+    <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div className="min-w-0">
+        {eyebrow && <p className="break-words text-xs font-semibold uppercase tracking-[0.22em] text-emerald-300">{eyebrow}</p>}
+        <h2 className="mt-1 break-words text-2xl font-semibold text-white">{title}</h2>
+        {copy && <p className="mt-2 max-w-2xl break-words text-sm leading-6 text-zinc-400">{copy}</p>}
       </div>
-      {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
+      {actions && <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:justify-end">{actions}</div>}
     </div>
   );
 }
 
 export function Panel({ id, title, eyebrow, className = '', children }: { id?: string; title?: string; eyebrow?: string; className?: string; children: React.ReactNode }) {
   return (
-    <section id={id} className={`scroll-mt-20 rounded-3xl border border-white/10 bg-white/[0.045] p-5 shadow-xl shadow-black/20 backdrop-blur-xl ${className}`}>
+    <section id={id} className={`min-w-0 scroll-mt-20 rounded-3xl border border-white/10 bg-white/[0.045] p-4 sm:p-5 shadow-xl shadow-black/20 backdrop-blur-xl ${className}`}>
       {(title || eyebrow) && (
         <div className="mb-4">
           {eyebrow && <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-300">{eyebrow}</p>}
@@ -60,7 +60,7 @@ export function Panel({ id, title, eyebrow, className = '', children }: { id?: s
 
 export function SocialCard({ children, selected = false, className = '' }: { children: React.ReactNode; selected?: boolean; className?: string }) {
   return (
-    <article className={`rounded-3xl border p-5 shadow-xl shadow-black/20 backdrop-blur-xl transition ${selected ? 'border-emerald-300/40 bg-emerald-300/10' : 'border-white/10 bg-white/[0.04]'} ${className}`}>
+    <article className={`min-w-0 overflow-hidden rounded-3xl border p-4 shadow-xl shadow-black/20 backdrop-blur-xl transition sm:p-5 ${selected ? 'border-emerald-300/40 bg-emerald-300/10' : 'border-white/10 bg-white/[0.04]'} ${className}`}>
       {children}
     </article>
   );
@@ -70,8 +70,8 @@ export function StatCard({ label, value, detail }: { label: string; value: strin
   return (
     <Panel>
       <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">{label}</p>
-      <p className="mt-2 break-all text-2xl font-semibold text-white">{value}</p>
-      <p className="mt-2 line-clamp-2 break-all text-sm text-zinc-400">{detail}</p>
+      <p className="mt-2 break-words text-2xl font-semibold text-white">{value}</p>
+      <p className="mt-2 line-clamp-2 break-words text-sm text-zinc-400">{detail}</p>
     </Panel>
   );
 }
@@ -86,8 +86,8 @@ export function MetricCard({ label, value, detail, tone = 'neutral' }: { label: 
   return (
     <div className={`rounded-3xl border bg-gradient-to-br p-4 shadow-lg shadow-black/20 ${tones[tone]}`}>
       <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">{label}</p>
-      <p className="mt-2 break-all text-2xl font-semibold text-white">{value}</p>
-      {detail && <p className="mt-2 line-clamp-2 break-all text-sm text-zinc-400">{detail}</p>}
+      <p className="mt-2 break-words text-2xl font-semibold text-white">{value}</p>
+      {detail && <p className="mt-2 line-clamp-2 break-words text-sm text-zinc-400">{detail}</p>}
     </div>
   );
 }
@@ -96,7 +96,7 @@ export function Metric({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-4">
       <p className="text-xs text-zinc-500">{label}</p>
-      <p className="mt-1 break-all text-lg font-semibold text-white">{value}</p>
+      <p className="mt-1 break-words text-lg font-semibold text-white">{value}</p>
     </div>
   );
 }
@@ -117,7 +117,7 @@ export function Badge({ children, tone = 'emerald' }: { children: React.ReactNod
     zinc: 'border-white/10 bg-white/5 text-zinc-300',
     red: 'border-red-300/30 bg-red-400/10 text-red-200',
   };
-  return <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${tones[tone]}`}>{children}</span>;
+  return <span className={`inline-flex max-w-full items-center rounded-full border px-3 py-1 text-center text-xs font-semibold leading-5 [overflow-wrap:anywhere] ${tones[tone]}`}>{children}</span>;
 }
 
 export function CategoryBadge({ category }: { category: string }) {
@@ -144,15 +144,15 @@ export function StatusPill({ children, tone }: { children: React.ReactNode; tone
     danger: 'border-red-300/30 bg-red-400/10 text-red-200',
     neutral: 'border-white/10 bg-white/5 text-zinc-300',
   };
-  return <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${tones[tone]}`}>{children}</span>;
+  return <span className={`inline-flex max-w-full rounded-full border px-3 py-1 text-center text-xs font-semibold leading-5 [overflow-wrap:anywhere] ${tones[tone]}`}>{children}</span>;
 }
 
 export function EmptyState({ title, copy, actions }: { title: string; copy: string; actions?: React.ReactNode }) {
   return (
-    <div className="rounded-3xl border border-dashed border-white/10 bg-black/20 p-8 text-center">
+    <div className="rounded-3xl border border-dashed border-white/10 bg-black/20 p-5 text-center sm:p-8">
       <div className="mx-auto mb-4 h-12 w-12 rounded-2xl border border-white/10 bg-white/[0.04]" />
       <p className="font-semibold text-white">{title}</p>
-      <p className="mt-2 text-sm text-zinc-500">{copy}</p>
+      <p className="mt-2 break-words text-sm text-zinc-500">{copy}</p>
       {actions && <div className="mt-5 flex flex-wrap justify-center gap-2">{actions}</div>}
     </div>
   );
@@ -315,11 +315,11 @@ export function DemoReadinessCard({
       <div className="grid gap-3 rounded-2xl border border-cyan-300/20 bg-cyan-300/[0.06] p-4 text-sm md:grid-cols-2">
         <div>
           <p className="text-xs uppercase tracking-[0.18em] text-cyan-200/70">Query and transaction RPC</p>
-          <p className="mt-1 font-mono text-cyan-100">http://localhost:50002</p>
+          <p className="mt-1 break-all font-mono text-cyan-100">http://localhost:50002</p>
         </div>
         <div>
           <p className="text-xs uppercase tracking-[0.18em] text-cyan-200/70">Admin and keystore RPC</p>
-          <p className="mt-1 font-mono text-cyan-100">http://localhost:50003</p>
+          <p className="mt-1 break-all font-mono text-cyan-100">http://localhost:50003</p>
         </div>
       </div>
       <div className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-black/20 p-4 md:flex-row md:items-center md:justify-between">
@@ -392,7 +392,7 @@ export function DangerPanel({ children }: { children: React.ReactNode }) {
 }
 
 export function Input({ label, value, onChange, type = 'text', placeholder, multiline = false }: { label: string; value: string; onChange: (v: string) => void; type?: string; placeholder?: string; multiline?: boolean }) {
-  const inputClass = 'w-full rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:border-emerald-300/60 focus:ring-2 focus:ring-emerald-400/20';
+  const inputClass = 'min-w-0 w-full rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:border-emerald-300/60 focus:ring-2 focus:ring-emerald-400/20';
   return (
     <label className="block">
       <span className="mb-2 block text-sm font-medium text-zinc-300">{label}</span>
@@ -411,10 +411,10 @@ export function Button({ children, onClick, variant = 'primary', to, className =
     secondary: 'border-white/10 bg-white/[0.08] text-white hover:bg-white/[0.12]',
     danger: 'border-red-300/30 bg-red-500/15 text-red-100 hover:bg-red-500/25',
   };
-  const buttonClass = `inline-flex items-center justify-center rounded-2xl border px-5 py-3 text-sm font-semibold shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl ${variants[variant]} ${className}`;
+  const buttonClass = `inline-flex max-w-full items-center justify-center whitespace-normal rounded-2xl border px-5 py-3 text-center text-sm font-semibold leading-5 shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#070b14] ${variants[variant]} ${className}`;
   if (to) return <Link className={buttonClass} to={to}>{children}</Link>;
   return (
-    <button className={buttonClass} onClick={() => void Promise.resolve(onClick?.()).catch((e) => alert(e.message || String(e)))}>
+    <button type="button" className={buttonClass} onClick={() => void Promise.resolve(onClick?.()).catch((e) => alert(e.message || String(e)))}>
       {children}
     </button>
   );
@@ -425,7 +425,7 @@ export function AddressList({ values }: { values: string[] }) {
   return (
     <div className="mt-4 grid gap-2">
       {values.map((value) => (
-        <div className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-xs" key={value}>
+        <div className="flex min-w-0 items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-xs" key={value}>
           <span className="font-mono text-zinc-300">{shortAddress(value)}</span>
           <span className="font-mono text-zinc-600">{cleanHex(value).slice(-8)}</span>
         </div>
@@ -443,13 +443,13 @@ export function MemberList({ values, currentAddress, creatorAddress }: { values:
         const isCurrent = clean === cleanHex(currentAddress);
         const isCreator = clean === cleanHex(creatorAddress);
         return (
-          <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-black/25 p-4" key={value}>
+          <div className="flex min-w-0 items-center gap-3 rounded-2xl border border-white/10 bg-black/25 p-4" key={value}>
             <AvatarFallback label={clean} />
             <div className="min-w-0 flex-1">
               <p className="font-mono text-sm text-zinc-200">{shortAddress(value)}</p>
               <p className="mt-1 font-mono text-xs text-zinc-600">{clean.slice(-12)}</p>
             </div>
-            <div className="flex flex-col gap-1">
+            <div className="flex shrink-0 flex-col gap-1">
               {isCurrent && <Badge tone="cyan">You</Badge>}
               {isCreator && <Badge>Creator</Badge>}
             </div>
@@ -463,12 +463,12 @@ export function MemberList({ values, currentAddress, creatorAddress }: { values:
 export function TxStatusCard({ status, lastTx, onRefresh }: { status: string; lastTx: string; onRefresh: () => Promise<void> }) {
   return (
     <Panel className="grid gap-4 md:grid-cols-[1fr_auto] md:items-center">
-      <div>
+      <div className="min-w-0" aria-live="polite">
         <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">RPC status</p>
-        <p className="mt-2 text-sm text-zinc-300">{status}</p>
+        <p className="mt-2 break-words text-sm text-zinc-300">{status}</p>
         <p className="mt-2 break-all font-mono text-xs text-zinc-500">{lastTx || 'No transaction submitted yet'}</p>
       </div>
-      <Button variant="secondary" onClick={onRefresh}>Refresh chain state</Button>
+      <Button variant="secondary" className="self-start md:self-auto" onClick={onRefresh}>Refresh chain state</Button>
     </Panel>
   );
 }
@@ -481,9 +481,7 @@ export function roleForReputation(reputation: number) {
 }
 
 export function roleBadge(roleName: string) {
-  const role = roleName || 'Newbie';
-  const icon = role === 'Circle Leader' ? 'Leader' : role === 'Core Member' ? 'Core' : role === 'Trusted' ? 'Trusted' : 'Newbie';
-  return `${icon} · ${role}`;
+  return roleName || 'Newbie';
 }
 
 export function shortAddress(value: string) {

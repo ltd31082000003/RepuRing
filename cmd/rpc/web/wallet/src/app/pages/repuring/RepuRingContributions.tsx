@@ -1,5 +1,6 @@
 import React from 'react';
 import { AvatarFallback, Badge, Button, CategoryBadge, EmptyState, Input, MetricCard, PageHeader, Panel, RepuRingPage, SectionHeader, SocialCard, StatusPill, TxStatusCard, shortAddress } from './components';
+import { cleanHex } from './RepuRingProvider';
 import { useRepuRing } from './useRepuRing';
 
 const categories = ['builder', 'helper', 'creator', 'researcher', 'tester', 'educator'];
@@ -25,7 +26,7 @@ export default function RepuRingContributions(): JSX.Element {
   } = useRepuRing();
   const [composerOpen, setComposerOpen] = React.useState(contributions.length === 0);
   const [filter, setFilter] = React.useState('all');
-  const isMember = Boolean(currentAddress && circle?.members?.includes(currentAddress));
+  const isMember = Boolean(currentAddress && circle?.members?.some((address) => cleanHex(address) === cleanHex(currentAddress)));
   const visibleContributions = filter === 'all' ? contributions : contributions.filter((item) => item.category === filter);
 
   return (
@@ -80,7 +81,8 @@ export default function RepuRingContributions(): JSX.Element {
                   key={chip}
                   type="button"
                   onClick={() => setFilter(chip)}
-                  className={`rounded-full border px-3 py-1 text-xs font-semibold capitalize transition ${filter === chip ? 'border-emerald-300/40 bg-emerald-300/15 text-emerald-100' : 'border-white/10 bg-white/5 text-zinc-400 hover:bg-white/[0.08]'}`}
+                  aria-pressed={filter === chip}
+                  className={`rounded-full border px-3 py-1 text-xs font-semibold capitalize transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/60 ${filter === chip ? 'border-emerald-300/40 bg-emerald-300/15 text-emerald-100' : 'border-white/10 bg-white/5 text-zinc-400 hover:bg-white/[0.08]'}`}
                 >
                   {chip}
                 </button>
@@ -111,7 +113,7 @@ export default function RepuRingContributions(): JSX.Element {
                       <div className="flex min-w-0 gap-3">
                         <AvatarFallback label={item.authorUsername || item.authorAddress} />
                         <div className="min-w-0">
-                          <p className="font-semibold text-white">{item.authorUsername || shortAddress(item.authorAddress)}</p>
+                          <p className="break-words font-semibold text-white">{item.authorUsername || shortAddress(item.authorAddress)}</p>
                           <p className="font-mono text-xs text-zinc-500">{shortAddress(item.authorAddress)}</p>
                         </div>
                       </div>
@@ -120,10 +122,10 @@ export default function RepuRingContributions(): JSX.Element {
                         <StatusPill tone={item.slashed ? 'danger' : 'success'}>{item.slashed ? 'Slashed' : 'Active'}</StatusPill>
                       </div>
                     </div>
-                    <h3 className="mt-5 text-xl font-semibold text-white">{item.title}</h3>
-                    <p className="mt-3 text-sm leading-6 text-zinc-300">{item.description || 'No description provided.'}</p>
+                    <h3 className="mt-5 break-words text-xl font-semibold text-white">{item.title}</h3>
+                    <p className="mt-3 break-words text-sm leading-6 text-zinc-300">{item.description || 'No description provided.'}</p>
                     <div className="mt-5 grid gap-3 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm">
-                      <div className="flex flex-wrap justify-between gap-2">
+                      <div className="flex min-w-0 flex-wrap justify-between gap-2">
                         <span className="text-zinc-500">Proof</span>
                         {item.proofUrl ? (
                           <a className="break-all font-mono text-cyan-200 underline-offset-4 hover:underline" href={item.proofUrl} target="_blank" rel="noreferrer">External proof link</a>
@@ -131,17 +133,17 @@ export default function RepuRingContributions(): JSX.Element {
                           <span className="text-zinc-500">Not provided</span>
                         )}
                       </div>
-                      <div className="flex flex-wrap justify-between gap-2">
+                      <div className="flex min-w-0 flex-wrap justify-between gap-2">
                         <span className="text-zinc-500">Endorsements</span>
                         <Badge>{item.endorsementCount}</Badge>
                       </div>
-                      <div className="flex flex-wrap justify-between gap-2">
-                        <span className="text-zinc-500">Contribution ID</span>
-                        <span className="break-all font-mono text-xs text-zinc-300">{item.contributionId}</span>
+                      <div className="flex min-w-0 flex-wrap justify-between gap-2">
+                        <span className="shrink-0 text-zinc-500">Contribution ID</span>
+                        <span className="min-w-0 break-all font-mono text-xs text-zinc-300">{item.contributionId}</span>
                       </div>
                     </div>
                     <div className="mt-5">
-                      <Button variant={selected ? 'primary' : 'secondary'} onClick={() => setSelectedContributionId(item.contributionId)}>
+                      <Button variant={selected ? 'primary' : 'secondary'} className="w-full sm:w-auto" onClick={() => setSelectedContributionId(item.contributionId)}>
                         {selected ? 'Selected for Endorsement' : 'Select for Endorsement'}
                       </Button>
                     </div>
