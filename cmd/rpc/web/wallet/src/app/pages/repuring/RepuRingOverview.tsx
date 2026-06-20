@@ -112,7 +112,7 @@ export default function RepuRingOverview(): JSX.Element {
         />
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
           <QuickAction title="My Account" copy="Create or edit your RepuRing identity." to="/key-management" />
-          <QuickAction title="Join/Create Circle" copy="Set up a project community." to="/repuring/circles" />
+          <QuickAction title="Create or Join Circle" copy="Set up a project community." to="/repuring/circles" />
           <QuickAction title="Post Contribution" copy="Publish proof-of-work to the feed." to="/repuring/contributions" />
           <QuickAction title="Endorse Work" copy="Review and endorse useful proofs." to="/repuring/endorse" />
           <QuickAction title="View Leaderboard" copy="See reputation and role rankings." to="/repuring/leaderboard" />

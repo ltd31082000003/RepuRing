@@ -37,7 +37,7 @@ RepuRing matches the Social-Fi theme through four connected onchain graphs and s
 - a reputation economy driven by peer endorsements,
 - role progression stored onchain through ClaimRoleTx.
 
-The current score is profile-level reputation displayed in selected circle context. RepuRing does not claim fully project-scoped or Sybil-resistant reputation.
+The current score is profile-level reputation displayed in selected circle context. Project-scoped scoring and anti-Sybil controls are outside the current implementation.
 
 ## What Is Stored In Plugin State
 
@@ -225,17 +225,18 @@ The requested logical queries are exposed as HTTP POST routes on port `50002`:
 
 Each query also accepts optional `{ "height": 123 }` to read historical state through the Canopy time-machine path.
 
-## Judge Checklist
+## Pre-submission Checklist
 
-- [x] Custom Canopy plugin transactions implemented.
-- [x] Contribution-based Social-Fi flow implemented.
-- [x] Browser signs custom plugin transactions.
-- [x] RPC query routes return RepuRing plugin state.
-- [x] Demo script submits real transactions through RPC.
+- [x] Custom plugin transactions are implemented and listed.
+- [x] Contribution-based Social-Fi flow is explained.
+- [x] RepuRing query routes are implemented and listed.
 - [x] TypeScript plugin build passes.
 - [x] Plugin invariant and source-behavior tests pass.
 - [x] Wallet frontend build passes.
-- [x] Manual browser happy-path and edge-case flow documented.
+- [x] Demo script syntax check passes and submits real RPC transactions.
+- [x] Manual browser demo path is documented.
+- [x] Current limitations are stated honestly.
+- [x] No protocol-breaking changes were introduced during final freeze.
 
 ## Verification Checklist
 

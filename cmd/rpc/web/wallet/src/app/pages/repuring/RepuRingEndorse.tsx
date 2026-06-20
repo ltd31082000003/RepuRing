@@ -54,7 +54,8 @@ export default function RepuRingEndorse(): JSX.Element {
               <div className="rounded-2xl border border-amber-300/30 bg-amber-300/10 p-4 text-sm font-medium leading-6 text-amber-100">
                 Switch to another circle member account to endorse this proof. The contribution author cannot self-endorse.
               </div>
-            )}            {selectedContribution ? (
+            )}
+            {selectedContribution ? (
               <SocialCard selected>
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div className="flex min-w-0 gap-3">
