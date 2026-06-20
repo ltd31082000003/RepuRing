@@ -47,7 +47,7 @@ export default function RepuRingEndorse(): JSX.Element {
             <SectionHeader
               eyebrow="Selected contribution"
               title={selectedContribution?.title || 'Choose work to endorse'}
-              copy="Endorse this contribution and increase the author's reputation."
+              copy="Peer validation through EndorseContributionTx increases the author's profile reputation by 1 after commit."
               actions={<StatusPill tone={!selectedContribution ? 'warning' : selectedAuthorIsSelf ? 'danger' : 'success'}>{!selectedContribution ? 'No selection' : selectedAuthorIsSelf ? 'Own work' : 'Review ready'}</StatusPill>}
             />
             {selectedAuthorIsSelf && (
@@ -120,7 +120,7 @@ export default function RepuRingEndorse(): JSX.Element {
 
         <div className="space-y-5">
           <Panel>
-            <SectionHeader eyebrow="Circle readiness" title="Validation checklist" copy="These are the onchain checks enforced by the RepuRing plugin." />
+            <SectionHeader eyebrow="Endorsement readiness" title="Onchain validation checklist" copy="The selected wallet must be another active circle member, and the contribution must be active." />
             <div className="grid gap-3">
               <Rule checked={isMember} text="Selected endorser wallet is a member of this circle." />
               <Rule checked={Boolean(selectedContribution)} text="A contribution proof exists and is selected for review." />
@@ -162,7 +162,7 @@ export default function RepuRingEndorse(): JSX.Element {
       </section>
 
       <Panel>
-        <SectionHeader eyebrow="Activity" title="Recent endorsements" copy="Endorsement records from the current account or selected circle." />
+        <SectionHeader eyebrow="Plugin state" title="Recent endorsements" copy="Records returned for the selected circle or current profile, including active and slashed status." />
         {endorsements.length === 0 ? (
           <EmptyState
             title="No endorsements yet"

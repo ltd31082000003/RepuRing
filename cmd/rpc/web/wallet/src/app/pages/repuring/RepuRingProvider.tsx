@@ -31,15 +31,15 @@ const txMeta: Record<TxKind, { typeUrl: string; message: string }> = {
 };
 
 const submittedStatus: Record<TxKind, string> = {
-  createProfile: 'Profile transaction submitted. Your onchain contributor identity will refresh after the next block.',
-  updateProfile: 'Profile update submitted. Bio and avatar will refresh after the next block; username and reputation stay unchanged.',
-  createCircle: 'Project circle transaction submitted. Refreshing community state after commit.',
-  joinCircle: 'Join request submitted. Membership will appear after commit.',
-  createContribution: 'Proof-of-work submitted. Contribution feed will refresh after commit.',
-  endorseContribution: 'Endorsement submitted. Author reputation and endorsement count will refresh after commit.',
-  endorseUser: 'Legacy member endorsement submitted. This path is kept for compatibility.',
-  claimRole: 'Role claim submitted. Your community role will refresh after commit.',
-  slashEndorsement: 'Slash submitted. Endorsement status and target reputation will refresh after commit.',
+  createProfile: 'CreateProfileTx submitted - contributor identity will appear after commit.',
+  updateProfile: 'UpdateProfileTx submitted - bio and avatar will refresh; username and reputation remain unchanged.',
+  createCircle: 'CreateCircleTx submitted - project circle will refresh after commit.',
+  joinCircle: 'JoinCircleTx submitted - membership will appear after commit.',
+  createContribution: 'CreateContributionTx submitted - proof-of-work will appear in the contribution feed.',
+  endorseContribution: 'EndorseContributionTx submitted - author profile reputation and endorsement count will refresh.',
+  endorseUser: 'EndorseUserTx submitted - legacy member endorsement path used.',
+  claimRole: 'ClaimRoleTx submitted - role for this circle will refresh after commit.',
+  slashEndorsement: 'SlashEndorsementTx submitted - endorsement status and target profile reputation will refresh.',
 };
 
 export function RepuRingProvider({ children }: { children: React.ReactNode }): JSX.Element {

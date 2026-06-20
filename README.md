@@ -1,6 +1,6 @@
 # RepuRing
 
-RepuRing is an onchain Social-Fi contribution network for Web3 project communities.
+RepuRing is an onchain Social-Fi contribution network where Web3 contributors post proof-of-work, receive peer endorsements, earn reputation, and claim community roles.
 
 ## What It Does
 
@@ -16,6 +16,40 @@ RepuRing extends the Canopy template with custom plugin transactions for an onch
 
 It is Social-Fi because project identity, contribution proofs, endorsements, reputation, and roles are signed transactions committed to Canopy plugin state rather than frontend-only metadata.
 
+## Why It Is Social-Fi
+
+RepuRing turns contribution activity into verifiable social capital:
+
+- **Profile** is an onchain contributor identity.
+- **Circle** is a Web3 project or community hub.
+- **Contribution** is a proof-of-work post linked to that community.
+- **Endorsement** is peer validation from another circle member.
+- **Reputation** is earned social capital from endorsed contribution proofs.
+- **Role** is community status derived from current profile reputation.
+- **Slashing** is creator/admin moderation against invalid endorsements.
+
+## Contest Theme Fit
+
+RepuRing matches the Social-Fi theme through four connected onchain graphs and state transitions:
+
+- a social graph formed by contributor profiles and circle memberships,
+- a contribution graph formed by proof-of-work posts,
+- a reputation economy driven by peer endorsements,
+- role progression stored onchain through ClaimRoleTx.
+
+The current score is profile-level reputation displayed in selected circle context. RepuRing does not claim fully project-scoped or Sybil-resistant reputation.
+
+## What Is Stored In Plugin State
+
+The TypeScript plugin deterministically stores:
+
+- profiles and the unique username index,
+- project circles and memberships,
+- contribution proofs and circle/author indexes,
+- endorsement records and duplicate-prevention indexes,
+- profile reputation updated by endorsements and slashing,
+- claimed roles for a circle,
+- slashed endorsement status and reason.
 ## Implementation
 
 The working implementation is in the TypeScript plugin template:
@@ -122,16 +156,17 @@ The RepuRing UI is a route-based Social-Fi dApp:
 
 The RepuRing pages sign custom plugin transactions in the browser, submit them to `http://localhost:50002/v1/tx`, and refresh profile, circle, contribution, endorsement, role, and leaderboard state from the RepuRing query routes. They do not use a mocked transaction path for the main flow.
 
-## Demo UI Flow
+## Technical Demo Path
 
-1. Open `http://127.0.0.1:5173/repuring`.
-2. Create a signing key on `/key-management` if needed.
-3. Create your RepuRing profile on `/key-management`.
-4. Create or join a project community circle on `/repuring/circles`.
-5. Post contribution proof on `/repuring/contributions`.
-6. Endorse that contribution on `/repuring/endorse`.
-7. Check rankings on `/repuring/leaderboard`.
-8. Claim a role or slash an invalid endorsement on `/repuring/admin`.
+1. Start the local Canopy chain with the TypeScript plugin on RPC ports 50002 and 50003.
+2. Open http://127.0.0.1:5173/repuring.
+3. Create or select Alice and Bob local signing wallets in My Account.
+4. Create onchain profiles for both contributors.
+5. Create a project circle as Alice and join it as Bob.
+6. Post a contribution proof as Bob.
+7. Switch to Alice and endorse Bob's contribution through EndorseContributionTx.
+8. Open the selected circle leaderboard, verify Bob's profile reputation, and claim Bob's role.
+9. Switch to Alice as creator/admin, slash the endorsement, and verify reputation decreases.
 
 ## Demo Script
 
@@ -190,18 +225,17 @@ The requested logical queries are exposed as HTTP POST routes on port `50002`:
 
 Each query also accepts optional `{ "height": 123 }` to read historical state through the Canopy time-machine path.
 
-## Demo Video Script
+## Judge Checklist
 
-1. Show local Canopy running with plugin `typescript`, ports `50002/50003`.
-2. Show `npm run build:all` passing in `plugin/typescript`.
-3. Show the overview at `/repuring`.
-4. Create/select wallet accounts in `/key-management`.
-5. Submit `CreateProfileTx` from My Account on `/key-management`, then submit circle transactions on `/repuring/circles`.
-6. Submit a contribution proof on `/repuring/contributions`.
-7. Submit a contribution endorsement on `/repuring/endorse`.
-8. Show returned transaction hashes from `/v1/tx`.
-9. Show reputation, role, and rankings on `/repuring/leaderboard`.
-10. Run the admin slash step on `/repuring/admin` and show Bob reputation decrease through `/v1/query/repuring/reputation`.
+- [x] Custom Canopy plugin transactions implemented.
+- [x] Contribution-based Social-Fi flow implemented.
+- [x] Browser signs custom plugin transactions.
+- [x] RPC query routes return RepuRing plugin state.
+- [x] Demo script submits real transactions through RPC.
+- [x] TypeScript plugin build passes.
+- [x] Plugin invariant and source-behavior tests pass.
+- [x] Wallet frontend build passes.
+- [x] Manual browser happy-path and edge-case flow documented.
 
 ## Verification Checklist
 
@@ -262,9 +296,12 @@ Live flow checklist:
 - Attempt to slash as a non-admin member.
 - Attempt to slash an already-slashed endorsement.
 - Update a profile and confirm username and reputation remain unchanged while bio/avatar update.
-## Future Work
+## Intentional Scope And Future Work
 
-- Project-scoped reputation so each community can weight contributor standing independently.
-- Project discovery for finding and joining active Web3 contribution circles.
-- Contribution timestamps for chronological feeds, auditability, and richer demo timelines.
-- Anti-Sybil and weighted endorsements for stronger trust signals in larger communities.
+RepuRing keeps the contest implementation focused and transparent:
+
+- Reputation is currently profile-level and shown in the selected circle leaderboard context.
+- Project-scoped reputation is a future extension, not a current claim.
+- Contribution timestamps and richer activity chronology are future work.
+- Anti-Sybil controls and weighted endorsements are future work.
+- Project discovery and community browsing are future work.

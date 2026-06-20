@@ -27,7 +27,7 @@ export default function RepuRingCircles(): JSX.Element {
       <PageHeader
         eyebrow="Project circles"
         title="Project communities for contribution reputation."
-        copy="Circles are Web3 project hubs where contributors join, post proofs, endorse work, and claim roles from reputation."
+        copy="A circle is the project/community hub that connects members, contribution proofs, peer endorsements, and role claims."
         actions={<Button variant="secondary" onClick={refreshState}>Refresh circle</Button>}
       />
 
@@ -104,7 +104,7 @@ export default function RepuRingCircles(): JSX.Element {
         <SectionHeader
           eyebrow="Members"
           title="Circle member graph"
-          copy="Creator and current user badges help judges read the community state quickly during the demo."
+          copy="Creator and current-account badges make the loaded membership state explicit."
         />
         {circle ? (
           <MemberList values={circle.members || []} currentAddress={currentAddress} creatorAddress={circle.creatorAddress} />

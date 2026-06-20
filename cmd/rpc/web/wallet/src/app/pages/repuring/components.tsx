@@ -200,13 +200,13 @@ export function SocialFiJourney({
       : 'blocked';
   const steps: Array<{ title: string; copy: string; status: JourneyStatus; to: string; tx?: string }> = [
     { title: 'Wallet selected', copy: 'Select a local signing key before submitting Social-Fi transactions.', status: statusFor(0), to: '/key-management' },
-    { title: 'Profile created', copy: 'Activate your onchain contributor identity.', status: statusFor(1), to: '/key-management', tx: 'CreateProfileTx' },
-    { title: 'Project circle loaded', copy: 'Create or load a Web3 project community.', status: statusFor(2), to: '/repuring/circles', tx: 'CreateCircleTx' },
+    { title: 'Profile created', copy: 'Store your contributor identity in RepuRing plugin state.', status: statusFor(1), to: '/key-management', tx: 'CreateProfileTx' },
+    { title: 'Project circle loaded', copy: 'Create or load the project community used by the remaining flow.', status: statusFor(2), to: '/repuring/circles', tx: 'CreateCircleTx' },
     { title: 'Member ready', copy: 'Join the selected circle before posting work.', status: statusFor(3), to: '/repuring/circles', tx: 'JoinCircleTx' },
     { title: 'Proof-of-work posted', copy: 'Publish a contribution proof into the selected circle.', status: statusFor(4), to: '/repuring/contributions', tx: 'CreateContributionTx' },
     { title: 'Contribution review ready', copy: 'Select useful work and switch to another member account to endorse it.', status: statusFor(5), to: '/repuring/endorse', tx: 'EndorseContributionTx' },
-    { title: 'Reputation visible', copy: 'Endorsed contribution proofs increase profile reputation.', status: statusFor(6), to: '/repuring/leaderboard' },
-    { title: 'Role claimed', copy: 'Turn profile reputation into status for the selected circle.', status: statusFor(7), to: '/repuring/admin', tx: 'ClaimRoleTx' },
+    { title: 'Reputation visible', copy: 'Peer-endorsed contribution proofs increase profile reputation.', status: statusFor(6), to: '/repuring/leaderboard' },
+    { title: 'Role claimed', copy: 'Store a role for this circle based on current profile reputation.', status: statusFor(7), to: '/repuring/admin', tx: 'ClaimRoleTx' },
     { title: 'Moderation ready', copy: 'The circle creator/admin can review and slash invalid endorsements.', status: endorsements.length > 0 ? 'done' : 'optional', to: '/repuring/admin', tx: 'SlashEndorsementTx' },
   ];
   const statusStyles: Record<JourneyStatus, string> = {
@@ -226,8 +226,8 @@ export function SocialFiJourney({
     <Panel>
       <SectionHeader
         eyebrow="Demo journey"
-        title="From identity to trusted community role"
-        copy="Follow the live onchain flow in order. Every transaction step uses the selected local wallet and Canopy RPC."
+        title="Follow the live Social-Fi state transition"
+        copy="Each completed step is backed by a signed custom transaction or a RepuRing RPC query."
       />
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {steps.map((step, index) => (
@@ -297,8 +297,8 @@ export function DemoReadinessCard({
     <Panel>
       <SectionHeader
         eyebrow="Demo readiness"
-        title="Local environment and onchain prerequisites"
-        copy="See what is ready before recording. Passwords are requested only when the selected local wallet signs a transaction."
+        title="Canopy RPC and signing readiness"
+        copy="Verify local services and transaction prerequisites before running the end-to-end flow. Passwords are used only for local wallet signing."
         actions={<StatusPill tone={rpcReady ? 'success' : 'warning'}>{rpcReady ? 'RPC connected' : 'Setup required'}</StatusPill>}
       />
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -350,7 +350,7 @@ export function RoleProgressCard({ reputation, embedded = false }: { reputation:
       <SectionHeader
         eyebrow="Reputation path"
         title="From contribution proof to community role"
-        copy="Profile reputation is earned from endorsed contribution proofs and is used to derive role status for the selected circle."
+        copy="Profile reputation comes from endorsed contribution proofs and determines the role that can be claimed for the selected circle."
         actions={<Badge tone="cyan">{roleBadge(currentRole)}</Badge>}
       />
       <div className="grid gap-3 md:grid-cols-3">

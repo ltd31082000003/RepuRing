@@ -33,7 +33,7 @@ export default function RepuRingContributions(): JSX.Element {
       <PageHeader
         eyebrow="Contribution feed"
         title="Project Contribution Feed"
-        copy="Members post proof-of-work for a Web3 project community. Endorsements turn useful work into onchain reputation."
+        copy="A contribution is a proof-of-work post stored for the selected project circle. Peer endorsements increase the author's profile reputation."
         actions={<Button variant="secondary" onClick={refreshState}>Refresh feed</Button>}
       />
 
@@ -93,7 +93,7 @@ export default function RepuRingContributions(): JSX.Element {
           <SectionHeader
             eyebrow={circleId || 'Select a circle'}
             title="Contribution feed"
-            copy="Social proof cards show author, category, proof URL, endorsement count, and status."
+            copy="Each card reflects contribution state returned by RPC: author, proof, category, endorsement count, and active/slashed status."
           />
           {visibleContributions.length === 0 ? (
             <EmptyState

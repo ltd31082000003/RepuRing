@@ -25,7 +25,7 @@ export default function RepuRingOverview(): JSX.Element {
                 Onchain Social-Fi for Web3 project contributors.
               </h1>
               <p className="mt-5 max-w-2xl text-base leading-7 text-zinc-300">
-                Create a project circle, publish proof-of-work, endorse useful contributions, and turn reputation into visible community roles.
+                Create an onchain contributor identity, join a project circle, post proof-of-work, earn peer endorsements, and claim a role from profile reputation.
               </p>
             </div>
             <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-6">
@@ -73,8 +73,8 @@ export default function RepuRingOverview(): JSX.Element {
       <Panel>
         <SectionHeader
           eyebrow="How RepuRing works"
-          title="One contribution graph, six clear Social-Fi objects"
-          copy="Reputation is profile-level today and is used to derive the role shown for the selected circle."
+          title="Six onchain Social-Fi building blocks"
+          copy="Profiles, circles, contribution proofs, endorsements, reputation, and roles are queried from real RepuRing plugin state."
         />
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
           {[
@@ -107,8 +107,8 @@ export default function RepuRingOverview(): JSX.Element {
       <Panel>
         <SectionHeader
           eyebrow="Quick actions"
-          title="Move through the demo like a Social-Fi product."
-          copy="Each action opens a route that keeps the real Canopy transaction and query flow."
+          title="Follow the contribution flow"
+          copy="Move from identity to contribution proof, peer validation, reputation, and role without leaving the real Canopy RPC path."
         />
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
           <QuickAction title="My Account" copy="Create or edit your RepuRing identity." to="/key-management" />

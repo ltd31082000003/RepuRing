@@ -31,7 +31,7 @@ export default function RepuRingAdmin(): JSX.Element {
       <PageHeader
         eyebrow="Moderation center"
         title="Moderation & Roles"
-        copy="Claim a role from your current reputation and slash invalid endorsements as the circle creator/admin."
+        copy="Claim a role for the selected circle from current profile reputation, or moderate an invalid endorsement as the circle creator/admin."
         actions={<Button variant="secondary" onClick={refreshState}>Refresh moderation state</Button>}
       />
 
@@ -61,12 +61,12 @@ export default function RepuRingAdmin(): JSX.Element {
         <DangerPanel>
           <SectionHeader
             eyebrow="SlashEndorsementTx"
-            title="Slash Endorsement Danger Zone"
+            title="Slash invalid endorsement"
             copy="Only the circle creator/admin can submit this danger action. Slashing marks the endorsement, reduces target reputation by 2 floored at 0, and decrements a linked contribution endorsement count when applicable."
             actions={<Badge tone="red">Danger action</Badge>}
           />
           <div className="rounded-2xl border border-red-300/20 bg-red-500/10 p-4 text-sm leading-6 text-red-100">
-            Use this only for an invalid endorsement. The change is committed onchain and cannot be treated like a UI-only moderation toggle.
+            This writes permanent plugin state: the endorsement is marked slashed, target profile reputation decreases by 2 with a floor of 0, and a linked contribution count decreases when applicable.
           </div>
           <div className="flex flex-wrap gap-2">
             <Badge tone="zinc">Circle: {circle?.name || circleId || 'not loaded'}</Badge>

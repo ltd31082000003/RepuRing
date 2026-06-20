@@ -58,7 +58,7 @@ export const KeyManagement = (): JSX.Element => {
             >
                 <PageHeader
                     title="My Account"
-                    subtitle="Manage your RepuRing identity, selected wallet, and local demo signing key."
+                    subtitle="Manage your onchain contributor identity and the local wallet used to sign RepuRing transactions."
                     className="w-full"
                 />
             </motion.div>
@@ -156,8 +156,8 @@ function RepuRingProfileCard(): JSX.Element {
                             </h2>
                             <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
                                 {profile
-                                    ? profile.bio || 'Your onchain Social-Fi identity is active for circles, contributions, endorsements, and reputation.'
-                                    : 'Your profile is your onchain social identity for project circles, contributions, endorsements, and reputation.'}
+                                    ? profile.bio || 'Your contributor identity is active for project circles, proof-of-work posts, peer endorsements, and profile reputation.'
+                                    : 'Create the onchain contributor identity required for circles, contribution proofs, endorsements, reputation, and roles.'}
                             </p>
                         </div>
                     </div>

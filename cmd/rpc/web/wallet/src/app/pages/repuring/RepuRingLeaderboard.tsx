@@ -14,7 +14,7 @@ export default function RepuRingLeaderboard(): JSX.Element {
       <PageHeader
         eyebrow="Reputation rankings"
         title="Contribution Leaderboard"
-        copy="Explore the selected circle leaderboard using profile reputation earned from endorsed contribution proofs."
+        copy="The selected circle leaderboard displays profile reputation earned from endorsed contribution proofs and the corresponding derived or claimed role."
         actions={<Button variant="secondary" onClick={refreshState}>Refresh rankings</Button>}
       />
 
@@ -42,8 +42,8 @@ export default function RepuRingLeaderboard(): JSX.Element {
       <Panel>
         <SectionHeader
           eyebrow="How rankings work"
-          title="Peer-endorsed work powers the leaderboard"
-          copy="The selected circle leaderboard helps compare members while preserving the current profile-level reputation model."
+          title="How reputation reaches the leaderboard"
+          copy="The leaderboard ranks loaded circle members using current profile reputation; it does not claim a separate per-circle score."
         />
         <div className="grid gap-3 md:grid-cols-3">
           <div className="rounded-2xl border border-emerald-300/20 bg-emerald-300/[0.07] p-4">
@@ -81,7 +81,7 @@ export default function RepuRingLeaderboard(): JSX.Element {
         <SectionHeader
           eyebrow="Ranked by reputation"
           title="Main leaderboard"
-          copy="Current user rows are highlighted when the selected wallet appears in the ranking."
+          copy="Rows show profile reputation and role status in the selected circle context; the selected wallet is highlighted."
           actions={<><Button to="/repuring/contributions" variant="secondary">Post Contribution</Button><Button to="/repuring/endorse">Endorse Work</Button></>}
         />
         {leaderboard.length === 0 ? (

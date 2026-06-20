@@ -42,6 +42,7 @@ async function main() {
   console.log(`Alice: ${alice.address}`);
   console.log(`Bob:   ${bob.address}`);
 
+  console.log('\n1. Create profiles');
   await send(alice, 'createProfile', { senderAddress: hexToBytes(alice.address), username: `alice-${suffix}`, bio: 'Pharos project admin' });
   await waitFor(`Alice profile ${alice.address}`, async () => {
     const profile = await queryMaybe('/v1/query/repuring/profile', { address: alice.address });
@@ -52,17 +53,20 @@ async function main() {
     const profile = await queryMaybe('/v1/query/repuring/profile', { address: bob.address });
     return profile?.username === `bob-${suffix}`;
   });
+  console.log('\n2. Create circle');
   await send(alice, 'createCircle', { senderAddress: hexToBytes(alice.address), circleId, name: 'Pharos Builders', description: 'Community for contributors helping the Pharos ecosystem.' });
   await waitFor(`circle ${circleId}`, async () => {
     const circle = await queryMaybe('/v1/query/repuring/circle', { circleId });
     return circle?.circleId === circleId;
   });
+  console.log('\n3. Join circle');
   await send(bob, 'joinCircle', { senderAddress: hexToBytes(bob.address), circleId });
   await waitFor(`Bob membership in ${circleId}`, async () => {
     const result = await queryMaybe('/v1/query/repuring/circle-members', { circleId });
     const members = Array.isArray(result) ? result : result?.members;
     return Array.isArray(members) && members.some((member) => cleanHex(member.address || member) === bob.address);
   });
+  console.log('\n4. Post contribution');
   await send(bob, 'createContribution', {
     senderAddress: hexToBytes(bob.address),
     contributionId,
@@ -77,6 +81,7 @@ async function main() {
     return Array.isArray(contributions) && contributions.some((item) => item.contributionId === contributionId);
   });
   const endorsementId = makeContributionEndorsementId(contributionId, alice.address);
+  console.log('\n5. Endorse contribution');
   await send(alice, 'endorseContribution', { senderAddress: hexToBytes(alice.address), contributionId, tag: 'builder', message: 'Endorsed contribution: Wrote Pharos testnet guide' });
   const bobAfterEndorse = await waitFor(`Bob reputation after endorsement`, async () => {
     const reputation = await queryMaybe('/v1/query/repuring/reputation', { address: bob.address });
@@ -89,17 +94,20 @@ async function main() {
   } else {
     console.log('Contribution endorsement count query was unavailable.');
   }
+  console.log('\n6. Claim role');
   await send(bob, 'claimRole', { senderAddress: hexToBytes(bob.address), circleId });
   const bobRole = await waitFor(`Bob role in ${circleId}`, async () => {
     const role = await queryMaybe('/v1/query/repuring/role', { address: bob.address, circleId });
     return role?.role ? role : false;
   });
   console.log(`Bob claimed role: ${bobRole.role}`);
+  console.log('\n7. Query leaderboard');
   const leaderboard = await waitFor(`leaderboard for ${circleId}`, async () => {
     const rows = await queryMaybe('/v1/query/repuring/leaderboard', { circleId });
     return Array.isArray(rows) && rows.some((row) => cleanHex(row.address) === bob.address) ? rows : false;
   });
   console.log('Leaderboard:', leaderboard.map((row, index) => `${index + 1}. ${row.username} (${row.reputation})`).join(' | '));
+  console.log('\n8. Slash endorsement');
   console.log('Endorsement ID used for slash: ' + endorsementId);
   await send(alice, 'slashEndorsement', { senderAddress: hexToBytes(alice.address), endorsementId, reason: 'demo slash by circle creator' });
   const bobAfterSlash = await waitFor(`Bob reputation after slash`, async () => {
@@ -112,8 +120,9 @@ async function main() {
   console.log(`Circle ID: ${circleId}`);
   console.log(`Contribution ID: ${contributionId}`);
   console.log(`Contribution endorsement ID: ${endorsementId}`);
-  console.log('Expected Bob reputation transition: 0 -> 1 -> 0');
+  console.log('Bob reputation: 0 -> 1 -> 0');
   console.log('Verified Bob reputation transition through RPC query state.');
+  console.log('RepuRing demo complete: contribution endorsement changed reputation, leaderboard returned state, and slash reverted invalid reputation.');
   console.log('\nFinal QA checklist:');
   for (const item of [
     'profiles created',
