@@ -278,7 +278,10 @@ export function DemoReadinessCard({
   lastTx: string;
   onRefresh: () => Promise<void>;
 }) {
-  const rpcReady = status.toLowerCase().includes('state refreshed');
+  const normalizedStatus = status.toLowerCase();
+  const rpcReady = normalizedStatus.includes('refreshed') &&
+    !normalizedStatus.includes('failed') &&
+    !normalizedStatus.includes('start local');
   const memberCount = circle?.members?.length || 0;
   const creatorReady = Boolean(
     currentAddress && circle?.creatorAddress && cleanHex(currentAddress) === cleanHex(circle.creatorAddress),
@@ -496,3 +499,4 @@ export function rpcTone(status: string): 'success' | 'warning' | 'danger' {
   if (lower.includes('submitting') || lower.includes('waiting') || lower.includes('start local')) return 'warning';
   return 'success';
 }
+
