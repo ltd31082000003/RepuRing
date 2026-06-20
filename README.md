@@ -230,13 +230,14 @@ Each query also accepts optional `{ "height": 123 }` to read historical state th
 - [x] Custom plugin transactions are implemented and listed.
 - [x] Contribution-based Social-Fi flow is explained.
 - [x] RepuRing query routes are implemented and listed.
-- [x] TypeScript plugin build passes.
-- [x] Plugin invariant and source-behavior tests pass.
-- [x] Wallet frontend build passes.
-- [x] Demo script syntax check passes and submits real RPC transactions.
+- [x] Demo script submits real RPC transactions.
 - [x] Manual browser demo path is documented.
 - [x] Current limitations are stated honestly.
 - [x] No protocol-breaking changes were introduced during final freeze.
+- [ ] Run `cd plugin/typescript && npm run build:all`.
+- [ ] Run `cd plugin/typescript && npm test`.
+- [ ] Run `cd cmd/rpc/web/wallet && npm run build`.
+- [ ] Run `node --check scripts/demo/repuring-demo.mjs`.
 
 ## Verification Checklist
 
@@ -306,3 +307,4 @@ RepuRing keeps the contest implementation focused and transparent:
 - Contribution timestamps and richer activity chronology are future work.
 - Anti-Sybil controls and weighted endorsements are future work.
 - Project discovery and community browsing are future work.
+
