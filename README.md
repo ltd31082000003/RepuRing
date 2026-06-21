@@ -112,22 +112,60 @@ npm run build
 
 ## Run Local Chain
 
-Docker path from the Canopy template:
+RepuRing uses one supported local runtime for development and contest demos. Prerequisites are Go, npm, and Node.js 20.19+ or 22.12+ (Node 22 LTS recommended):
 
-```bash
-make docker/plugin PLUGIN=typescript
-docker run -p 50002:50002 -p 50003:50003 -v ~/.canopy:/root/.canopy canopy-typescript
-```
+- Windows
+- Go native Canopy node (canopy.exe)
+- TypeScript RepuRing plugin started by Canopy
+- query/transaction RPC on port 50002
+- admin/keystore RPC on port 50003
 
-Manual path:
+Docker, Ubuntu, and WSL are not part of the RepuRing run path.
 
-1. Build Canopy with the normal template instructions.
-2. Set `"plugin": "typescript"` in `~/.canopy/config.json`.
-3. Start the node:
+Build all native runtime components from PowerShell:
 
-```bash
-canopy start
-```
+~~~powershell
+cd C:\Users\Admin\Downloads\RepuRing
+powershell -ExecutionPolicy Bypass -File .\scripts\windows-native\build.ps1
+~~~
+
+Start the local chain:
+
+~~~powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\windows-native\start.ps1
+~~~
+
+The start script preserves the existing %USERPROFILE%\.canopy\config.json, sets plugin to typescript, verifies that ports 50002 and 50003 are available, and then runs canopy.exe start from the repository root.
+
+Verify both RPC listeners in another PowerShell window:
+
+~~~powershell
+Test-NetConnection 127.0.0.1 -Port 50002
+Test-NetConnection 127.0.0.1 -Port 50003
+~~~
+
+Both commands must report TcpTestSucceeded : True. If Windows reports that either port is reserved, close software that owns Hyper-V/HNS networking and resolve the Windows port reservation before starting Canopy. Do not change the RepuRing RPC ports.
+
+The equivalent manual commands are:
+
+~~~powershell
+cd C:\Users\Admin\Downloads\RepuRing\plugin\typescript
+npm install
+npm run build:all
+
+cd C:\Users\Admin\Downloads\RepuRing\cmd\rpc\web\wallet
+npm install
+npm run build
+
+cd C:\Users\Admin\Downloads\RepuRing\cmd\rpc\web\explorer
+npm install
+npm run build
+
+cd C:\Users\Admin\Downloads\RepuRing
+$env:GOTELEMETRY = "off"
+go build -o .\canopy.exe .\cmd\main
+.\canopy.exe start
+~~~
 
 ## Run Web UI
 
