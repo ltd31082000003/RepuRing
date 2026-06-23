@@ -29,9 +29,10 @@ export default function RepuRingContributions(): JSX.Element {
   } = useRepuRing();
   const [composerOpen, setComposerOpen] = React.useState(contributions.length === 0);
   const [filter, setFilter] = React.useState('all');
+  const [customContributionId, setCustomContributionId] = React.useState('');
   const isMember = Boolean(currentAddress && circle?.members?.some((address) => cleanHex(address) === cleanHex(currentAddress)));
   const visibleContributions = filter === 'all' ? contributions : contributions.filter((item) => item.category === filter);
-  const postDisabled = !currentAddress || !profile || !circle || !isMember || !password || !contributionForm.contributionId.trim() || !contributionForm.title.trim();
+  const postDisabled = !currentAddress || !profile || !circle || !isMember || !password || !contributionForm.title.trim();
   const postHelp = !currentAddress
     ? 'Select a wallet in My Account.'
       : !profile
@@ -42,18 +43,40 @@ export default function RepuRingContributions(): JSX.Element {
           ? 'Join the current community before posting.'
           : !password
             ? 'Enter the selected wallet password to sign CreateContributionTx.'
-            : !contributionForm.contributionId.trim()
-              ? 'Enter a contribution ID for this proof-of-work.'
-              : !contributionForm.title.trim()
-                ? 'Enter a title for this proof-of-work.'
-                : 'Ready to post proof-of-work.';
+            : !contributionForm.title.trim()
+              ? 'Enter a title for this proof-of-work. Contribution ID will be generated automatically.'
+              : 'Ready to post proof-of-work. Contribution ID will be generated automatically.';
+
+  React.useEffect(() => {
+    if (!composerOpen || !circle || contributionForm.contributionId.trim()) return;
+    setContributionForm({
+      ...contributionForm,
+      contributionId: generateContributionId(circle.circleId, contributionForm.title),
+    });
+  }, [composerOpen, circle, contributionForm, setContributionForm]);
+
+  function regenerateContributionId() {
+    const nextCircleId = circle?.circleId || circleId || 'circle';
+    setContributionForm({
+      ...contributionForm,
+      contributionId: generateContributionId(nextCircleId, contributionForm.title),
+    });
+  }
+
+  function useCustomContributionId() {
+    const nextContributionId = customContributionId.trim();
+    if (!nextContributionId) return;
+    setContributionForm({ ...contributionForm, contributionId: nextContributionId });
+  }
 
   async function postContribution() {
     if (!circle) return;
-    const ok = await submit('createContribution', { circleId: circle.circleId, ...contributionForm });
+    const contributionId = contributionForm.contributionId.trim() || generateContributionId(circle.circleId, contributionForm.title);
+    const ok = await submit('createContribution', { circleId: circle.circleId, ...contributionForm, contributionId });
     if (ok) {
       await refreshState();
       setComposerOpen(false);
+      setContributionForm({ ...contributionForm, contributionId: '' });
     }
   }
 
@@ -135,7 +158,6 @@ export default function RepuRingContributions(): JSX.Element {
             {composerOpen && (
               <div className="space-y-4 rounded-3xl border border-white/10 bg-black/20 p-4">
                 <Input label="Signing key password" type="password" value={password} onChange={setPassword} placeholder="Required for BLS signing" />
-                <Input label="Contribution ID" value={contributionForm.contributionId} onChange={(contributionId) => setContributionForm({ ...contributionForm, contributionId })} placeholder="pharos-guide-v1" />
                 <Input label="Title" value={contributionForm.title} onChange={(title) => setContributionForm({ ...contributionForm, title })} placeholder="Wrote Pharos testnet guide" />
                 <Input label="Description" value={contributionForm.description} onChange={(description) => setContributionForm({ ...contributionForm, description })} multiline />
                 <Input label="Proof URL" value={contributionForm.proofUrl} onChange={(proofUrl) => setContributionForm({ ...contributionForm, proofUrl })} placeholder="https://..." />
@@ -145,6 +167,24 @@ export default function RepuRingContributions(): JSX.Element {
                     {categories.map((category) => <option key={category}>{category}</option>)}
                   </select>
                 </label>
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-white">Generated contribution ID</p>
+                      <p className="mt-1 break-all font-mono text-xs text-zinc-400">{contributionForm.contributionId || 'Generated before submit'}</p>
+                      <p className="mt-2 text-xs text-zinc-500">This ID is generated for the onchain contribution record.</p>
+                    </div>
+                    <Button variant="secondary" onClick={regenerateContributionId}>Regenerate ID</Button>
+                  </div>
+                </div>
+                <details className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                  <summary className="cursor-pointer text-sm font-semibold text-zinc-200">Advanced: custom contribution ID</summary>
+                  <p className="mt-3 text-sm text-zinc-500">Only use this for demos or debugging. IDs must be unique in the current chain state.</p>
+                  <div className="mt-4 space-y-3">
+                    <Input label="Custom contribution ID" value={customContributionId} onChange={setCustomContributionId} placeholder="pharos-guide-v1" />
+                    <Button variant="secondary" disabled={!customContributionId.trim()} onClick={useCustomContributionId}>Use custom ID</Button>
+                  </div>
+                </details>
                 <div className="flex flex-wrap items-center gap-3">
                   <Button disabled={postDisabled} onClick={postContribution}>Post proof-of-work</Button>
                   <Button to="/repuring/circles" variant="secondary">Change community</Button>
@@ -227,7 +267,7 @@ export default function RepuRingContributions(): JSX.Element {
                         <Badge>{item.endorsementCount}</Badge>
                       </div>
                       <div className="flex min-w-0 flex-wrap justify-between gap-2">
-                        <span className="shrink-0 text-zinc-500">Contribution ID</span>
+                        <span className="shrink-0 text-zinc-500">Onchain record ID</span>
                         <span className="min-w-0 break-all font-mono text-xs text-zinc-300">{item.contributionId}</span>
                       </div>
                     </div>
@@ -265,4 +305,20 @@ function proofLabel(value: string) {
   } catch {
     return value.length > 48 ? `${value.slice(0, 45)}...` : value;
   }
+}
+
+function slugifyContributionTitle(value: string): string {
+  const slug = value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return slug || 'contribution';
+}
+
+function generateContributionId(circleId: string, title: string): string {
+  const circleSlug = slugifyContributionTitle(circleId || 'circle');
+  const titleSlug = slugifyContributionTitle(title);
+  const suffix = Date.now().toString(36).slice(-6);
+  return `${circleSlug}-${titleSlug}-${suffix}`;
 }
