@@ -3,7 +3,7 @@ import { ActiveWalletBanner, Badge, Button, EmptyState, Input, MemberList, Metri
 import { cleanHex } from './RepuRingProvider';
 import { CircleView, useRepuRing } from './useRepuRing';
 
-type WalletCircleStatus = 'Creator' | 'Joined' | 'Not joined' | 'No wallet selected' | 'No profile';
+type WalletCircleStatus = 'Creator' | 'Joined' | 'Not joined' | 'No wallet selected' | 'Profile required';
 
 export default function RepuRingCircles(): JSX.Element {
   const {
@@ -25,6 +25,8 @@ export default function RepuRingCircles(): JSX.Element {
   const [createOpen, setCreateOpen] = React.useState(!circle);
   const [advancedJoinOpen, setAdvancedJoinOpen] = React.useState(false);
   const [joinCircleId, setJoinCircleId] = React.useState('');
+  const [contextNotice, setContextNotice] = React.useState('');
+  const currentContextRef = React.useRef<HTMLElement | null>(null);
   const refreshStateRef = React.useRef(refreshState);
 
   React.useEffect(() => {
@@ -45,20 +47,36 @@ export default function RepuRingCircles(): JSX.Element {
     : !profile
       ? 'Create a profile first.'
       : !activeCircle?.circleId
-        ? 'Select a circle first.'
+        ? 'Open a circle first.'
         : isMember
           ? 'Already joined.'
           : !password
             ? "Enter this wallet's password to join."
             : 'Ready to join this circle.';
 
-  async function selectCircle(nextCircleId: string) {
+  async function setCurrentCircleContext(nextCircleId: string, scrollToContext: boolean) {
     setCircleId(nextCircleId);
-    if (nextCircleId === circleId) await refreshState();
+    setContextNotice('This circle is now the current context. The feed, endorsements, leaderboard, and roles use this circle.');
+    if (scrollToContext) currentContextRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (nextCircleId === circleId) {
+      await refreshState();
+    } else {
+      window.setTimeout(() => { void refreshStateRef.current(); }, 0);
+    }
+  }
+
+  async function openCircle(nextCircleId: string) {
+    await setCurrentCircleContext(nextCircleId, true);
+  }
+
+  function prepareJoinCircle(nextCircleId: string, expanded: boolean) {
+    void setCurrentCircleContext(nextCircleId, false);
+    setJoinCircleId(expanded ? '' : nextCircleId);
   }
 
   async function joinDiscoveredCircle(targetCircleId: string) {
     setCircleId(targetCircleId);
+    setContextNotice('This circle is now the current context. The feed, endorsements, leaderboard, and roles use this circle.');
     const joined = await submit('joinCircle', { circleId: targetCircleId });
     if (joined) {
       setJoinCircleId('');
@@ -71,8 +89,8 @@ export default function RepuRingCircles(): JSX.Element {
       <PageHeader
         eyebrow="Project circles"
         title="Project communities for contribution reputation."
-        copy="Alice creates a circle here. Bob uses Discover Circles to join it. Do not use Create Circle when you only want to join."
-        actions={<Button variant="secondary" onClick={refreshState}>Refresh selected circle</Button>}
+        copy="Create a new project community, or join an existing one from Discover Circles. Circle creators start new communities here; members join existing circles from Discover Circles."
+        actions={<Button variant="secondary" onClick={refreshState}>Refresh current context</Button>}
       />
 
       <ActiveWalletBanner
@@ -98,30 +116,33 @@ export default function RepuRingCircles(): JSX.Element {
       )}
 
       <Panel className="overflow-hidden">
-        <SectionHeader
-          eyebrow="Active / selected circle"
-          title={activeCircle?.name || 'No project circle loaded'}
-          copy={activeCircle?.description || 'Select a circle from Discover Circles, or create the first project circle as Alice.'}
-          actions={<Button variant="secondary" onClick={refreshState}>Refresh selected circle</Button>}
-        />
+        <section ref={currentContextRef} className="scroll-mt-20">
+          <SectionHeader
+            eyebrow="Current circle context"
+            title={activeCircle?.name || 'No project circle loaded'}
+            copy="This circle is used by the contribution feed, endorsement review, leaderboard, and role actions."
+            actions={<Button variant="secondary" onClick={refreshState}>Refresh current context</Button>}
+          />
+        </section>
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-          <MetricCard label="Circle ID" value={activeCircle?.circleId || circleId || 'None'} detail="Selected project community key." tone="cyan" />
-          <MetricCard label="Description" value={activeCircle?.description ? 'Loaded' : 'None'} detail={activeCircle?.description || 'No selected circle description.'} />
-          <MetricCard label="Creator" value={shortAddress(activeCircle?.creatorAddress || '') || 'Unknown'} detail={activeCircle?.creatorAddress || 'Create or select a circle to load creator.'} />
+          <MetricCard label="Circle ID" value={activeCircle?.circleId || circleId || 'None'} detail="Current project community key." tone="cyan" />
+          <MetricCard label="Description" value={activeCircle?.description ? 'Loaded' : 'None'} detail={activeCircle?.description || 'No current circle description.'} />
+          <MetricCard label="Creator" value={shortAddress(activeCircle?.creatorAddress || '') || 'Unknown'} detail={activeCircle?.creatorAddress || 'Create or open a circle to load creator.'} />
           <MetricCard label="Members" value={String(memberCount)} detail="Profiles joined to this circle." tone="emerald" />
           <MetricCard label="Wallet status" value={selectedStatus} detail={currentAddress || 'Select a signing key in My Account.'} tone={selectedStatusTone === 'success' ? 'emerald' : 'neutral'} />
         </div>
         <div className="flex flex-wrap gap-2">
           <StatusPill tone={selectedStatusTone}>{selectedStatus}</StatusPill>
-          <Badge tone="cyan">Selected: {activeCircle?.circleId || circleId || 'none'}</Badge>
+          <Badge tone="cyan">Current context: {activeCircle?.circleId || circleId || 'none'}</Badge>
           {activeCircle?.name && <Badge tone="zinc">{activeCircle.name}</Badge>}
-          {activeCircleNeedsRefresh && <Badge tone="zinc">Refreshing selected state</Badge>}
+          {activeCircleNeedsRefresh && <Badge tone="zinc">Refreshing current context</Badge>}
         </div>
+        {contextNotice && <p className="text-sm leading-6 text-emerald-100/80">{contextNotice}</p>}
         {!activeCircle && (
           <EmptyState
             title="No project circle loaded"
-            copy="Select a discovered circle to load its context. If no circles exist yet, Alice should create the first one below."
-            actions={<Button variant="secondary" onClick={() => setCreateOpen(true)}>Open Create Circle</Button>}
+            copy="Open a discovered circle to use it across contributions, endorsements, leaderboard, and role actions."
+            actions={<Button variant="secondary" onClick={() => setCreateOpen(true)}>Create new community</Button>}
           />
         )}
       </Panel>
@@ -129,15 +150,15 @@ export default function RepuRingCircles(): JSX.Element {
       <Panel>
         <SectionHeader
           eyebrow="Discover circles"
-          title="Select and join existing project groups"
-          copy="Use these cards for existing circles. Selecting a circle loads that circle context automatically; joining happens inside the card."
+          title="Discover project communities"
+          copy="Open a community to make it the current context, or join from the card when your profile is ready."
           actions={<Button variant="secondary" onClick={refreshState}>Refresh circles</Button>}
         />
         {circles.length === 0 ? (
           <EmptyState
-            title="No project circles yet"
-            copy="No project circles yet. Create the first one as Alice."
-            actions={<Button variant="secondary" onClick={() => setCreateOpen(true)}>Create the first circle</Button>}
+            title="No project communities found"
+            copy="Create the first project community, then other members can discover and join it."
+            actions={<Button variant="secondary" onClick={() => setCreateOpen(true)}>Create the first project community</Button>}
           />
         ) : (
           <div className="grid gap-4 lg:grid-cols-2">
@@ -147,15 +168,24 @@ export default function RepuRingCircles(): JSX.Element {
               const itemIsMember = itemStatus === 'Creator' || itemStatus === 'Joined';
               const joinExpanded = joinCircleId === item.circleId;
               const cardJoinDisabled = !currentAddress || !profile || !password || itemIsMember;
+              const primaryAction = itemIsMember
+                ? 'Open circle'
+                : !currentAddress
+                  ? 'View details'
+                  : !profile
+                    ? 'Create profile'
+                    : 'Join community';
               const cardJoinHelp = !currentAddress
-                ? 'Select a wallet first.'
+                ? 'Select a wallet in My Account to join.'
                 : !profile
-                  ? 'Create a profile first.'
+                  ? 'Create a profile to join this community.'
+                  : itemStatus === 'Creator'
+                    ? 'You created this community.'
                   : itemIsMember
-                    ? 'Already joined.'
+                    ? 'This community is open as a member.'
                     : !password
                       ? "Enter this wallet's password to join."
-                      : 'Ready to join this circle.';
+                      : 'Ready to join this community.';
               return (
                 <div key={item.circleId} className={['rounded-3xl border p-4 shadow-xl shadow-black/20', itemSelected ? 'border-emerald-300/40 bg-emerald-300/10' : 'border-white/10 bg-white/[0.04]'].join(' ')}>
                   <div className="flex flex-wrap items-start justify-between gap-3">
@@ -171,13 +201,21 @@ export default function RepuRingCircles(): JSX.Element {
                     <div>Creator <span className="font-mono text-zinc-300">{shortAddress(item.creatorAddress)}</span></div>
                   </div>
                   <div className="mt-4 flex flex-wrap items-center gap-2">
-                    <Button variant={itemSelected ? 'primary' : 'secondary'} onClick={() => selectCircle(item.circleId)}>
-                      {itemSelected ? 'Selected' : 'Select'}
-                    </Button>
-                    {!itemIsMember && (
-                      <Button variant="secondary" disabled={!currentAddress || !profile} onClick={() => setJoinCircleId(joinExpanded ? '' : item.circleId)}>
-                        {joinExpanded ? 'Hide join' : 'Join'}
+                    {itemIsMember || !currentAddress ? (
+                      <Button variant={itemSelected ? 'primary' : 'secondary'} onClick={() => openCircle(item.circleId)}>
+                        {primaryAction}
                       </Button>
+                    ) : !profile ? (
+                      <Button variant="secondary" to="/key-management">Create profile</Button>
+                    ) : (
+                      <>
+                        <Button onClick={() => prepareJoinCircle(item.circleId, joinExpanded)}>
+                          {joinExpanded ? 'Hide join' : 'Join community'}
+                        </Button>
+                        <Button variant={itemSelected ? 'primary' : 'secondary'} onClick={() => openCircle(item.circleId)}>
+                          Preview circle
+                        </Button>
+                      </>
                     )}
                     <Badge tone="zinc">JoinCircleTx</Badge>
                   </div>
@@ -200,9 +238,9 @@ export default function RepuRingCircles(): JSX.Element {
 
       <Panel>
         <SectionHeader
-          eyebrow="Create circle"
-          title="Create a new project circle"
-          copy="Use this flow only when Alice is starting a new project community. Bob should join from Discover Circles instead."
+          eyebrow="Create new community"
+          title="Create a new project community"
+          copy="Start a new project circle. Existing members should join from Discover Circles."
           actions={<Button variant="secondary" onClick={() => setCreateOpen((open) => !open)}>{createOpen ? 'Hide create' : 'Open create'}</Button>}
         />
         {createOpen ? (
@@ -212,10 +250,10 @@ export default function RepuRingCircles(): JSX.Element {
             <Input label="Name" value={circleForm.name} onChange={(name) => setCircleForm({ ...circleForm, name })} placeholder="Pharos Builders" />
             <Input label="Description" value={circleForm.description} onChange={(description) => setCircleForm({ ...circleForm, description })} multiline />
             <div className="flex flex-wrap gap-3">
-              <Button disabled={createDisabled} onClick={() => { void submit('createCircle', { circleId, ...circleForm }); }}>Create project circle</Button>
+              <Button disabled={createDisabled} onClick={() => { void submit('createCircle', { circleId, ...circleForm }); }}>Create community</Button>
               <Badge tone="zinc">CreateCircleTx</Badge>
             </div>
-            <p className="text-sm text-zinc-500">Alice creates a circle here. Do not use Create Circle when you only want to join.</p>
+            <p className="text-sm text-zinc-500">Circle creators start new communities here. Members join existing circles from Discover Circles.</p>
           </div>
         ) : (
           <div className="flex flex-wrap gap-2">
@@ -227,6 +265,7 @@ export default function RepuRingCircles(): JSX.Element {
         <details className="rounded-3xl border border-white/10 bg-black/20 p-4" open={advancedJoinOpen} onToggle={(event) => setAdvancedJoinOpen(event.currentTarget.open)}>
           <summary className="cursor-pointer text-sm font-semibold text-zinc-200">Advanced: join by circle ID</summary>
           <div className="mt-4 space-y-4">
+            <p className="text-sm leading-6 text-zinc-500">Use this only if a circle does not appear in Discover Circles.</p>
             <Input label="Circle ID" value={circleId} onChange={setCircleId} placeholder="pharos-builders" />
             <Input label="Signing password" type="password" value={password} onChange={setPassword} placeholder="Required for JoinCircleTx" />
             <div className="flex flex-wrap items-center gap-3">
@@ -249,7 +288,7 @@ export default function RepuRingCircles(): JSX.Element {
         ) : (
           <EmptyState
             title="No members to show"
-            copy="Load or create a project circle, then join it with a second wallet to prepare the contribution endorsement demo."
+            copy="Open or create a project circle, then members can join and appear here."
             actions={<Button variant="secondary" onClick={refreshState}>Refresh members</Button>}
           />
         )}
@@ -266,7 +305,7 @@ function isCircleMember(circle: CircleView | null, currentAddress: string) {
 
 function walletStatus(circle: CircleView | null, currentAddress: string, hasProfile: boolean): WalletCircleStatus {
   if (!currentAddress) return 'No wallet selected';
-  if (!hasProfile) return 'No profile';
+  if (!hasProfile) return 'Profile required';
   if (circle?.creatorAddress && cleanHex(circle.creatorAddress) === cleanHex(currentAddress)) return 'Creator';
   if (isCircleMember(circle, currentAddress)) return 'Joined';
   return 'Not joined';
@@ -274,6 +313,6 @@ function walletStatus(circle: CircleView | null, currentAddress: string, hasProf
 
 function statusTone(status: WalletCircleStatus): 'success' | 'warning' | 'danger' | 'neutral' {
   if (status === 'Creator' || status === 'Joined') return 'success';
-  if (status === 'No wallet selected' || status === 'No profile') return 'warning';
+  if (status === 'No wallet selected' || status === 'Profile required') return 'warning';
   return 'neutral';
 }
