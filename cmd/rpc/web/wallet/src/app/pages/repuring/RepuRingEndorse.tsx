@@ -34,7 +34,18 @@ export default function RepuRingEndorse(): JSX.Element {
   const selectedContribution = contributions.find((item) => item.contributionId === selectedContributionId) || null;
   const selectedAuthorIsSelf = Boolean(selectedContribution && cleanHex(selectedContribution.authorAddress) === cleanHex(currentAddress));
   const selectedReviews = selectedContribution ? endorsements.filter((item) => item.contributionId === selectedContribution.contributionId && (!item.circleId || item.circleId === selectedContribution.circleId)) : [];
-  const endorseDisabled = !currentAddress || !profile || !selectedContribution || !isMember || selectedAuthorIsSelf || Boolean(selectedContribution?.slashed) || !password || !endorse.tag.trim() || !endorse.message.trim();
+  const currentReviewerEndorsement = selectedContribution
+    ? endorsements.find((item) =>
+      item.contributionId === selectedContribution.contributionId &&
+        (!item.circleId || item.circleId === selectedContribution.circleId) &&
+        currentAddress &&
+        cleanHex(item.fromAddress) === cleanHex(currentAddress) &&
+        !item.slashed
+    ) || null
+    : null;
+  const alreadyEndorsed = Boolean(currentReviewerEndorsement);
+  const selectedReviewState = selectedContribution ? contributionReviewState(selectedContribution, selectedAuthorIsSelf, alreadyEndorsed) : { label: 'No selection', tone: 'warning' as const };
+  const endorseDisabled = !currentAddress || !profile || !selectedContribution || !isMember || selectedAuthorIsSelf || Boolean(selectedContribution?.slashed) || alreadyEndorsed || !password || !endorse.tag.trim() || !endorse.message.trim();
   const endorseHelp = !selectedContribution
     ? 'Select a contribution first.'
     : !currentAddress
@@ -47,13 +58,15 @@ export default function RepuRingEndorse(): JSX.Element {
             ? 'Switch to another member wallet to endorse this contribution.'
             : selectedContribution.slashed
               ? 'This contribution is slashed and cannot be endorsed.'
-              : !password
-                ? 'Enter the selected wallet password to sign EndorseContributionTx.'
-                : !endorse.tag.trim()
-                  ? 'Choose an endorsement tag.'
-                  : !endorse.message.trim()
-                    ? 'Write a review message before continuing.'
-                    : 'Ready to review and confirm this endorsement.';
+              : alreadyEndorsed
+                ? 'You already endorsed this contribution. Onchain endorsements cannot be self-cancelled in this protocol; a circle creator can moderate bad endorsements.'
+                : !password
+                  ? 'Enter the selected wallet password to sign EndorseContributionTx.'
+                  : !endorse.tag.trim()
+                    ? 'Choose an endorsement tag.'
+                    : !endorse.message.trim()
+                      ? 'Write a review message before continuing.'
+                      : 'Ready to review and confirm this endorsement.';
 
   async function confirmEndorsement() {
     if (!selectedContribution) return;
@@ -94,11 +107,24 @@ export default function RepuRingEndorse(): JSX.Element {
               eyebrow="Selected contribution"
               title={selectedContribution?.title || 'Choose work to endorse'}
               copy="Peer validation through EndorseContributionTx increases the author's profile reputation by 1 after commit."
-              actions={<StatusPill tone={!selectedContribution ? 'warning' : selectedAuthorIsSelf ? 'danger' : 'success'}>{!selectedContribution ? 'No selection' : selectedAuthorIsSelf ? 'Own work' : 'Review ready'}</StatusPill>}
+              actions={<StatusPill tone={selectedReviewState.tone}>{selectedReviewState.label}</StatusPill>}
             />
             {selectedAuthorIsSelf && (
               <div className="rounded-2xl border border-amber-300/30 bg-amber-300/10 p-4 text-sm font-medium leading-6 text-amber-100">
                 Switch to another circle member account to endorse this proof. The contribution author cannot self-endorse.
+              </div>
+            )}
+            {alreadyEndorsed && currentReviewerEndorsement && (
+              <div className="rounded-2xl border border-emerald-300/20 bg-emerald-300/10 p-4 text-sm leading-6 text-emerald-100">
+                <p className="font-semibold">You already endorsed this work.</p>
+                <p>Your review is visible under this contribution.</p>
+                <p>There is no self-cancel transaction in the current protocol. If this endorsement is wrong, ask the circle creator to moderate it.</p>
+                <div className="mt-3 grid gap-2 rounded-2xl border border-white/10 bg-black/20 p-3 text-xs text-zinc-300">
+                  <div>Tag <span className="font-semibold text-white">{currentReviewerEndorsement.tag || 'Not tagged'}</span></div>
+                  <div>Message <span className="break-words text-white">{currentReviewerEndorsement.message || 'No message'}</span></div>
+                  <div>Endorsement ID <span className="break-all font-mono text-white">{currentReviewerEndorsement.endorsementId}</span></div>
+                  <div>Status <StatusPill tone={currentReviewerEndorsement.slashed ? 'danger' : 'success'}>{currentReviewerEndorsement.slashed ? 'Slashed' : 'Active'}</StatusPill></div>
+                </div>
               </div>
             )}
             {selectedContribution ? (
@@ -162,7 +188,7 @@ export default function RepuRingEndorse(): JSX.Element {
             </div>
             <Input label="Review message" value={endorse.message} onChange={(message) => setEndorse({ ...endorse, message })} multiline />
             <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
-              <Button disabled={endorseDisabled} className="w-full sm:w-auto" onClick={() => { setSuccessMessage(''); setConfirmOpen(true); }}>
+              <Button disabled={endorseDisabled} className="w-full sm:w-auto" onClick={() => { if (endorseDisabled) return; setSuccessMessage(''); setConfirmOpen(true); }}>
                 Review and continue
               </Button>
               <Badge tone="zinc">EndorseContributionTx</Badge>
@@ -178,7 +204,7 @@ export default function RepuRingEndorse(): JSX.Element {
                 <SectionHeader
                   eyebrow="Confirm endorsement"
                   title="Review before submitting"
-                  copy="This endorsement will increase the author's reputation. It can only be moderated later by the circle creator."
+                  copy="This endorsement is an onchain attestation. It will increase the author's reputation. After confirmation, you cannot self-cancel it in the current protocol. Only the circle creator can moderate it."
                 />
                 <div className="grid gap-3 text-sm md:grid-cols-2">
                   <ConfirmRow label="Contribution" value={selectedContribution.title || selectedContribution.contributionId} />
@@ -209,6 +235,7 @@ export default function RepuRingEndorse(): JSX.Element {
               <Rule checked={Boolean(selectedContribution)} text="A contribution proof exists and is selected for review." />
               <Rule checked={!selectedAuthorIsSelf && Boolean(selectedContribution)} text="Selected wallet belongs to another member, not the contribution author." />
               <Rule checked={Boolean(selectedContribution && !selectedContribution.slashed)} text="Contribution is active and has not been slashed." />
+              <Rule checked={Boolean(selectedContribution && !alreadyEndorsed)} text="Current wallet has not already endorsed this contribution." />
             </div>
           </Panel>
 
@@ -233,22 +260,35 @@ export default function RepuRingEndorse(): JSX.Element {
               />
             ) : (
               <div className="grid gap-3">
-                {contributions.map((item) => (
-                  <button
-                    key={item.contributionId}
-                    type="button"
-                    onClick={() => setSelectedContributionId(item.contributionId)}
-                    aria-pressed={item.contributionId === selectedContributionId}
-                    className={`min-w-0 rounded-2xl border p-4 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/60 ${item.contributionId === selectedContributionId ? 'border-emerald-300/40 bg-emerald-300/10' : 'border-white/10 bg-black/25 hover:bg-white/[0.08]'}`}
-                  >
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <span className="min-w-0 break-words font-semibold text-white">{item.title}</span>
-                      <CategoryBadge category={item.category} />
-                    </div>
-                    <p className="mt-2 line-clamp-2 break-words text-sm text-zinc-400">{item.description}</p>
-                    <p className="mt-3 text-xs text-zinc-500">Author <span className="font-mono text-zinc-300">{item.authorUsername || shortAddress(item.authorAddress)}</span></p>
-                  </button>
-                ))}
+                {contributions.map((item) => {
+                  const itemOwnWork = Boolean(currentAddress && cleanHex(item.authorAddress) === cleanHex(currentAddress));
+                  const itemAlreadyEndorsed = Boolean(currentAddress && endorsements.some((endorsement) =>
+                    endorsement.contributionId === item.contributionId &&
+                    (!endorsement.circleId || endorsement.circleId === item.circleId) &&
+                    cleanHex(endorsement.fromAddress) === cleanHex(currentAddress) &&
+                    !endorsement.slashed
+                  ));
+                  const itemState = contributionReviewState(item, itemOwnWork, itemAlreadyEndorsed);
+                  return (
+                    <button
+                      key={item.contributionId}
+                      type="button"
+                      onClick={() => setSelectedContributionId(item.contributionId)}
+                      aria-pressed={item.contributionId === selectedContributionId}
+                      className={`min-w-0 rounded-2xl border p-4 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/60 ${item.contributionId === selectedContributionId ? 'border-emerald-300/40 bg-emerald-300/10' : 'border-white/10 bg-black/25 hover:bg-white/[0.08]'}`}
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="min-w-0 break-words font-semibold text-white">{item.title}</span>
+                        <div className="flex flex-wrap gap-2">
+                          <CategoryBadge category={item.category} />
+                          <StatusPill tone={itemState.tone}>{itemState.label}</StatusPill>
+                        </div>
+                      </div>
+                      <p className="mt-2 line-clamp-2 break-words text-sm text-zinc-400">{item.description}</p>
+                      <p className="mt-3 text-xs text-zinc-500">Author <span className="font-mono text-zinc-300">{item.authorUsername || shortAddress(item.authorAddress)}</span></p>
+                    </button>
+                  );
+                })}
               </div>
             )}
           </Panel>
@@ -288,7 +328,7 @@ export default function RepuRingEndorse(): JSX.Element {
         <SectionHeader
           eyebrow="Advanced / Legacy"
           title="Legacy direct user endorsement"
-          copy="Legacy direct user endorsement - not part of the main contribution review flow."
+          copy="Main RepuRing reputation should come from contribution reviews. This legacy path is kept for compatibility."
           actions={<Button variant="secondary" onClick={() => setLegacyOpen((open) => !open)}>{legacyOpen ? 'Hide legacy' : 'Open legacy'}</Button>}
         />
         {legacyOpen && (
@@ -320,4 +360,15 @@ function ConfirmRow({ label, value, mono = false }: { label: string; value: stri
       <p className={`mt-1 break-words text-sm text-zinc-100 ${mono ? 'font-mono' : ''}`}>{value || 'Not provided'}</p>
     </div>
   );
+}
+
+function contributionReviewState(
+  contribution: { slashed?: boolean },
+  ownWork: boolean,
+  alreadyEndorsed: boolean
+): { label: string; tone: 'success' | 'warning' | 'danger' | 'neutral' } {
+  if (contribution.slashed) return { label: 'Slashed', tone: 'danger' };
+  if (ownWork) return { label: 'Own work', tone: 'warning' };
+  if (alreadyEndorsed) return { label: 'Already endorsed', tone: 'neutral' };
+  return { label: 'Ready to review', tone: 'success' };
 }
