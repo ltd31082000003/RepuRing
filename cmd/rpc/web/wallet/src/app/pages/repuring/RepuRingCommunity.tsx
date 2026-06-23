@@ -31,7 +31,16 @@ export default function RepuRingCommunity(): JSX.Element {
   const walletStatus = communityStatus(community, currentAddress, Boolean(profile));
   const derivedRole = role?.role || roleForReputation(profile?.reputation || 0);
   const topRows = leaderboard.slice(0, 5);
-  const communityReviews = endorsements.filter((item) => item.contributionId).slice(0, 8);
+  const communityContributionIds = new Set(contributions.map((item) => item.contributionId));
+  const scopedReviews = community
+    ? endorsements.filter((item) => {
+      if (!item.contributionId) return false;
+      if (item.circleId && item.circleId !== community.circleId) return false;
+      if (communityContributionIds.size > 0 && !communityContributionIds.has(item.contributionId)) return false;
+      return true;
+    })
+    : [];
+  const communityReviews = scopedReviews.slice(0, 8);
   const recentContributions = contributions.slice(0, 6);
 
   function reviewContribution(contributionId: string) {
@@ -48,8 +57,12 @@ export default function RepuRingCommunity(): JSX.Element {
         actions={(
           <>
             <Button variant="secondary" onClick={refreshState}>Refresh community</Button>
-            <Button to="/repuring/contributions" variant="secondary">Post contribution</Button>
-            <Button to="/repuring/endorse" variant="secondary">Review work</Button>
+            {!currentAddress && <Button to="/key-management" variant="secondary">Select wallet</Button>}
+            {currentAddress && !profile && <Button to="/key-management" variant="secondary">Create profile</Button>}
+            {currentAddress && profile && community && !isMember && <Button to="/repuring/circles" variant="secondary">Join community</Button>}
+            {isMember && <Button to="/repuring/contributions" variant="secondary">Post contribution</Button>}
+            {isMember && <Button to="/repuring/endorse" variant="secondary">Review work</Button>}
+            {isCreator && <Button to="/repuring/admin" variant="secondary">Open moderation</Button>}
             <Button to="/repuring/leaderboard">View leaderboard</Button>
           </>
         )}
@@ -120,12 +133,20 @@ export default function RepuRingCommunity(): JSX.Element {
                   title="Role and moderation"
                   copy="Joined members can claim role status. Circle creators can moderate contribution endorsements."
                 />
-                <RoleProgressCard reputation={profile?.reputation || 0} embedded />
-                <div className="flex flex-wrap gap-3">
-                  {isMember && <Button to="/repuring/admin">Claim role</Button>}
-                  {isCreator && <Button to="/repuring/admin" variant="secondary">Open moderation</Button>}
-                  {!isMember && <Button to="/repuring/circles" variant="secondary">Join community</Button>}
-                </div>
+                {!isMember ? (
+                  <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                    <p className="text-sm leading-6 text-zinc-300">Join this community before claiming a role.</p>
+                    <div className="mt-4"><Button to="/repuring/circles" variant="secondary">Join this community</Button></div>
+                  </div>
+                ) : (
+                  <>
+                    <RoleProgressCard reputation={profile?.reputation || 0} embedded />
+                    <div className="flex flex-wrap gap-3">
+                      <Button to="/repuring/admin">Claim role</Button>
+                      {isCreator && <Button to="/repuring/admin" variant="secondary">Open moderation</Button>}
+                    </div>
+                  </>
+                )}
               </Panel>
             </div>
 
@@ -146,7 +167,7 @@ export default function RepuRingCommunity(): JSX.Element {
                 ) : (
                   <div className="grid gap-4">
                     {recentContributions.map((item) => {
-                      const reviewCount = endorsements.filter((endorsement) => endorsement.contributionId === item.contributionId).length;
+                      const reviewCount = scopedReviews.filter((endorsement) => endorsement.contributionId === item.contributionId).length;
                       const selected = item.contributionId === selectedContributionId;
                       return (
                         <SocialCard key={item.contributionId} selected={selected}>
@@ -195,6 +216,11 @@ export default function RepuRingCommunity(): JSX.Element {
                         </div>
                         <p className="mt-3 break-words text-sm leading-6 text-zinc-300">{item.message || 'No review message provided.'}</p>
                         <p className="mt-3 break-all font-mono text-xs text-zinc-500">Contribution {item.contributionId}</p>
+                        <div className="mt-4">
+                          <Button variant={item.contributionId === selectedContributionId ? 'primary' : 'secondary'} onClick={() => reviewContribution(item.contributionId)}>
+                            Review this work
+                          </Button>
+                        </div>
                       </SocialCard>
                     ))}
                   </div>

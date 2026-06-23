@@ -26,7 +26,7 @@ export type ContributionView = {
   endorsementCount: number;
   slashed: boolean;
 };
-export type EndorsementView = { endorsementId: string; fromAddress: string; targetAddress: string; contributionId: string; tag: string; message: string; slashed: boolean; slashReason: string };
+export type EndorsementView = { endorsementId: string; circleId: string; fromAddress: string; targetAddress: string; contributionId: string; tag: string; message: string; slashed: boolean; slashReason: string };
 export type LeaderboardRow = { address: string; username: string; reputation: number; role: string };
 
 export type RepuRingContextValue = {
