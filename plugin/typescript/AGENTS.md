@@ -284,3 +284,4 @@ Message types (`FSMToPlugin` / `PluginToFSM`):
 - `end`: EndBlock
 - `stateRead`: State read request/response
 - `stateWrite`: State write request/response
+

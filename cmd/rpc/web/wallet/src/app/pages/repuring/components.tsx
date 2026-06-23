@@ -569,3 +569,4 @@ export function rpcTone(status: string): 'success' | 'warning' | 'danger' {
   if (lower.includes('submitting') || lower.includes('waiting') || lower.includes('start local')) return 'warning';
   return 'success';
 }
+
