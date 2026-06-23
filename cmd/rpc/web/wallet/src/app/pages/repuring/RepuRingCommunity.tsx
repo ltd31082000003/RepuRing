@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ActiveWalletBanner, AvatarFallback, Badge, Button, CategoryBadge, EmptyState, MemberList, MetricCard, PageHeader, Panel, ReputationBadge, RepuRingPage, RoleProgressCard, SectionHeader, SocialCard, StatusPill, TxStatusCard, roleBadge, roleForReputation, shortAddress } from './components';
 import { cleanHex } from './RepuRingProvider';
-import { CircleView, useRepuRing } from './useRepuRing';
+import { CircleView, ContributionView, useRepuRing } from './useRepuRing';
 
 type CommunityStatus = 'Creator' | 'Joined' | 'Not joined' | 'No profile' | 'No wallet selected';
 
@@ -46,6 +46,69 @@ export default function RepuRingCommunity(): JSX.Element {
   function reviewContribution(contributionId: string) {
     setSelectedContributionId(contributionId);
     navigate('/repuring/endorse');
+  }
+
+  function contributionEmptyAction() {
+    if (!currentAddress) return <Button to="/key-management" variant="secondary">Select wallet</Button>;
+    if (!profile) return <Button to="/key-management" variant="secondary">Create profile</Button>;
+    if (!isMember) return <Button to="/repuring/circles" variant="secondary">Join community</Button>;
+    return <Button to="/repuring/contributions">Post first contribution</Button>;
+  }
+
+  function contributionReviewAction(item: ContributionView, selected: boolean) {
+    const ownWork = Boolean(currentAddress && cleanHex(item.authorAddress) === cleanHex(currentAddress));
+    if (!isMember) return <Button to="/repuring/circles" variant="secondary">Join to review</Button>;
+    if (ownWork) return <p className="text-sm font-medium text-zinc-400">Own work - switch wallet to review</p>;
+    if (item.slashed) return <p className="text-sm font-medium text-zinc-400">Review disabled</p>;
+    return <Button variant={selected ? 'primary' : 'secondary'} onClick={() => reviewContribution(item.contributionId)}>Review this work</Button>;
+  }
+
+  function reviewCardAction(contributionId: string) {
+    const linkedContribution = contributions.find((item) => item.contributionId === contributionId);
+    const ownWork = Boolean(currentAddress && linkedContribution?.authorAddress && cleanHex(linkedContribution.authorAddress) === cleanHex(currentAddress));
+    if (!isMember) return <Button to="/repuring/circles" variant="secondary">Join to review</Button>;
+    if (ownWork) return <p className="text-sm font-medium text-zinc-400">Own work - switch wallet to review</p>;
+    return (
+      <Button variant={contributionId === selectedContributionId ? 'primary' : 'secondary'} onClick={() => reviewContribution(contributionId)}>
+        Review this work
+      </Button>
+    );
+  }
+
+  function roleActions() {
+    if (!currentAddress) {
+      return (
+        <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+          <p className="text-sm leading-6 text-zinc-300">Select a wallet before joining or claiming a role.</p>
+          <div className="mt-4"><Button to="/key-management" variant="secondary">Select wallet</Button></div>
+        </div>
+      );
+    }
+    if (!profile) {
+      return (
+        <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+          <p className="text-sm leading-6 text-zinc-300">Create a profile before joining or claiming a role.</p>
+          <div className="mt-4"><Button to="/key-management" variant="secondary">Create profile</Button></div>
+        </div>
+      );
+    }
+    if (!isMember) {
+      return (
+        <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+          <p className="text-sm leading-6 text-zinc-300">Join this community before claiming a role.</p>
+          <div className="mt-4"><Button to="/repuring/circles" variant="secondary">Join this community</Button></div>
+        </div>
+      );
+    }
+    return (
+      <>
+        <RoleProgressCard reputation={profile.reputation || 0} embedded />
+        <div className="flex flex-wrap gap-3">
+          <Button to="/repuring/admin">Claim role</Button>
+          {isCreator && <Button to="/repuring/admin" variant="secondary">Open moderation</Button>}
+        </div>
+      </>
+    );
   }
 
   return (
@@ -98,7 +161,7 @@ export default function RepuRingCommunity(): JSX.Element {
               <MetricCard label="Creator" value={shortAddress(community.creatorAddress) || 'Unknown'} detail={community.creatorAddress || 'Creator address not loaded.'} />
               <MetricCard label="Members" value={String(memberCount)} detail="Joined contributor profiles." tone="emerald" />
               <MetricCard label="Contributions" value={String(contributions.length)} detail="Proof-of-work posts in this community." />
-              <MetricCard label="Reviews" value={String(communityReviews.length)} detail="Peer review comments loaded for this context." />
+              <MetricCard label="Reviews" value={String(scopedReviews.length)} detail="Peer review comments loaded for this context." />
             </div>
           </Panel>
 
@@ -133,20 +196,7 @@ export default function RepuRingCommunity(): JSX.Element {
                   title="Role and moderation"
                   copy="Joined members can claim role status. Circle creators can moderate contribution endorsements."
                 />
-                {!isMember ? (
-                  <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                    <p className="text-sm leading-6 text-zinc-300">Join this community before claiming a role.</p>
-                    <div className="mt-4"><Button to="/repuring/circles" variant="secondary">Join this community</Button></div>
-                  </div>
-                ) : (
-                  <>
-                    <RoleProgressCard reputation={profile?.reputation || 0} embedded />
-                    <div className="flex flex-wrap gap-3">
-                      <Button to="/repuring/admin">Claim role</Button>
-                      {isCreator && <Button to="/repuring/admin" variant="secondary">Open moderation</Button>}
-                    </div>
-                  </>
-                )}
+                {roleActions()}
               </Panel>
             </div>
 
@@ -162,7 +212,7 @@ export default function RepuRingCommunity(): JSX.Element {
                   <EmptyState
                     title="No contribution proofs yet"
                     copy="Joined members can post the first proof-of-work for this project community."
-                    actions={<Button to="/repuring/contributions">Post first contribution</Button>}
+                    actions={contributionEmptyAction()}
                   />
                 ) : (
                   <div className="grid gap-4">
@@ -190,7 +240,7 @@ export default function RepuRingCommunity(): JSX.Element {
                             <Badge tone="zinc">{reviewCount} review{reviewCount === 1 ? '' : 's'}</Badge>
                           </div>
                           <div className="mt-4">
-                            <Button variant={selected ? 'primary' : 'secondary'} onClick={() => reviewContribution(item.contributionId)}>Review this work</Button>
+                            {contributionReviewAction(item, selected)}
                           </div>
                         </SocialCard>
                       );
@@ -217,9 +267,7 @@ export default function RepuRingCommunity(): JSX.Element {
                         <p className="mt-3 break-words text-sm leading-6 text-zinc-300">{item.message || 'No review message provided.'}</p>
                         <p className="mt-3 break-all font-mono text-xs text-zinc-500">Contribution {item.contributionId}</p>
                         <div className="mt-4">
-                          <Button variant={item.contributionId === selectedContributionId ? 'primary' : 'secondary'} onClick={() => reviewContribution(item.contributionId)}>
-                            Review this work
-                          </Button>
+                          {reviewCardAction(item.contributionId)}
                         </div>
                       </SocialCard>
                     ))}
