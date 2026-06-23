@@ -48,12 +48,12 @@ export default function RepuRingContributions(): JSX.Element {
               : 'Ready to post proof-of-work. Contribution ID will be generated automatically.';
 
   React.useEffect(() => {
-    if (!composerOpen || !circle || contributionForm.contributionId.trim()) return;
+    if (!composerOpen || !circle?.circleId || !contributionForm.title.trim() || contributionForm.contributionId.trim()) return;
     setContributionForm({
       ...contributionForm,
       contributionId: generateContributionId(circle.circleId, contributionForm.title),
     });
-  }, [composerOpen, circle, contributionForm, setContributionForm]);
+  }, [composerOpen, circle?.circleId, contributionForm.title, contributionForm.contributionId, setContributionForm]);
 
   function regenerateContributionId() {
     const nextCircleId = circle?.circleId || circleId || 'circle';
