@@ -11,6 +11,7 @@ export default function RepuRingCommunity(): JSX.Element {
     currentAddress,
     profile,
     circleId,
+    setCircleId,
     circle,
     circles,
     contributions,
@@ -24,10 +25,12 @@ export default function RepuRingCommunity(): JSX.Element {
     setSelectedContributionId,
   } = useRepuRing();
   const navigate = useNavigate();
+  const [contextNotice, setContextNotice] = React.useState('');
   const community = circle?.circleId === circleId ? circle : circles.find((item) => item.circleId === circleId) || null;
   const memberCount = community?.members?.length || 0;
   const isMember = isCircleMember(community, currentAddress);
   const isCreator = Boolean(currentAddress && community?.creatorAddress && cleanHex(currentAddress) === cleanHex(community.creatorAddress));
+  const joinedCommunities = circles.filter((item) => currentAddress && (isCircleMember(item, currentAddress) || cleanHex(item.creatorAddress) === cleanHex(currentAddress)));
   const walletStatus = communityStatus(community, currentAddress, Boolean(profile));
   const derivedRole = role?.role || roleForReputation(profile?.reputation || 0);
   const topRows = leaderboard.slice(0, 5);
@@ -46,6 +49,74 @@ export default function RepuRingCommunity(): JSX.Element {
   function reviewContribution(contributionId: string) {
     setSelectedContributionId(contributionId);
     navigate('/repuring/endorse');
+  }
+
+  function openJoinedCommunity(nextCircleId: string) {
+    setCircleId(nextCircleId);
+    setContextNotice('Community switched. Contributions, reviews, leaderboard, and role actions now use this community.');
+    navigate('/repuring/community');
+  }
+
+  function joinedCommunitiesPanel() {
+    return (
+      <Panel>
+        <SectionHeader
+          eyebrow="My joined communities"
+          title="Joined project communities"
+          copy="Switch between communities your current wallet has joined."
+        />
+        {contextNotice && (
+          <div className="mb-4 rounded-2xl border border-emerald-300/20 bg-emerald-300/10 p-4 text-sm font-medium leading-6 text-emerald-100">
+            {contextNotice}
+          </div>
+        )}
+        {!currentAddress ? (
+          <EmptyState
+            title="Select a wallet to see joined communities."
+            copy="Joined communities are loaded for the current wallet."
+            actions={<Button to="/key-management" variant="secondary">Select wallet</Button>}
+          />
+        ) : !profile ? (
+          <EmptyState
+            title="Create a profile before joining communities."
+            copy="Profiles identify members across project communities."
+            actions={<Button to="/key-management" variant="secondary">Create profile</Button>}
+          />
+        ) : joinedCommunities.length === 0 ? (
+          <EmptyState
+            title="You have not joined any communities yet."
+            copy="Discover project communities, then join one to make it available here."
+            actions={<Button to="/repuring/circles" variant="secondary">Discover communities</Button>}
+          />
+        ) : (
+          <div className="grid gap-3">
+            {joinedCommunities.map((item) => {
+              const current = item.circleId === circleId;
+              const creator = Boolean(currentAddress && cleanHex(item.creatorAddress) === cleanHex(currentAddress));
+              return (
+                <div key={item.circleId} className="rounded-2xl border border-white/10 bg-black/25 p-4">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <h3 className="break-words font-semibold text-white">{item.name || item.circleId}</h3>
+                      <p className="mt-1 break-all font-mono text-xs text-zinc-500">{item.circleId}</p>
+                    </div>
+                    <Badge tone={current ? 'emerald' : creator ? 'cyan' : 'zinc'}>{current ? 'Current' : creator ? 'Creator' : 'Joined'}</Badge>
+                  </div>
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                    <Badge tone="zinc">{item.members?.length || 0} member{(item.members?.length || 0) === 1 ? '' : 's'}</Badge>
+                    {current ? (
+                      <Button disabled variant="secondary">Current</Button>
+                    ) : (
+                      <Button variant="secondary" onClick={() => openJoinedCommunity(item.circleId)}>Open community</Button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </Panel>
+    );
   }
 
   function contributionEmptyAction() {
@@ -145,13 +216,16 @@ export default function RepuRingCommunity(): JSX.Element {
       />
 
       {!community ? (
-        <Panel>
-          <EmptyState
-            title={circleId ? 'Selected community not found' : 'No community selected'}
-            copy="Open a project community from Discover Circles to load its workspace."
-            actions={<Button to="/repuring/circles" variant="secondary">Discover Circles</Button>}
-          />
-        </Panel>
+        <div className="grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
+          {joinedCommunitiesPanel()}
+          <Panel>
+            <EmptyState
+              title={circleId ? 'Selected community not found' : 'No community selected'}
+              copy="Open a joined project community to load its workspace, or discover a new community from Circles."
+              actions={<Button to="/repuring/circles" variant="secondary">Discover communities</Button>}
+            />
+          </Panel>
+        </div>
       ) : (
         <>
           <Panel>
@@ -189,6 +263,8 @@ export default function RepuRingCommunity(): JSX.Element {
                 {currentAddress && !profile && <Button to="/key-management" variant="secondary">Create profile</Button>}
                 {currentAddress && profile && !isMember && <Button to="/repuring/circles">Join from Discover Circles</Button>}
               </Panel>
+
+              {joinedCommunitiesPanel()}
 
               <Panel>
                 <SectionHeader eyebrow="Members" title="Community members" copy="Current wallet and creator badges are marked in the member graph." />

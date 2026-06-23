@@ -28,30 +28,55 @@ export default function RepuRingEndorse(): JSX.Element {
     submit,
   } = useRepuRing();
   const [legacyOpen, setLegacyOpen] = React.useState(false);
+  const [confirmOpen, setConfirmOpen] = React.useState(false);
+  const [successMessage, setSuccessMessage] = React.useState('');
   const isMember = Boolean(currentAddress && circle?.members?.some((address) => cleanHex(address) === cleanHex(currentAddress)));
   const targetIsMember = Boolean(targetAddress && circle?.members?.some((address) => cleanHex(address) === cleanHex(targetAddress)));
   const selectedContribution = contributions.find((item) => item.contributionId === selectedContributionId) || null;
   const selectedAuthorIsSelf = Boolean(selectedContribution && cleanHex(selectedContribution.authorAddress) === cleanHex(currentAddress));
-  const selectedReviews = selectedContribution ? endorsements.filter((item) => item.contributionId === selectedContribution.contributionId) : [];
-  const endorseDisabled = !selectedContribution || !isMember || selectedAuthorIsSelf || Boolean(selectedContribution?.slashed) || !password;
+  const selectedReviews = selectedContribution ? endorsements.filter((item) => item.contributionId === selectedContribution.contributionId && (!item.circleId || item.circleId === selectedContribution.circleId)) : [];
+  const endorseDisabled = !currentAddress || !profile || !selectedContribution || !isMember || selectedAuthorIsSelf || Boolean(selectedContribution?.slashed) || !password || !endorse.tag.trim() || !endorse.message.trim();
   const endorseHelp = !selectedContribution
     ? 'Select a contribution first.'
-    : !isMember
-      ? 'Join the circle before endorsing.'
-      : selectedAuthorIsSelf
-        ? 'Switch to another member wallet to endorse this contribution.'
-        : selectedContribution.slashed
-          ? 'This contribution is slashed and cannot be endorsed.'
-          : !password
-            ? 'Enter the selected wallet password to sign EndorseContributionTx.'
-            : 'Ready to endorse this contribution.';
+    : !currentAddress
+      ? 'Select a wallet before reviewing contribution work.'
+      : !profile
+        ? 'Create a profile before reviewing contribution work.'
+        : !isMember
+          ? 'Join the circle before endorsing.'
+          : selectedAuthorIsSelf
+            ? 'Switch to another member wallet to endorse this contribution.'
+            : selectedContribution.slashed
+              ? 'This contribution is slashed and cannot be endorsed.'
+              : !password
+                ? 'Enter the selected wallet password to sign EndorseContributionTx.'
+                : !endorse.tag.trim()
+                  ? 'Choose an endorsement tag.'
+                  : !endorse.message.trim()
+                    ? 'Write a review message before continuing.'
+                    : 'Ready to review and confirm this endorsement.';
+
+  async function confirmEndorsement() {
+    if (!selectedContribution) return;
+    const ok = await submit('endorseContribution', { contributionId: selectedContribution.contributionId, ...endorse });
+    if (ok) {
+      setConfirmOpen(false);
+      setSuccessMessage('Endorsement submitted. The review is now visible under this contribution.');
+      await refreshState();
+    }
+  }
+
+  React.useEffect(() => {
+    setConfirmOpen(false);
+    setSuccessMessage('');
+  }, [selectedContributionId, currentAddress]);
 
   return (
     <RepuRingPage>
       <PageHeader
         eyebrow="Contribution review"
         title="Endorse Useful Work"
-        copy="Review proof-of-work from another circle member. The author cannot endorse their own proof; use a second member wallet for EndorseContributionTx."
+        copy="Final review and endorsement transaction for another community member's proof-of-work."
         actions={<Button variant="secondary" onClick={refreshState}>Refresh work</Button>}
       />
 
@@ -138,12 +163,42 @@ export default function RepuRingEndorse(): JSX.Element {
             </div>
             <Input label="Review message" value={endorse.message} onChange={(message) => setEndorse({ ...endorse, message })} multiline />
             <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
-              <Button disabled={endorseDisabled} className="w-full sm:w-auto" onClick={() => { void submit('endorseContribution', { contributionId: selectedContributionId, ...endorse }); }}>
-                Endorse contribution
+              <Button disabled={endorseDisabled} className="w-full sm:w-auto" onClick={() => { setSuccessMessage(''); setConfirmOpen(true); }}>
+                Review and continue
               </Button>
               <Badge tone="zinc">EndorseContributionTx</Badge>
             </div>
             <p className="text-sm text-zinc-500">{endorseHelp}</p>
+            {successMessage && (
+              <div className="rounded-2xl border border-emerald-300/20 bg-emerald-300/10 p-4 text-sm font-medium leading-6 text-emerald-100">
+                {successMessage}
+              </div>
+            )}
+            {confirmOpen && selectedContribution && (
+              <div className="rounded-3xl border border-amber-300/30 bg-amber-300/10 p-4">
+                <SectionHeader
+                  eyebrow="Confirm endorsement"
+                  title="Review before submitting"
+                  copy="This endorsement will increase the author's reputation. It can only be moderated later by the circle creator."
+                />
+                <div className="grid gap-3 text-sm md:grid-cols-2">
+                  <ConfirmRow label="Contribution" value={selectedContribution.title || selectedContribution.contributionId} />
+                  <ConfirmRow label="Contribution ID" value={selectedContribution.contributionId} mono />
+                  <ConfirmRow label="Author" value={selectedContribution.authorUsername || shortAddress(selectedContribution.authorAddress) || selectedContribution.authorAddress} />
+                  <ConfirmRow label="Community" value={circle?.name || selectedContribution.circleId} />
+                  <ConfirmRow label="Circle ID" value={circle?.circleId || selectedContribution.circleId || circleId} mono />
+                  <ConfirmRow label="Tag" value={endorse.tag} />
+                  <ConfirmRow label="Reviewer wallet" value={shortAddress(currentAddress) || currentAddress} mono />
+                  <div className="md:col-span-2">
+                    <ConfirmRow label="Review message" value={endorse.message} />
+                  </div>
+                </div>
+                <div className="mt-4 flex flex-wrap gap-3">
+                  <Button onClick={confirmEndorsement}>Confirm endorsement</Button>
+                  <Button variant="secondary" onClick={() => setConfirmOpen(false)}>Cancel</Button>
+                </div>
+              </div>
+            )}
           </Panel>
         </div>
 
@@ -223,8 +278,8 @@ export default function RepuRingEndorse(): JSX.Element {
       <Panel>
         <SectionHeader
           eyebrow="Advanced / Legacy"
-          title="Member endorsement compatibility"
-          copy="EndorseUserTx remains available for backward compatibility; the main product flow is contribution-based."
+          title="Legacy direct user endorsement"
+          copy="Legacy direct user endorsement - not part of the main contribution review flow."
           actions={<Button variant="secondary" onClick={() => setLegacyOpen((open) => !open)}>{legacyOpen ? 'Hide legacy' : 'Open legacy'}</Button>}
         />
         {legacyOpen && (
@@ -245,6 +300,15 @@ function Rule({ checked, text }: { checked: boolean; text: string }) {
   return (
     <div className={`rounded-2xl border p-4 text-sm ${checked ? 'border-emerald-300/20 bg-emerald-300/10 text-emerald-100' : 'border-white/10 bg-white/[0.03] text-zinc-400'}`}>
       {checked ? 'Ready' : 'Check'} - {text}
+    </div>
+  );
+}
+
+function ConfirmRow({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
+      <p className="text-xs font-semibold uppercase text-zinc-500">{label}</p>
+      <p className={`mt-1 break-words text-sm text-zinc-100 ${mono ? 'font-mono' : ''}`}>{value || 'Not provided'}</p>
     </div>
   );
 }
