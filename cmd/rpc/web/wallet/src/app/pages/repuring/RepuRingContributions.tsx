@@ -50,11 +50,20 @@ export default function RepuRingContributions(): JSX.Element {
                 : 'Ready to post proof-of-work.';
 
   async function postContribution() {
-    const ok = await submit('createContribution', { circleId, ...contributionForm });
+    if (!circle) return;
+    const ok = await submit('createContribution', { circleId: circle.circleId, ...contributionForm });
     if (ok) {
       await refreshState();
       setComposerOpen(false);
     }
+  }
+
+  function composerAction() {
+    if (!currentAddress) return <Button to="/key-management" variant="secondary">Select wallet</Button>;
+    if (!profile) return <Button to="/key-management" variant="secondary">Create profile</Button>;
+    if (!circle) return <Button to="/repuring/circles" variant="secondary">Discover communities</Button>;
+    if (!isMember) return <Button to="/repuring/circles" variant="secondary">Join community</Button>;
+    return <Button onClick={() => setComposerOpen((open) => !open)}>{composerOpen ? 'Close composer' : 'Open composer'}</Button>;
   }
 
   function emptyFeedAction() {
@@ -116,7 +125,7 @@ export default function RepuRingContributions(): JSX.Element {
               eyebrow="Composer"
               title="Post proof-of-work"
               copy="Publish proof-of-work in the current project community after your wallet has joined it."
-              actions={<Button onClick={() => setComposerOpen((open) => !open)}>{composerOpen ? 'Close composer' : 'Open composer'}</Button>}
+              actions={composerAction()}
             />
             <div className="grid gap-3 sm:grid-cols-2">
               <MetricCard label="Community" value={circle?.name || 'No community selected'} detail={circle?.description || 'Open or join a project community from Discover communities.'} tone="cyan" />
@@ -147,7 +156,7 @@ export default function RepuRingContributions(): JSX.Element {
                   <div className="mt-4">
                     <Input label="Circle ID" value={circleId} onChange={setCircleId} placeholder="pharos-builders" />
                   </div>
-                  <p className="mt-3 text-xs leading-5 text-zinc-500">Use this only to switch the current community context manually. The main composer posts to the current community.</p>
+                  <p className="mt-3 text-xs leading-5 text-zinc-500">Advanced only. Changing this ID switches the current context after refresh. Normal users should change communities from Discover communities.</p>
                 </details>
               </div>
             )}
