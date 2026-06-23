@@ -5,6 +5,7 @@ import {
     UserCircle,
     BadgeCheck,
     Users,
+    PanelsTopLeft,
     ClipboardCheck,
     HeartHandshake,
     Trophy,
@@ -18,6 +19,7 @@ import {
 const navItems = [
     { name: 'RepuRing', path: '/repuring', icon: BadgeCheck },
     { name: 'Circles', path: '/repuring/circles', icon: Users },
+    { name: 'Community', path: '/repuring/community', icon: PanelsTopLeft },
     { name: 'Contributions', path: '/repuring/contributions', icon: ClipboardCheck },
     { name: 'Endorse', path: '/repuring/endorse', icon: HeartHandshake },
     { name: 'Leaderboard', path: '/repuring/leaderboard', icon: Trophy },

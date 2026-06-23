@@ -187,6 +187,7 @@ export function SocialFiJourney({
     Boolean(profile),
     Boolean(circle),
     memberReady,
+    memberReady,
     contributions.length > 0,
     Boolean(selectedContributionId),
     Boolean((profile?.reputation || 0) > 0 || leaderboard.length > 0),
@@ -202,11 +203,12 @@ export function SocialFiJourney({
     { title: 'Wallet selected', copy: 'Select a local signing key before submitting Social-Fi transactions.', status: statusFor(0), to: '/key-management' },
     { title: 'Profile created', copy: 'Store your contributor identity in RepuRing plugin state.', status: statusFor(1), to: '/key-management', tx: 'CreateProfileTx' },
     { title: 'Project circle loaded', copy: 'Create or load the project community used by the remaining flow.', status: statusFor(2), to: '/repuring/circles', tx: 'CreateCircleTx' },
-    { title: 'Member ready', copy: 'Join the selected circle before posting work.', status: statusFor(3), to: '/repuring/circles', tx: 'JoinCircleTx' },
-    { title: 'Proof-of-work posted', copy: 'Publish a contribution proof into the selected circle.', status: statusFor(4), to: '/repuring/contributions', tx: 'CreateContributionTx' },
-    { title: 'Contribution review ready', copy: 'Select useful work and switch to another member account to endorse it.', status: statusFor(5), to: '/repuring/endorse', tx: 'EndorseContributionTx' },
-    { title: 'Reputation visible', copy: 'Peer-endorsed contribution proofs increase profile reputation.', status: statusFor(6), to: '/repuring/leaderboard' },
-    { title: 'Role claimed', copy: 'Store a role for this circle based on current profile reputation.', status: statusFor(7), to: '/repuring/admin', tx: 'ClaimRoleTx' },
+    { title: 'Member ready', copy: 'Join the current project community before posting work.', status: statusFor(3), to: '/repuring/circles', tx: 'JoinCircleTx' },
+    { title: 'Community workspace', copy: 'Open the joined project community to view members, contributions, reviews, leaderboard, and role actions.', status: statusFor(4), to: '/repuring/community' },
+    { title: 'Proof-of-work posted', copy: 'Publish a contribution proof into the current project community.', status: statusFor(5), to: '/repuring/contributions', tx: 'CreateContributionTx' },
+    { title: 'Contribution review ready', copy: 'Select useful work and switch to another member account to endorse it.', status: statusFor(6), to: '/repuring/endorse', tx: 'EndorseContributionTx' },
+    { title: 'Reputation visible', copy: 'Peer-endorsed contribution proofs increase profile reputation.', status: statusFor(7), to: '/repuring/leaderboard' },
+    { title: 'Role claimed', copy: 'Store a role for this circle based on current profile reputation.', status: statusFor(8), to: '/repuring/admin', tx: 'ClaimRoleTx' },
     { title: 'Moderation ready', copy: 'The circle creator/admin can review and slash invalid endorsements.', status: endorsements.length > 0 ? 'done' : 'optional', to: '/repuring/admin', tx: 'SlashEndorsementTx' },
   ];
   const statusStyles: Record<JourneyStatus, string> = {
@@ -480,7 +482,7 @@ export function ActiveWalletBanner({
     <Panel className="border-cyan-300/15 bg-cyan-300/[0.055]">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-200/80">Active wallet / demo role</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-200/80">Active wallet / community role</p>
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <Badge tone={currentAddress ? 'cyan' : 'zinc'}>{currentAddress ? shortAddress(currentAddress) : 'No wallet selected'}</Badge>
             <Badge tone={hasProfile ? 'emerald' : 'zinc'}>{hasProfile ? (username || 'Profile active') : 'No profile'}</Badge>
@@ -488,8 +490,8 @@ export function ActiveWalletBanner({
           </div>
           <p className="mt-2 break-words text-sm text-zinc-400">
             {currentAddress
-              ? 'This wallet signs transactions for ' + (circleName || 'the selected circle') + '. Switch Alice/Bob in My Account and confirm this banner before submitting.'
-              : 'Select a local account in My Account before running the Alice/Bob demo flow.'}
+              ? 'This wallet signs transactions for ' + (circleName || 'the current circle') + '. Confirm the active wallet before submitting.'
+              : 'Select a local account in My Account before submitting RepuRing transactions.'}
           </p>
         </div>
         <Button to="/key-management" variant="secondary">Open My Account</Button>

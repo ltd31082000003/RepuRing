@@ -2,7 +2,7 @@ import React from 'react';
 import { AvatarFallback, Badge, Button, DemoReadinessCard, MetricCard, Panel, RepuRingPage, RoleProgressCard, SectionHeader, SocialFiJourney, StatusPill, roleBadge, roleForReputation, shortAddress } from './components';
 import { useRepuRing } from './useRepuRing';
 
-const flow = ['Profile', 'Circle', 'Contribution', 'Endorsement', 'Reputation', 'Role'];
+const flow = ['Profile', 'Circle', 'Community', 'Contribution', 'Endorsement', 'Role'];
 
 export default function RepuRingOverview(): JSX.Element {
   const { currentAddress, profile, role, circle, circleId, contributions, selectedContributionId, leaderboard, endorsements, lastTx, status, refreshState } = useRepuRing();
@@ -110,9 +110,10 @@ export default function RepuRingOverview(): JSX.Element {
           title="Follow the contribution flow"
           copy="Move from identity to contribution proof, peer validation, reputation, and role without leaving the real Canopy RPC path."
         />
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
           <QuickAction title="My Account" copy="Create or edit your RepuRing identity." to="/key-management" />
           <QuickAction title="Create or Join Circle" copy="Set up a project community." to="/repuring/circles" />
+          <QuickAction title="Community Workspace" copy="Open the current project community." to="/repuring/community" />
           <QuickAction title="Post Contribution" copy="Publish proof-of-work to the feed." to="/repuring/contributions" />
           <QuickAction title="Endorse Work" copy="Review and endorse useful proofs." to="/repuring/endorse" />
           <QuickAction title="View Leaderboard" copy="See reputation and role rankings." to="/repuring/leaderboard" />

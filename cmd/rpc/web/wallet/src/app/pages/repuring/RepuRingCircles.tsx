@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ActiveWalletBanner, Badge, Button, EmptyState, Input, MemberList, MetricCard, PageHeader, Panel, RepuRingPage, SectionHeader, StatusPill, TxStatusCard, shortAddress } from './components';
 import { cleanHex } from './RepuRingProvider';
 import { CircleView, useRepuRing } from './useRepuRing';
@@ -28,6 +29,7 @@ export default function RepuRingCircles(): JSX.Element {
   const [contextNotice, setContextNotice] = React.useState('');
   const currentContextRef = React.useRef<HTMLElement | null>(null);
   const refreshStateRef = React.useRef(refreshState);
+  const navigate = useNavigate();
 
   React.useEffect(() => {
     refreshStateRef.current = refreshState;
@@ -65,7 +67,12 @@ export default function RepuRingCircles(): JSX.Element {
     }
   }
 
-  async function openCircle(nextCircleId: string) {
+  async function openCommunity(nextCircleId: string) {
+    await setCurrentCircleContext(nextCircleId, false);
+    navigate('/repuring/community');
+  }
+
+  async function previewCommunity(nextCircleId: string) {
     await setCurrentCircleContext(nextCircleId, true);
   }
 
@@ -81,6 +88,7 @@ export default function RepuRingCircles(): JSX.Element {
     if (joined) {
       setJoinCircleId('');
       await refreshStateRef.current();
+      navigate('/repuring/community');
     }
   }
 
@@ -169,7 +177,7 @@ export default function RepuRingCircles(): JSX.Element {
               const joinExpanded = joinCircleId === item.circleId;
               const cardJoinDisabled = !currentAddress || !profile || !password || itemIsMember;
               const primaryAction = itemIsMember
-                ? 'Open circle'
+                ? 'Open community'
                 : !currentAddress
                   ? 'View details'
                   : !profile
@@ -202,7 +210,7 @@ export default function RepuRingCircles(): JSX.Element {
                   </div>
                   <div className="mt-4 flex flex-wrap items-center gap-2">
                     {itemIsMember || !currentAddress ? (
-                      <Button variant={itemSelected ? 'primary' : 'secondary'} onClick={() => openCircle(item.circleId)}>
+                      <Button variant={itemSelected ? 'primary' : 'secondary'} onClick={() => itemIsMember ? openCommunity(item.circleId) : previewCommunity(item.circleId)}>
                         {primaryAction}
                       </Button>
                     ) : !profile ? (
@@ -212,8 +220,8 @@ export default function RepuRingCircles(): JSX.Element {
                         <Button onClick={() => prepareJoinCircle(item.circleId, joinExpanded)}>
                           {joinExpanded ? 'Hide join' : 'Join community'}
                         </Button>
-                        <Button variant={itemSelected ? 'primary' : 'secondary'} onClick={() => openCircle(item.circleId)}>
-                          Preview circle
+                        <Button variant={itemSelected ? 'primary' : 'secondary'} onClick={() => previewCommunity(item.circleId)}>
+                          Preview community
                         </Button>
                       </>
                     )}

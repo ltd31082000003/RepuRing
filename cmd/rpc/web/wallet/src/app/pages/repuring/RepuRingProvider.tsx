@@ -116,7 +116,7 @@ export function RepuRingProvider({ children }: { children: React.ReactNode }): J
   }, [refreshState]);
 
   React.useEffect(() => {
-    // Multi-account demo safety: switching Alice/Bob should not reuse stale signing or action inputs.
+    // Multi-account safety: switching wallets should not reuse stale signing or action inputs.
     setPassword('');
     setTargetAddress('');
     setEndorsementId('');
