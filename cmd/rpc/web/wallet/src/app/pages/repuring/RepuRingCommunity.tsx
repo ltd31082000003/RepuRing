@@ -57,6 +57,8 @@ export default function RepuRingCommunity(): JSX.Element {
 
   function contributionReviewAction(item: ContributionView, selected: boolean) {
     const ownWork = Boolean(currentAddress && cleanHex(item.authorAddress) === cleanHex(currentAddress));
+    if (!currentAddress) return <Button to="/key-management" variant="secondary">Select wallet</Button>;
+    if (!profile) return <Button to="/key-management" variant="secondary">Create profile</Button>;
     if (!isMember) return <Button to="/repuring/circles" variant="secondary">Join to review</Button>;
     if (ownWork) return <p className="text-sm font-medium text-zinc-400">Own work - switch wallet to review</p>;
     if (item.slashed) return <p className="text-sm font-medium text-zinc-400">Review disabled</p>;
@@ -66,8 +68,11 @@ export default function RepuRingCommunity(): JSX.Element {
   function reviewCardAction(contributionId: string) {
     const linkedContribution = contributions.find((item) => item.contributionId === contributionId);
     const ownWork = Boolean(currentAddress && linkedContribution?.authorAddress && cleanHex(linkedContribution.authorAddress) === cleanHex(currentAddress));
+    if (!currentAddress) return <Button to="/key-management" variant="secondary">Select wallet</Button>;
+    if (!profile) return <Button to="/key-management" variant="secondary">Create profile</Button>;
     if (!isMember) return <Button to="/repuring/circles" variant="secondary">Join to review</Button>;
     if (ownWork) return <p className="text-sm font-medium text-zinc-400">Own work - switch wallet to review</p>;
+    if (linkedContribution?.slashed) return <p className="text-sm font-medium text-zinc-400">Review disabled</p>;
     return (
       <Button variant={contributionId === selectedContributionId ? 'primary' : 'secondary'} onClick={() => reviewContribution(contributionId)}>
         Review this work
