@@ -26,6 +26,7 @@ export default function RepuRingCommunity(): JSX.Element {
   } = useRepuRing();
   const navigate = useNavigate();
   const [contextNotice, setContextNotice] = React.useState('');
+  const pendingSwitchRef = React.useRef('');
   const community = circle?.circleId === circleId ? circle : circles.find((item) => item.circleId === circleId) || null;
   const memberCount = community?.members?.length || 0;
   const isMember = isCircleMember(community, currentAddress);
@@ -52,10 +53,17 @@ export default function RepuRingCommunity(): JSX.Element {
   }
 
   function openJoinedCommunity(nextCircleId: string) {
+    pendingSwitchRef.current = nextCircleId;
     setCircleId(nextCircleId);
     setContextNotice('Community switched. Contributions, reviews, leaderboard, and role actions now use this community.');
     navigate('/repuring/community');
   }
+
+  React.useEffect(() => {
+    if (!pendingSwitchRef.current || pendingSwitchRef.current !== circleId) return;
+    pendingSwitchRef.current = '';
+    window.setTimeout(() => { void refreshState(); }, 0);
+  }, [circleId, refreshState]);
 
   function joinedCommunitiesPanel() {
     return (

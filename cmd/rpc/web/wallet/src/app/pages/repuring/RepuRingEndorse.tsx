@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActiveWalletBanner, AvatarFallback, Badge, Button, CategoryBadge, ContributionReviews, EmptyState, Input, PageHeader, Panel, RepuRingPage, SectionHeader, SocialCard, StatusPill, TxStatusCard, shortAddress } from './components';
+import { ActiveWalletBanner, AvatarFallback, Badge, Button, CategoryBadge, ContributionReviews, EmptyState, Input, MetricCard, PageHeader, Panel, RepuRingPage, SectionHeader, SocialCard, StatusPill, TxStatusCard, shortAddress } from './components';
 import { cleanHex } from './RepuRingProvider';
 import { useRepuRing } from './useRepuRing';
 
@@ -11,7 +11,6 @@ export default function RepuRingEndorse(): JSX.Element {
     password,
     setPassword,
     circleId,
-    setCircleId,
     circle,
     profile,
     targetAddress,
@@ -214,8 +213,18 @@ export default function RepuRingEndorse(): JSX.Element {
           </Panel>
 
           <Panel>
-            <SectionHeader eyebrow={circleId || 'Select circle'} title="Contribution selector" copy="Pick work to review without leaving this page." />
-            <Input label="Circle ID" value={circleId} onChange={setCircleId} />
+            <SectionHeader
+              eyebrow={circleId || 'Current community'}
+              title="Contribution selector"
+              copy="Pick work to review in the current community context."
+              actions={<Button to="/repuring/community" variant="secondary">Change community</Button>}
+            />
+            <div className="mb-4 grid gap-3 sm:grid-cols-2">
+              <MetricCard label="Community" value={circle?.name || 'No community selected'} detail={circle?.description || 'Open a joined community before reviewing work.'} tone="cyan" />
+              <MetricCard label="Circle ID" value={circle?.circleId || circleId || 'Not selected'} detail="Current community context for contribution reviews." />
+              <MetricCard label="Members" value={String(circle?.members?.length || 0)} detail="Joined wallets in this community." tone="emerald" />
+              <MetricCard label="Wallet status" value={isMember ? 'Joined' : currentAddress ? 'Not joined' : 'No wallet'} detail={isMember ? 'Current wallet can review eligible work.' : 'Change or join a community before reviewing.'} />
+            </div>
             {contributions.length === 0 ? (
               <EmptyState
                 title="No contribution proofs loaded"
