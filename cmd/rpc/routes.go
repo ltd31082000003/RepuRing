@@ -66,6 +66,7 @@ const (
 	SubscribeRCInfoPath            = "/v1/subscribe-rc-info"
 	RepuRingProfileRoutePath       = "/v1/query/repuring/profile"
 	RepuRingCircleRoutePath        = "/v1/query/repuring/circle"
+	RepuRingCirclesRoutePath       = "/v1/query/repuring/circles"
 	RepuRingCircleMembersRoutePath = "/v1/query/repuring/circle-members"
 	RepuRingReputationRoutePath    = "/v1/query/repuring/reputation"
 	RepuRingRoleRoutePath          = "/v1/query/repuring/role"
@@ -171,6 +172,7 @@ const (
 	CheckpointRouteName            = "checkpoint"
 	RepuRingProfileRouteName       = "repuring-profile"
 	RepuRingCircleRouteName        = "repuring-circle"
+	RepuRingCirclesRouteName       = "repuring-circles"
 	RepuRingCircleMembersRouteName = "repuring-circle-members"
 	RepuRingReputationRouteName    = "repuring-reputation"
 	RepuRingRoleRouteName          = "repuring-role"
@@ -289,6 +291,7 @@ var routePaths = routes{
 	CheckpointRouteName:            {Method: http.MethodPost, Path: CheckpointRoutePath},
 	RepuRingProfileRouteName:       {Method: http.MethodPost, Path: RepuRingProfileRoutePath},
 	RepuRingCircleRouteName:        {Method: http.MethodPost, Path: RepuRingCircleRoutePath},
+	RepuRingCirclesRouteName:       {Method: http.MethodPost, Path: RepuRingCirclesRoutePath},
 	RepuRingCircleMembersRouteName: {Method: http.MethodPost, Path: RepuRingCircleMembersRoutePath},
 	RepuRingReputationRouteName:    {Method: http.MethodPost, Path: RepuRingReputationRoutePath},
 	RepuRingRoleRouteName:          {Method: http.MethodPost, Path: RepuRingRoleRoutePath},
@@ -400,6 +403,7 @@ func createRouter(s *Server) *httprouter.Router {
 		CheckpointRouteName:            s.Checkpoint,
 		RepuRingProfileRouteName:       s.RepuRingProfile,
 		RepuRingCircleRouteName:        s.RepuRingCircle,
+		RepuRingCirclesRouteName:       s.RepuRingCircles,
 		RepuRingCircleMembersRouteName: s.RepuRingCircleMembers,
 		RepuRingReputationRouteName:    s.RepuRingReputation,
 		RepuRingRoleRouteName:          s.RepuRingRole,

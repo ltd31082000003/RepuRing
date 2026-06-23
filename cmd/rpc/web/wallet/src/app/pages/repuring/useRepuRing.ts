@@ -57,6 +57,7 @@ export type RepuRingContextValue = {
   profile: ProfileView | null;
   role: RoleView | null;
   circle: CircleView | null;
+  circles: CircleView[];
   contributions: ContributionView[];
   endorsements: EndorsementView[];
   leaderboard: LeaderboardRow[];

@@ -1,6 +1,6 @@
 # RepuRing
 
-RepuRing is an onchain Social-Fi contribution network for Web3 project communities.
+RepuRing is an onchain Social-Fi contribution network where Web3 contributors post proof-of-work, receive peer endorsements, earn reputation, and claim community roles.
 
 ## What It Does
 
@@ -16,6 +16,40 @@ RepuRing extends the Canopy template with custom plugin transactions for an onch
 
 It is Social-Fi because project identity, contribution proofs, endorsements, reputation, and roles are signed transactions committed to Canopy plugin state rather than frontend-only metadata.
 
+## Why It Is Social-Fi
+
+RepuRing turns contribution activity into verifiable social capital:
+
+- **Profile** is an onchain contributor identity.
+- **Circle** is a Web3 project or community hub.
+- **Contribution** is a proof-of-work post linked to that community.
+- **Endorsement** is peer validation from another circle member.
+- **Reputation** is earned social capital from endorsed contribution proofs.
+- **Role** is community status derived from current profile reputation.
+- **Slashing** is creator/admin moderation against invalid endorsements.
+
+## Contest Theme Fit
+
+RepuRing matches the Social-Fi theme through four connected onchain graphs and state transitions:
+
+- a social graph formed by contributor profiles and circle memberships,
+- a contribution graph formed by proof-of-work posts,
+- a reputation economy driven by peer endorsements,
+- role progression stored onchain through ClaimRoleTx.
+
+The current score is profile-level reputation displayed in selected circle context. Project-scoped scoring and anti-Sybil controls are outside the current implementation.
+
+## What Is Stored In Plugin State
+
+The TypeScript plugin deterministically stores:
+
+- profiles and the unique username index,
+- project circles and memberships,
+- contribution proofs and circle/author indexes,
+- endorsement records and duplicate-prevention indexes,
+- profile reputation updated by endorsements and slashing,
+- claimed roles for a circle,
+- slashed endorsement status and reason.
 ## Implementation
 
 The working implementation is in the TypeScript plugin template:
@@ -78,22 +112,60 @@ npm run build
 
 ## Run Local Chain
 
-Docker path from the Canopy template:
+RepuRing uses one supported local runtime for development and contest demos. Prerequisites are Go, npm, and Node.js 20.19+ or 22.12+ (Node 22 LTS recommended):
 
-```bash
-make docker/plugin PLUGIN=typescript
-docker run -p 50002:50002 -p 50003:50003 -v ~/.canopy:/root/.canopy canopy-typescript
-```
+- Windows
+- Go native Canopy node (canopy.exe)
+- TypeScript RepuRing plugin started by Canopy
+- query/transaction RPC on port 50002
+- admin/keystore RPC on port 50003
 
-Manual path:
+Docker, Ubuntu, and WSL are not part of the RepuRing run path.
 
-1. Build Canopy with the normal template instructions.
-2. Set `"plugin": "typescript"` in `~/.canopy/config.json`.
-3. Start the node:
+Build all native runtime components from PowerShell:
 
-```bash
-canopy start
-```
+~~~powershell
+cd C:\Users\Admin\Downloads\RepuRing
+powershell -ExecutionPolicy Bypass -File .\scripts\windows-native\build.ps1
+~~~
+
+Start the local chain:
+
+~~~powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\windows-native\start.ps1
+~~~
+
+The start script preserves the existing %USERPROFILE%\.canopy\config.json, sets plugin to typescript, verifies that ports 50002 and 50003 are available, and then runs canopy.exe start from the repository root.
+
+Verify both RPC listeners in another PowerShell window:
+
+~~~powershell
+Test-NetConnection 127.0.0.1 -Port 50002
+Test-NetConnection 127.0.0.1 -Port 50003
+~~~
+
+Both commands must report TcpTestSucceeded : True. If Windows reports that either port is reserved, close software that owns Hyper-V/HNS networking and resolve the Windows port reservation before starting Canopy. Do not change the RepuRing RPC ports.
+
+The equivalent manual commands are:
+
+~~~powershell
+cd C:\Users\Admin\Downloads\RepuRing\plugin\typescript
+npm install
+npm run build:all
+
+cd C:\Users\Admin\Downloads\RepuRing\cmd\rpc\web\wallet
+npm install
+npm run build
+
+cd C:\Users\Admin\Downloads\RepuRing\cmd\rpc\web\explorer
+npm install
+npm run build
+
+cd C:\Users\Admin\Downloads\RepuRing
+$env:GOTELEMETRY = "off"
+go build -o .\canopy.exe .\cmd\main
+.\canopy.exe start
+~~~
 
 ## Run Web UI
 
@@ -122,16 +194,28 @@ The RepuRing UI is a route-based Social-Fi dApp:
 
 The RepuRing pages sign custom plugin transactions in the browser, submit them to `http://localhost:50002/v1/tx`, and refresh profile, circle, contribution, endorsement, role, and leaderboard state from the RepuRing query routes. They do not use a mocked transaction path for the main flow.
 
-## Demo UI Flow
+## Technical Demo Path
 
-1. Open `http://127.0.0.1:5173/repuring`.
-2. Create a signing key on `/key-management` if needed.
-3. Create your RepuRing profile on `/key-management`.
-4. Create or join a project community circle on `/repuring/circles`.
-5. Post contribution proof on `/repuring/contributions`.
-6. Endorse that contribution on `/repuring/endorse`.
-7. Check rankings on `/repuring/leaderboard`.
-8. Claim a role or slash an invalid endorsement on `/repuring/admin`.
+This is the real browser demo flow used for multi-account (Alice/Bob) testing:
+
+1. Start the Go node so query/transaction RPC (50002) and admin/keystore RPC (50003) are listening.
+2. Open `http://127.0.0.1:5173/repuring`, then open **My Account**.
+3. Create Alice and Bob local signing wallets and create an onchain profile for each.
+4. Create a project circle as Alice (`/repuring/circles`).
+5. Switch to Bob and use **Discover circles** to select and join Alice's circle from its card — no need to remember the circle ID.
+6. Post a contribution proof as Bob (`/repuring/contributions`).
+7. Switch to Alice.
+8. As Alice, select Bob's contribution on `/repuring/endorse` and write an endorsement review/comment message.
+9. Confirm the review appears under the contribution (the "Reviews / comments" section on both the Endorse and Contributions pages).
+10. Confirm Bob's profile reputation increases on `/repuring/leaderboard`.
+11. Switch to Bob and claim his role on `/repuring/admin`.
+12. Switch to Alice (circle creator/admin) and slash the endorsement if needed; reputation decreases.
+
+Notes for the browser demo:
+
+- **Circle discovery:** every created circle is listed from `/v1/query/repuring/circles` in the **Discover circles** section, so members join by clicking a card instead of memorizing circle IDs. A manual circle-ID input remains as an advanced fallback.
+- **Comments / reviews:** endorsement messages are shown as peer review comments under each contribution. They are the `message` field of `EndorseContributionTx`, matched by `contribution_id` — there is **no separate CommentTx** in this version.
+- **Multi-account safety:** switching Alice/Bob clears stale password/target/endorsement/profile-form state, keeps the selected circle, and avoids leaving an author's own contribution selected for endorsement. Impossible actions (self-endorsement, posting/joining without membership, slashing as a non-creator) are disabled in the UI before submit, with helper text explaining why.
 
 ## Demo Script
 
@@ -178,6 +262,7 @@ The requested logical queries are exposed as HTTP POST routes on port `50002`:
 | --- | --- | --- |
 | `getProfile(address)` | `/v1/query/repuring/profile` | `{ "address": "<hex>" }` |
 | `getCircle(circle_id)` | `/v1/query/repuring/circle` | `{ "circleId": "pharos-builders" }` |
+| `listCircles()` | `/v1/query/repuring/circles` | `{}` (read-only discovery of every circle) |
 | `getCircleMembers(circle_id)` | `/v1/query/repuring/circle-members` | `{ "circleId": "pharos-builders" }` |
 | `getReputation(address)` | `/v1/query/repuring/reputation` | `{ "address": "<hex>" }` |
 | `getRole(circle_id, address)` | `/v1/query/repuring/role` | `{ "circleId": "pharos-builders", "address": "<hex>" }` |
@@ -190,18 +275,19 @@ The requested logical queries are exposed as HTTP POST routes on port `50002`:
 
 Each query also accepts optional `{ "height": 123 }` to read historical state through the Canopy time-machine path.
 
-## Demo Video Script
+## Pre-submission Checklist
 
-1. Show local Canopy running with plugin `typescript`, ports `50002/50003`.
-2. Show `npm run build:all` passing in `plugin/typescript`.
-3. Show the overview at `/repuring`.
-4. Create/select wallet accounts in `/key-management`.
-5. Submit `CreateProfileTx` from My Account on `/key-management`, then submit circle transactions on `/repuring/circles`.
-6. Submit a contribution proof on `/repuring/contributions`.
-7. Submit a contribution endorsement on `/repuring/endorse`.
-8. Show returned transaction hashes from `/v1/tx`.
-9. Show reputation, role, and rankings on `/repuring/leaderboard`.
-10. Run the admin slash step on `/repuring/admin` and show Bob reputation decrease through `/v1/query/repuring/reputation`.
+- [x] Custom plugin transactions are implemented and listed.
+- [x] Contribution-based Social-Fi flow is explained.
+- [x] RepuRing query routes are implemented and listed.
+- [x] Demo script submits real RPC transactions.
+- [x] Manual browser demo path is documented.
+- [x] Current limitations are stated honestly.
+- [x] No protocol-breaking changes were introduced during final freeze.
+- [ ] Run `cd plugin/typescript && npm run build:all`.
+- [ ] Run `cd plugin/typescript && npm test`.
+- [ ] Run `cd cmd/rpc/web/wallet && npm run build`.
+- [ ] Run `node --check scripts/demo/repuring-demo.mjs`.
 
 ## Verification Checklist
 
@@ -262,9 +348,12 @@ Live flow checklist:
 - Attempt to slash as a non-admin member.
 - Attempt to slash an already-slashed endorsement.
 - Update a profile and confirm username and reputation remain unchanged while bio/avatar update.
-## Future Work
+## Intentional Scope And Future Work
 
-- Project-scoped reputation so each community can weight contributor standing independently.
-- Project discovery for finding and joining active Web3 contribution circles.
-- Contribution timestamps for chronological feeds, auditability, and richer demo timelines.
-- Anti-Sybil and weighted endorsements for stronger trust signals in larger communities.
+RepuRing keeps the contest implementation focused and transparent:
+
+- Reputation is currently profile-level and shown in the selected circle leaderboard context.
+- Project-scoped reputation is a future extension, not a current claim.
+- Contribution timestamps and richer activity chronology are future work.
+- Anti-Sybil controls and weighted endorsements are future work.
+- Circle discovery is now available in the UI (the **Discover circles** section, backed by `/v1/query/repuring/circles`); richer community browsing and search are future work.

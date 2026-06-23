@@ -31,15 +31,15 @@ const txMeta: Record<TxKind, { typeUrl: string; message: string }> = {
 };
 
 const submittedStatus: Record<TxKind, string> = {
-  createProfile: 'Profile transaction submitted. Your onchain contributor identity will refresh after the next block.',
-  updateProfile: 'Profile update submitted. Bio and avatar will refresh after the next block; username and reputation stay unchanged.',
-  createCircle: 'Project circle transaction submitted. Refreshing community state after commit.',
-  joinCircle: 'Join request submitted. Membership will appear after commit.',
-  createContribution: 'Proof-of-work submitted. Contribution feed will refresh after commit.',
-  endorseContribution: 'Endorsement submitted. Author reputation and endorsement count will refresh after commit.',
-  endorseUser: 'Legacy member endorsement submitted. This path is kept for compatibility.',
-  claimRole: 'Role claim submitted. Your community role will refresh after commit.',
-  slashEndorsement: 'Slash submitted. Endorsement status and target reputation will refresh after commit.',
+  createProfile: 'CreateProfileTx submitted - contributor identity will appear after commit.',
+  updateProfile: 'UpdateProfileTx submitted - bio and avatar will refresh; username and reputation remain unchanged.',
+  createCircle: 'CreateCircleTx submitted - project circle will refresh after commit.',
+  joinCircle: 'JoinCircleTx submitted - membership will appear after commit.',
+  createContribution: 'CreateContributionTx submitted - proof-of-work will appear in the contribution feed.',
+  endorseContribution: 'EndorseContributionTx submitted - author profile reputation and endorsement count will refresh.',
+  endorseUser: 'EndorseUserTx submitted - legacy member endorsement path used.',
+  claimRole: 'ClaimRoleTx submitted - role for this circle will refresh after commit.',
+  slashEndorsement: 'SlashEndorsementTx submitted - endorsement status and target profile reputation will refresh.',
 };
 
 export function RepuRingProvider({ children }: { children: React.ReactNode }): JSX.Element {
@@ -65,6 +65,7 @@ export function RepuRingProvider({ children }: { children: React.ReactNode }): J
   const [profile, setProfile] = React.useState<ProfileView | null>(null);
   const [role, setRole] = React.useState<RoleView | null>(null);
   const [circle, setCircle] = React.useState<CircleView | null>(null);
+  const [circles, setCircles] = React.useState<CircleView[]>([]);
   const [contributions, setContributions] = React.useState<ContributionView[]>([]);
   const [endorsements, setEndorsements] = React.useState<EndorsementView[]>([]);
   const [leaderboard, setLeaderboard] = React.useState<LeaderboardRow[]>([]);
@@ -79,6 +80,7 @@ export function RepuRingProvider({ children }: { children: React.ReactNode }): J
       const nextRole = currentAddress && circleId.trim()
         ? await queryMaybe<RoleView>('/v1/query/repuring/role', { address: currentAddress, circleId })
         : null;
+      const nextCircles = await queryMaybe<CircleView[]>('/v1/query/repuring/circles', {});
       const nextCircle = circleId.trim()
         ? await queryMaybe<CircleView>('/v1/query/repuring/circle', { circleId })
         : null;
@@ -98,11 +100,13 @@ export function RepuRingProvider({ children }: { children: React.ReactNode }): J
       setProfile(nextProfile);
       setRole(nextRole);
       setCircle(nextCircle);
+      setCircles(nextCircles || []);
       setContributions(nextContributions || []);
       setLeaderboard(nextLeaderboard || []);
       setEndorsements(mergeEndorsements(byUser || [], inCircle || []));
       setStatus(`State refreshed from ${QUERY_RPC}`);
     } catch (e) {
+      setCircles([]);
       setStatus(`RPC query failed: ${e instanceof Error ? e.message : String(e)}`);
     }
   }, [circleId, currentAddress]);
@@ -112,10 +116,21 @@ export function RepuRingProvider({ children }: { children: React.ReactNode }): J
   }, [refreshState]);
 
   React.useEffect(() => {
-    if (contributions.length > 0 && !contributions.some((item) => item.contributionId === selectedContributionId)) {
-      setSelectedContributionId(contributions[0].contributionId);
+    // Multi-account demo safety: switching Alice/Bob should not reuse stale signing or action inputs.
+    setPassword('');
+    setTargetAddress('');
+    setEndorsementId('');
+    setSlashReason('invalid endorsement');
+    setProfileForm({ username: '', bio: '', avatarUrl: '' });
+  }, [currentAddress]);
+
+  React.useEffect(() => {
+    const selectable = contributions.find((item) => cleanHex(item.authorAddress) !== cleanHex(currentAddress)) || contributions[0];
+    const selected = contributions.find((item) => item.contributionId === selectedContributionId);
+    if (selectable && (!selected || cleanHex(selected.authorAddress) === cleanHex(currentAddress))) {
+      setSelectedContributionId(selectable.contributionId);
     }
-  }, [contributions, selectedContributionId]);
+  }, [contributions, currentAddress, selectedContributionId]);
 
   async function submit(kind: TxKind, fields: Record<string, unknown>) {
     try {
@@ -189,6 +204,7 @@ export function RepuRingProvider({ children }: { children: React.ReactNode }): J
         profile,
         role,
         circle,
+        circles,
         contributions,
         endorsements,
         leaderboard,

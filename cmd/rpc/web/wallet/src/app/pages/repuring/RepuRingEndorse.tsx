@@ -1,5 +1,5 @@
 import React from 'react';
-import { AvatarFallback, Badge, Button, CategoryBadge, EmptyState, Input, PageHeader, Panel, RepuRingPage, SectionHeader, SocialCard, StatusPill, TxStatusCard, shortAddress } from './components';
+import { ActiveWalletBanner, AvatarFallback, Badge, Button, CategoryBadge, ContributionReviews, EmptyState, Input, PageHeader, Panel, RepuRingPage, SectionHeader, SocialCard, StatusPill, TxStatusCard, shortAddress } from './components';
 import { cleanHex } from './RepuRingProvider';
 import { useRepuRing } from './useRepuRing';
 
@@ -13,6 +13,7 @@ export default function RepuRingEndorse(): JSX.Element {
     circleId,
     setCircleId,
     circle,
+    profile,
     targetAddress,
     setTargetAddress,
     contributions,
@@ -31,6 +32,19 @@ export default function RepuRingEndorse(): JSX.Element {
   const targetIsMember = Boolean(targetAddress && circle?.members?.some((address) => cleanHex(address) === cleanHex(targetAddress)));
   const selectedContribution = contributions.find((item) => item.contributionId === selectedContributionId) || null;
   const selectedAuthorIsSelf = Boolean(selectedContribution && cleanHex(selectedContribution.authorAddress) === cleanHex(currentAddress));
+  const selectedReviews = selectedContribution ? endorsements.filter((item) => item.contributionId === selectedContribution.contributionId) : [];
+  const endorseDisabled = !selectedContribution || !isMember || selectedAuthorIsSelf || Boolean(selectedContribution?.slashed) || !password;
+  const endorseHelp = !selectedContribution
+    ? 'Select a contribution first.'
+    : !isMember
+      ? 'Join the circle before endorsing.'
+      : selectedAuthorIsSelf
+        ? 'Switch to another member wallet to endorse this contribution.'
+        : selectedContribution.slashed
+          ? 'This contribution is slashed and cannot be endorsed.'
+          : !password
+            ? 'Enter the selected wallet password to sign EndorseContributionTx.'
+            : 'Ready to endorse this contribution.';
 
   return (
     <RepuRingPage>
@@ -41,26 +55,35 @@ export default function RepuRingEndorse(): JSX.Element {
         actions={<Button variant="secondary" onClick={refreshState}>Refresh work</Button>}
       />
 
+      <ActiveWalletBanner
+        currentAddress={currentAddress}
+        username={profile?.username}
+        circleName={circle?.name}
+        isMember={isMember}
+        hasProfile={Boolean(profile)}
+      />
+
       <section className="grid gap-5 xl:grid-cols-[1.05fr_0.95fr]">
         <div className="space-y-5">
           <Panel>
             <SectionHeader
               eyebrow="Selected contribution"
               title={selectedContribution?.title || 'Choose work to endorse'}
-              copy="Endorse this contribution and increase the author's reputation."
+              copy="Peer validation through EndorseContributionTx increases the author's profile reputation by 1 after commit."
               actions={<StatusPill tone={!selectedContribution ? 'warning' : selectedAuthorIsSelf ? 'danger' : 'success'}>{!selectedContribution ? 'No selection' : selectedAuthorIsSelf ? 'Own work' : 'Review ready'}</StatusPill>}
             />
             {selectedAuthorIsSelf && (
               <div className="rounded-2xl border border-amber-300/30 bg-amber-300/10 p-4 text-sm font-medium leading-6 text-amber-100">
                 Switch to another circle member account to endorse this proof. The contribution author cannot self-endorse.
               </div>
-            )}            {selectedContribution ? (
+            )}
+            {selectedContribution ? (
               <SocialCard selected>
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div className="flex min-w-0 gap-3">
                     <AvatarFallback label={selectedContribution.authorUsername || selectedContribution.authorAddress} />
                     <div>
-                      <p className="font-semibold text-white">{selectedContribution.authorUsername || shortAddress(selectedContribution.authorAddress)}</p>
+                      <p className="break-words font-semibold text-white">{selectedContribution.authorUsername || shortAddress(selectedContribution.authorAddress)}</p>
                       <p className="font-mono text-xs text-zinc-500">{shortAddress(selectedContribution.authorAddress)}</p>
                     </div>
                   </div>
@@ -69,7 +92,7 @@ export default function RepuRingEndorse(): JSX.Element {
                     <Badge>{selectedContribution.endorsementCount} endorsements</Badge>
                   </div>
                 </div>
-                <p className="mt-4 text-sm leading-6 text-zinc-300">{selectedContribution.description || 'No description provided.'}</p>
+                <p className="mt-4 break-words text-sm leading-6 text-zinc-300">{selectedContribution.description || 'No description provided.'}</p>
                 <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm">
                   <p className="text-zinc-500">Proof URL</p>
                   {selectedContribution.proofUrl ? (
@@ -78,6 +101,7 @@ export default function RepuRingEndorse(): JSX.Element {
                     <p className="mt-2 text-zinc-400">No proof URL provided.</p>
                   )}
                 </div>
+                <ContributionReviews endorsements={selectedReviews} emptyCopy="No reviews yet. Endorse this contribution from another member account to add the first review/comment." />
               </SocialCard>
             ) : (
               <EmptyState
@@ -104,7 +128,8 @@ export default function RepuRingEndorse(): JSX.Element {
                     key={tag}
                     type="button"
                     onClick={() => setEndorse({ ...endorse, tag })}
-                    className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${endorse.tag === tag ? 'border-emerald-300/40 bg-emerald-300/15 text-emerald-100' : 'border-white/10 bg-white/5 text-zinc-400 hover:bg-white/[0.08]'}`}
+                    aria-pressed={endorse.tag === tag}
+                    className={`rounded-full border px-4 py-2 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/60 ${endorse.tag === tag ? 'border-emerald-300/40 bg-emerald-300/15 text-emerald-100' : 'border-white/10 bg-white/5 text-zinc-400 hover:bg-white/[0.08]'}`}
                   >
                     {tag}
                   </button>
@@ -112,15 +137,19 @@ export default function RepuRingEndorse(): JSX.Element {
               </div>
             </div>
             <Input label="Review message" value={endorse.message} onChange={(message) => setEndorse({ ...endorse, message })} multiline />
-            <Button onClick={() => { void submit('endorseContribution', { contributionId: selectedContributionId, ...endorse }); }}>
-              Endorse contribution
-            </Button>
+            <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
+              <Button disabled={endorseDisabled} className="w-full sm:w-auto" onClick={() => { void submit('endorseContribution', { contributionId: selectedContributionId, ...endorse }); }}>
+                Endorse contribution
+              </Button>
+              <Badge tone="zinc">EndorseContributionTx</Badge>
+            </div>
+            <p className="text-sm text-zinc-500">{endorseHelp}</p>
           </Panel>
         </div>
 
         <div className="space-y-5">
           <Panel>
-            <SectionHeader eyebrow="Circle readiness" title="Validation checklist" copy="These are the onchain checks enforced by the RepuRing plugin." />
+            <SectionHeader eyebrow="Endorsement readiness" title="Onchain validation checklist" copy="The selected wallet must be another active circle member, and the contribution must be active." />
             <div className="grid gap-3">
               <Rule checked={isMember} text="Selected endorser wallet is a member of this circle." />
               <Rule checked={Boolean(selectedContribution)} text="A contribution proof exists and is selected for review." />
@@ -145,13 +174,14 @@ export default function RepuRingEndorse(): JSX.Element {
                     key={item.contributionId}
                     type="button"
                     onClick={() => setSelectedContributionId(item.contributionId)}
-                    className={`rounded-2xl border p-4 text-left transition ${item.contributionId === selectedContributionId ? 'border-emerald-300/40 bg-emerald-300/10' : 'border-white/10 bg-black/25 hover:bg-white/[0.08]'}`}
+                    aria-pressed={item.contributionId === selectedContributionId}
+                    className={`min-w-0 rounded-2xl border p-4 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/60 ${item.contributionId === selectedContributionId ? 'border-emerald-300/40 bg-emerald-300/10' : 'border-white/10 bg-black/25 hover:bg-white/[0.08]'}`}
                   >
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <span className="font-semibold text-white">{item.title}</span>
+                      <span className="min-w-0 break-words font-semibold text-white">{item.title}</span>
                       <CategoryBadge category={item.category} />
                     </div>
-                    <p className="mt-2 line-clamp-2 text-sm text-zinc-400">{item.description}</p>
+                    <p className="mt-2 line-clamp-2 break-words text-sm text-zinc-400">{item.description}</p>
                     <p className="mt-3 text-xs text-zinc-500">Author <span className="font-mono text-zinc-300">{item.authorUsername || shortAddress(item.authorAddress)}</span></p>
                   </button>
                 ))}
@@ -162,7 +192,7 @@ export default function RepuRingEndorse(): JSX.Element {
       </section>
 
       <Panel>
-        <SectionHeader eyebrow="Activity" title="Recent endorsements" copy="Endorsement records from the current account or selected circle." />
+        <SectionHeader eyebrow="Plugin state" title="Recent endorsements" copy="Records returned for the selected circle or current profile, including active and slashed status." />
         {endorsements.length === 0 ? (
           <EmptyState
             title="No endorsements yet"
@@ -177,9 +207,9 @@ export default function RepuRingEndorse(): JSX.Element {
                   <Badge>{item.tag}</Badge>
                   <StatusPill tone={item.slashed ? 'danger' : 'success'}>{item.slashed ? 'Slashed' : 'Active'}</StatusPill>
                 </div>
-                <p className="mt-3 text-sm leading-6 text-zinc-300">{item.message || 'No message'}</p>
+                <p className="mt-3 break-words text-sm leading-6 text-zinc-300">{item.message || 'No message'}</p>
                 <div className="mt-4 grid gap-2 text-xs text-zinc-500">
-                  {item.contributionId && <div>Contribution <span className="font-mono text-zinc-300">{item.contributionId}</span></div>}
+                  {item.contributionId && <div>Contribution <span className="break-all font-mono text-zinc-300">{item.contributionId}</span></div>}
                   <div>From <span className="font-mono text-zinc-300">{shortAddress(item.fromAddress)}</span></div>
                   <div>Target <span className="font-mono text-zinc-300">{shortAddress(item.targetAddress)}</span></div>
                   <div>ID <span className="break-all font-mono text-zinc-300">{item.endorsementId}</span></div>
@@ -201,7 +231,7 @@ export default function RepuRingEndorse(): JSX.Element {
           <div className="space-y-4 rounded-3xl border border-white/10 bg-black/20 p-4">
             <Input label="Target address" value={targetAddress} onChange={setTargetAddress} placeholder="Hex address of another circle member" />
             <StatusPill tone={targetIsMember ? 'success' : 'neutral'}>{targetIsMember ? 'Target is member' : 'Membership not confirmed'}</StatusPill>
-            <Button variant="secondary" onClick={() => { void submit('endorseUser', { circleId, targetAddress, ...endorse }); }}>Submit EndorseUserTx</Button>
+            <div className="flex flex-wrap items-center gap-3"><Button variant="secondary" onClick={() => { void submit('endorseUser', { circleId, targetAddress, ...endorse }); }}>Endorse member (legacy)</Button><Badge tone="zinc">EndorseUserTx</Badge></div>
           </div>
         )}
       </Panel>

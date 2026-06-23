@@ -140,63 +140,24 @@ npm run dev          # Run with nodemon for hot reload
 npm start            # Run compiled output
 ```
 
-### Running with Docker
+### RepuRing Runtime Policy
 
-The TypeScript plugin can be run in a Docker container that includes both Canopy and the plugin.
+RepuRing is developed and demonstrated with the native Windows runtime only:
 
-#### Build the Docker Image
+- build Canopy with Go into `canopy.exe`;
+- configure `%USERPROFILE%\.canopy\config.json` with `plugin` set to `typescript`;
+- run `canopy.exe start` from the repository root;
+- use `http://localhost:50002` for transactions and queries;
+- use `http://localhost:50003` for admin/keystore operations.
 
-From the repository root:
+Do not instruct RepuRing users to run the chain through Docker, Ubuntu, or WSL. Use the repository scripts:
 
-```bash
-make docker/plugin PLUGIN=typescript
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\windows-native\build.ps1
+powershell -ExecutionPolicy Bypass -File .\scripts\windows-native\start.ps1
 ```
 
-This builds a Docker image named `canopy-typescript` that contains:
-- The Canopy binary
-- The TypeScript plugin (compiled with all proto descriptors)
-- Node.js 20 runtime
-- Pre-configured `config.json` with `"plugin": "typescript"`
-
-#### Run the Container
-
-```bash
-make docker/run-typescript
-```
-
-Or manually with volume mount for persistent data:
-
-```bash
-docker run -v ~/.canopy:/root/.canopy canopy-typescript
-```
-
-#### Expose Ports for Testing
-
-To run tests against the containerized Canopy, expose the RPC ports:
-
-```bash
-docker run -p 50002:50002 -p 50003:50003 -v ~/.canopy:/root/.canopy canopy-typescript
-```
-
-| Port | Service |
-|------|---------|
-| 50002 | RPC API (transactions, queries) |
-| 50003 | Admin RPC (keystore operations) |
-
-Now you can run tests from your host machine that connect to `localhost:50002`.
-
-#### View Logs
-
-```bash
-# Get the container ID
-docker ps
-
-# View Canopy logs
-docker exec -it <container_id> tail -f /root/.canopy/logs/log
-
-# View plugin logs
-docker exec -it <container_id> tail -f /tmp/plugin/typescript-plugin.log
-```
+Canopy starts the compiled TypeScript plugin automatically on Windows. The plugin process communicates with Canopy through the native Windows controller implementation.
 
 ### Running Tests
 

@@ -1,10 +1,11 @@
 import React from 'react';
-import { AvatarFallback, Badge, Button, EmptyState, Input, MetricCard, PageHeader, Panel, ReputationBadge, RepuRingPage, RoleProgressCard, SectionHeader, TxStatusCard, roleBadge, roleForReputation, shortAddress } from './components';
+import { ActiveWalletBanner, AvatarFallback, Badge, Button, EmptyState, Input, MetricCard, PageHeader, Panel, ReputationBadge, RepuRingPage, RoleProgressCard, SectionHeader, TxStatusCard, roleBadge, roleForReputation, shortAddress } from './components';
 import { cleanHex } from './RepuRingProvider';
 import { useRepuRing } from './useRepuRing';
 
 export default function RepuRingLeaderboard(): JSX.Element {
   const { currentAddress, profile, circleId, setCircleId, leaderboard, circle, status, lastTx, refreshState } = useRepuRing();
+  const isMember = Boolean(currentAddress && circle?.members?.some((address) => cleanHex(address) === cleanHex(currentAddress)));
   const currentRank = leaderboard.findIndex((row) => cleanHex(row.address) === cleanHex(currentAddress)) + 1;
   const topReputation = leaderboard[0]?.reputation || 0;
   const podium = leaderboard.slice(0, 3);
@@ -14,8 +15,16 @@ export default function RepuRingLeaderboard(): JSX.Element {
       <PageHeader
         eyebrow="Reputation rankings"
         title="Contribution Leaderboard"
-        copy="Explore the selected circle leaderboard using profile reputation earned from endorsed contribution proofs."
+        copy="The selected circle leaderboard displays profile reputation earned from endorsed contribution proofs and the corresponding derived or claimed role."
         actions={<Button variant="secondary" onClick={refreshState}>Refresh rankings</Button>}
+      />
+
+      <ActiveWalletBanner
+        currentAddress={currentAddress}
+        username={profile?.username}
+        circleName={circle?.name}
+        isMember={isMember}
+        hasProfile={Boolean(profile)}
       />
 
       <Panel>
@@ -42,8 +51,8 @@ export default function RepuRingLeaderboard(): JSX.Element {
       <Panel>
         <SectionHeader
           eyebrow="How rankings work"
-          title="Peer-endorsed work powers the leaderboard"
-          copy="The selected circle leaderboard helps compare members while preserving the current profile-level reputation model."
+          title="How reputation reaches the leaderboard"
+          copy="The selected circle leaderboard ranks loaded members using current profile reputation earned from endorsed contribution proofs."
         />
         <div className="grid gap-3 md:grid-cols-3">
           <div className="rounded-2xl border border-emerald-300/20 bg-emerald-300/[0.07] p-4">
@@ -52,7 +61,7 @@ export default function RepuRingLeaderboard(): JSX.Element {
           </div>
           <div className="rounded-2xl border border-cyan-300/20 bg-cyan-300/[0.07] p-4">
             <p className="font-semibold text-white">2. Enter the ranking</p>
-            <p className="mt-2 text-sm leading-6 text-zinc-400">Profile reputation is displayed in the selected circle leaderboard; it is not yet fully project-scoped.</p>
+            <p className="mt-2 text-sm leading-6 text-zinc-400">The score is profile-level and displayed in the selected circle context.</p>
           </div>
           <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
             <p className="font-semibold text-white">3. Show role status</p>
@@ -68,7 +77,7 @@ export default function RepuRingLeaderboard(): JSX.Element {
               <div key={row.address} className={`rounded-3xl border p-5 text-center ${index === 0 ? 'border-emerald-300/30 bg-emerald-300/10' : 'border-white/10 bg-black/25'}`}>
                 <div className="mx-auto w-fit"><AvatarFallback label={row.username || row.address} /></div>
                 <p className="mt-4 text-sm text-zinc-500">Rank #{index + 1}</p>
-                <h3 className="mt-1 text-xl font-semibold text-white">{row.username || 'Unnamed'}</h3>
+                <h3 className="mt-1 break-words text-xl font-semibold text-white">{row.username || 'Unnamed'}</h3>
                 <p className="mt-2 font-mono text-xs text-zinc-500">{shortAddress(row.address)}</p>
                 <div className="mt-4 flex justify-center"><ReputationBadge value={row.reputation} /></div>
               </div>
@@ -81,7 +90,7 @@ export default function RepuRingLeaderboard(): JSX.Element {
         <SectionHeader
           eyebrow="Ranked by reputation"
           title="Main leaderboard"
-          copy="Current user rows are highlighted when the selected wallet appears in the ranking."
+          copy="Rows show profile reputation and role status in the selected circle context; the selected wallet is highlighted."
           actions={<><Button to="/repuring/contributions" variant="secondary">Post Contribution</Button><Button to="/repuring/endorse">Endorse Work</Button></>}
         />
         {leaderboard.length === 0 ? (
@@ -91,8 +100,8 @@ export default function RepuRingLeaderboard(): JSX.Element {
             actions={<><Button to="/repuring/contributions" variant="secondary">Post proof-of-work</Button><Button to="/repuring/endorse">Endorse work</Button></>}
           />
         ) : (
-          <div className="overflow-hidden rounded-3xl border border-white/10">
-            <table className="w-full text-left text-sm">
+          <div className="overflow-x-auto overscroll-x-contain rounded-3xl border border-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/50" role="region" aria-label="Scrollable contribution leaderboard" tabIndex={0}>
+            <table className="min-w-[44rem] w-full text-left text-sm">
               <thead className="bg-white/[0.04] text-xs uppercase tracking-[0.18em] text-zinc-500">
                 <tr>
                   <th className="px-4 py-3">Rank</th>
@@ -109,7 +118,7 @@ export default function RepuRingLeaderboard(): JSX.Element {
                     <tr key={row.address} className={`border-t border-white/10 ${isCurrent ? 'bg-emerald-300/10' : 'bg-black/10'}`}>
                       <td className="px-4 py-4 font-mono text-zinc-400">#{index + 1}</td>
                       <td className="px-4 py-4">
-                        <div className="flex items-center gap-3">
+                        <div className="flex min-w-0 items-center gap-3">
                           <AvatarFallback label={row.username || row.address} />
                           <div>
                             <p className="font-semibold text-white">{row.username || 'Unnamed'}</p>

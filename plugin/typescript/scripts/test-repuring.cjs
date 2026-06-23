@@ -6,6 +6,7 @@ const root = path.resolve(__dirname, '..');
 const contract = fs.readFileSync(path.join(root, 'src/contract/contract.ts'), 'utf8');
 const proto = fs.readFileSync(path.join(root, 'proto/tx.proto'), 'utf8');
 const routes = fs.readFileSync(path.resolve(root, '../../cmd/rpc/routes.go'), 'utf8');
+const repuringRpc = fs.readFileSync(path.resolve(root, '../../cmd/rpc/repuring.go'), 'utf8');
 
 function extractBlock(source, needle) {
   const start = source.indexOf(needle);
@@ -82,6 +83,7 @@ for (const category of ['builder', 'helper', 'creator', 'researcher', 'tester', 
 for (const route of [
   '/v1/query/repuring/profile',
   '/v1/query/repuring/circle',
+  '/v1/query/repuring/circles',
   '/v1/query/repuring/circle-members',
   '/v1/query/repuring/reputation',
   '/v1/query/repuring/role',
@@ -94,6 +96,29 @@ for (const route of [
 ]) {
   assert(routes.includes(route), route + ' missing from RPC routes');
 }
+
+// Circle discovery: the read-only list route must be wired end to end (path, name, handler)
+// so the UI can list circles without users memorizing circle IDs.
+assert(routes.includes('RepuRingCirclesRoutePath'), 'RepuRingCirclesRoutePath constant missing from routes.go');
+assert(routes.includes('RepuRingCirclesRouteName'), 'RepuRingCirclesRouteName constant missing from routes.go');
+assert(routes.includes('s.RepuRingCircles'), 'RepuRingCircles handler not mapped in routes.go');
+assert(repuringRpc.includes('func (s *Server) RepuRingCircles('), 'RepuRingCircles handler missing from repuring.go');
+// Discovery iterates circle state by the circle prefix, not a single circleId lookup.
+assert(repuringRpc.includes('repuringGetAllCircles'), 'repuringGetAllCircles iterator helper missing from repuring.go');
+assert(
+  /Iterator\(repuringKey\(repuringCirclePrefix\)\)/.test(repuringRpc),
+  'circle discovery must iterate state by repuringCirclePrefix'
+);
+
+// Comments/reviews reuse the existing endorsement protocol: there must be NO separate
+// CommentTx, and the demo must not introduce comment-only messages into tx.proto.
+assert(!proto.includes('MessageComment'), 'tx.proto must not add a CommentTx message');
+assert(!proto.includes('message Comment'), 'tx.proto must not add a Comment state message');
+assert(!contract.includes("'comment'"), 'contract must not register a comment transaction');
+// Endorsement must keep the fields the UI relies on to render reviews/comments.
+assert(protoFields('Endorsement').includes('message'), 'Endorsement.message field required for review comments');
+assert(protoFields('Endorsement').includes('contribution_id'), 'Endorsement.contribution_id field required to attach reviews to a contribution');
+assert(proto.includes('message MessageEndorseContribution'), 'EndorseContributionTx must remain the review/comment path');
 
 // Protobuf field invariants protect immutable usernames and reputation ownership.
 assertFields('MessageUpdateProfile', ['sender_address', 'bio', 'avatar_url']);

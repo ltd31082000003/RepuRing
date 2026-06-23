@@ -24,6 +24,12 @@ const (
 	repuringUserContributionPrefix   byte = 72
 )
 
+type repuringHeightRequest struct {
+	Height uint64 `json:"height"`
+}
+
+func (r *repuringHeightRequest) GetHeight() uint64 { return r.Height }
+
 type repuringAddressRequest struct {
 	Height  uint64       `json:"height"`
 	Address lib.HexBytes `json:"address"`
@@ -183,6 +189,22 @@ func (s *Server) RepuRingCircle(w http.ResponseWriter, r *http.Request, _ httpro
 			return errPayload(fmt.Errorf("repuring circle not found")), http.StatusNotFound
 		}
 		return circle.view(), http.StatusOK
+	})
+}
+
+// RepuRingCircles lists all discovered project circles created by CreateCircleTx.
+func (s *Server) RepuRingCircles(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	req := new(repuringHeightRequest)
+	s.repuringRead(w, r, req, func(state *fsm.StateMachine) (any, int) {
+		circles, err := repuringGetAllCircles(state)
+		if err != nil {
+			return errPayload(err), http.StatusBadRequest
+		}
+		views := make([]repuringCircleView, 0, len(circles))
+		for _, circle := range circles {
+			views = append(views, circle.view())
+		}
+		return views, http.StatusOK
 	})
 }
 
@@ -395,6 +417,34 @@ func repuringGetCircle(state *fsm.StateMachine, circleID string) (*repuringCircl
 	return decodeRepuringCircle(bz)
 }
 
+func repuringGetAllCircles(state *fsm.StateMachine) ([]*repuringCircleRecord, error) {
+	it, err := state.Iterator(repuringKey(repuringCirclePrefix))
+	if err != nil {
+		return nil, err
+	}
+	defer it.Close()
+	items := make([]*repuringCircleRecord, 0)
+	for ; it.Valid(); it.Next() {
+		segments := lib.DecodeLengthPrefixed(it.Key())
+		if len(segments) < 2 {
+			return nil, fmt.Errorf("invalid repuring circle key")
+		}
+		circle, err := repuringGetCircle(state, string(segments[len(segments)-1]))
+		if err != nil {
+			return nil, err
+		}
+		if circle != nil {
+			items = append(items, circle)
+		}
+	}
+	sort.Slice(items, func(i, j int) bool {
+		if items[i].Name != items[j].Name {
+			return items[i].Name < items[j].Name
+		}
+		return items[i].CircleID < items[j].CircleID
+	})
+	return items, nil
+}
 func repuringGetRole(state *fsm.StateMachine, circleID string, address []byte) (*repuringRoleRecord, error) {
 	circleID = strings.TrimSpace(circleID)
 	if circleID == "" {
