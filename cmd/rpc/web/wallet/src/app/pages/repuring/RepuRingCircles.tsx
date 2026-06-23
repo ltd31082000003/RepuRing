@@ -31,17 +31,20 @@ export default function RepuRingCircles(): JSX.Element {
     refreshStateRef.current = refreshState;
   }, [refreshState]);
 
-  const memberCount = circle?.members?.length || 0;
-  const isMember = isCircleMember(circle, currentAddress);
-  const selectedStatus = walletStatus(circle, currentAddress, Boolean(profile));
+  const discoveredSelectedCircle = circles.find((item) => item.circleId === circleId) || null;
+  const activeCircle = circle?.circleId === circleId ? circle : discoveredSelectedCircle;
+  const activeCircleNeedsRefresh = Boolean(activeCircle && circle?.circleId !== activeCircle.circleId);
+  const memberCount = activeCircle?.members?.length || 0;
+  const isMember = isCircleMember(activeCircle, currentAddress);
+  const selectedStatus = walletStatus(activeCircle, currentAddress, Boolean(profile));
   const selectedStatusTone = statusTone(selectedStatus);
   const createDisabled = !currentAddress || !profile || !password || !circleId.trim() || !circleForm.name.trim();
-  const manualJoinDisabled = !currentAddress || !profile || !password || !circle?.circleId || isMember;
+  const manualJoinDisabled = !currentAddress || !profile || !password || !activeCircle?.circleId || isMember;
   const manualJoinHelp = !currentAddress
     ? 'Select a wallet first.'
     : !profile
       ? 'Create a profile first.'
-      : !circle?.circleId
+      : !activeCircle?.circleId
         ? 'Select a circle first.'
         : isMember
           ? 'Already joined.'
@@ -75,7 +78,7 @@ export default function RepuRingCircles(): JSX.Element {
       <ActiveWalletBanner
         currentAddress={currentAddress}
         username={profile?.username}
-        circleName={circle?.name}
+        circleName={activeCircle?.name}
         isMember={isMember}
         hasProfile={Boolean(profile)}
       />
@@ -97,23 +100,24 @@ export default function RepuRingCircles(): JSX.Element {
       <Panel className="overflow-hidden">
         <SectionHeader
           eyebrow="Active / selected circle"
-          title={circle?.name || 'No project circle loaded'}
-          copy={circle?.description || 'Select a circle from Discover Circles, or create the first project circle as Alice.'}
+          title={activeCircle?.name || 'No project circle loaded'}
+          copy={activeCircle?.description || 'Select a circle from Discover Circles, or create the first project circle as Alice.'}
           actions={<Button variant="secondary" onClick={refreshState}>Refresh selected circle</Button>}
         />
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-          <MetricCard label="Circle ID" value={circle?.circleId || circleId || 'None'} detail="Selected project community key." tone="cyan" />
-          <MetricCard label="Description" value={circle?.description ? 'Loaded' : 'None'} detail={circle?.description || 'No selected circle description.'} />
-          <MetricCard label="Creator" value={shortAddress(circle?.creatorAddress || '') || 'Unknown'} detail={circle?.creatorAddress || 'Create or select a circle to load creator.'} />
+          <MetricCard label="Circle ID" value={activeCircle?.circleId || circleId || 'None'} detail="Selected project community key." tone="cyan" />
+          <MetricCard label="Description" value={activeCircle?.description ? 'Loaded' : 'None'} detail={activeCircle?.description || 'No selected circle description.'} />
+          <MetricCard label="Creator" value={shortAddress(activeCircle?.creatorAddress || '') || 'Unknown'} detail={activeCircle?.creatorAddress || 'Create or select a circle to load creator.'} />
           <MetricCard label="Members" value={String(memberCount)} detail="Profiles joined to this circle." tone="emerald" />
           <MetricCard label="Wallet status" value={selectedStatus} detail={currentAddress || 'Select a signing key in My Account.'} tone={selectedStatusTone === 'success' ? 'emerald' : 'neutral'} />
         </div>
         <div className="flex flex-wrap gap-2">
           <StatusPill tone={selectedStatusTone}>{selectedStatus}</StatusPill>
-          <Badge tone="cyan">Selected: {circle?.circleId || circleId || 'none'}</Badge>
-          {circle?.name && <Badge tone="zinc">{circle.name}</Badge>}
+          <Badge tone="cyan">Selected: {activeCircle?.circleId || circleId || 'none'}</Badge>
+          {activeCircle?.name && <Badge tone="zinc">{activeCircle.name}</Badge>}
+          {activeCircleNeedsRefresh && <Badge tone="zinc">Refreshing selected state</Badge>}
         </div>
-        {!circle && (
+        {!activeCircle && (
           <EmptyState
             title="No project circle loaded"
             copy="Select a discovered circle to load its context. If no circles exist yet, Alice should create the first one below."
@@ -240,8 +244,8 @@ export default function RepuRingCircles(): JSX.Element {
           title="Circle member graph"
           copy="Creator and current-account badges make the loaded membership state explicit."
         />
-        {circle ? (
-          <MemberList values={circle.members || []} currentAddress={currentAddress} creatorAddress={circle.creatorAddress} />
+        {activeCircle ? (
+          <MemberList values={activeCircle.members || []} currentAddress={currentAddress} creatorAddress={activeCircle.creatorAddress} />
         ) : (
           <EmptyState
             title="No members to show"
