@@ -1,14 +1,26 @@
 # RepuRing Product Design v1
 
+## 0. Design Role and Network Scope
+
+This document is a product design and UX/system-flow specification for RepuRing. It is written for founder, designer, and engineering handoff alignment.
+
+The implementation work is owned by the engineering team. This document should guide what the product should do, how users should move through it, what each feature means, and what constraints must not be broken.
+
+Network scope:
+
+> RepuRing MVP is designed for the Canopy test network / local Canopy test environment first.
+
+This means the MVP should be treated as a Social-Fi Web3 product running on Canopy test infrastructure, not as a mainnet financial product. Token, NFT, staking, and real-money reward mechanics are not part of this MVP.
+
 ## 1. Product Definition
 
-RepuRing is a Social-Fi Web3 app for contributor communities.
+RepuRing is a Social-Fi Web3 app for contributor communities on the Canopy test network.
 
 It lets Web3 contributors create an onchain social identity, join community circles, post proof-of-work, receive peer endorsements, build reputation, claim circle-based roles, and gain visible community status.
 
 Short positioning:
 
-> RepuRing is a Social-Fi reputation network for Web3 contributors.
+> RepuRing is a Social-Fi reputation network for Web3 contributors on Canopy.
 
 Product promise:
 
@@ -165,8 +177,9 @@ These are intentionally out of scope for MVP:
 - project-scoped reputation
 - anti-Sybil scoring
 - weighted endorsements
+- mainnet financial rewards
 
-These can be considered later only after the MVP loop is stable.
+These can be considered later only after the Canopy testnet MVP loop is stable.
 
 ## 5. Core Loop
 
@@ -273,7 +286,7 @@ Must include:
 - role metric
 - journey checklist
 - quick actions
-- optional dev/demo readiness panel
+- optional Canopy testnet/dev readiness panel
 
 ### 8.2 `/key-management` — My Account / Profile
 
@@ -418,10 +431,11 @@ Rules:
 8. Admin moderation should be card-based, not ID-based.
 9. Reputation must be described honestly as global profile reputation in MVP.
 10. Token/NFT/DAO ideas must remain outside MVP.
+11. Canopy testnet/dev readiness can be shown, but it should not overpower the product journey.
 
 ## 12. Canonical Demo Story
 
-Alice and Bob demonstrate the full Social-Fi loop:
+Alice and Bob demonstrate the full Social-Fi loop on Canopy testnet:
 
 1. Alice creates a contributor profile.
 2. Bob creates a contributor profile.
@@ -432,15 +446,15 @@ Alice and Bob demonstrate the full Social-Fi loop:
 7. Bob's reputation increases.
 8. Bob claims his community role.
 9. Alice, as circle creator/admin, can slash an invalid endorsement.
-10. Bob's reputation and contribution endorsement count update from onchain state.
+10. Bob's reputation and contribution endorsement count update from Canopy state.
 
 Demo story in one sentence:
 
-> Bob turns useful work into reputation and status through Alice's peer endorsement inside a Web3 community circle.
+> Bob turns useful work into reputation and status through Alice's peer endorsement inside a Web3 community circle on Canopy testnet.
 
 ## 13. Future Roadmap
 
-### V1 — Productized MVP
+### V1 — Productized Canopy Testnet MVP
 
 - clean up product language
 - make Community Workspace the main surface
@@ -448,6 +462,7 @@ Demo story in one sentence:
 - card-based slash flow
 - clearer onboarding and empty states
 - preserve current protocol
+- keep Canopy testnet/local RPC assumptions explicit
 
 ### V2 — Activity and History
 
@@ -473,7 +488,7 @@ Demo story in one sentence:
 
 ### V5 — Expanded Social-Fi Economy
 
-Only after the reputation loop is stable:
+Only after the Canopy testnet reputation loop is stable:
 
 - token rewards
 - NFT credentials
