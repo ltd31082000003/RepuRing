@@ -63,7 +63,7 @@ try {
 Write-Host "[4/4] Building native Canopy node"
 Push-Location $repoRoot
 try {
-    Invoke-Checked go build -o .\canopy.exe .\cmd\main
+    Invoke-Checked go build '-o' .\canopy.exe .\cmd\main
 } finally {
     Pop-Location
 }
