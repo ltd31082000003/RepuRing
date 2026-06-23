@@ -1,12 +1,14 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ActiveWalletBanner, AvatarFallback, Badge, Button, CategoryBadge, ContributionReviews, EmptyState, Input, MetricCard, PageHeader, Panel, RepuRingPage, SectionHeader, SocialCard, StatusPill, TxStatusCard, shortAddress } from './components';
 import { cleanHex } from './RepuRingProvider';
-import { useRepuRing } from './useRepuRing';
+import { ContributionView, useRepuRing } from './useRepuRing';
 
 const categories = ['builder', 'helper', 'creator', 'researcher', 'tester', 'educator'];
 const filterChips = ['all', ...categories];
 
 export default function RepuRingContributions(): JSX.Element {
+  const navigate = useNavigate();
   const {
     currentAddress,
     password,
@@ -33,15 +35,56 @@ export default function RepuRingContributions(): JSX.Element {
   const postDisabled = !currentAddress || !profile || !circle || !isMember || !password || !contributionForm.contributionId.trim() || !contributionForm.title.trim();
   const postHelp = !currentAddress
     ? 'Select a wallet in My Account.'
-    : !profile
-      ? 'Create your profile before posting proof-of-work.'
-      : !circle
-        ? 'Select or create a project circle first.'
+      : !profile
+        ? 'Create your profile before posting proof-of-work.'
+        : !circle
+        ? 'Open or join a project community before posting proof-of-work.'
         : !isMember
-          ? 'Join the selected circle before posting.'
+          ? 'Join the current community before posting.'
           : !password
             ? 'Enter the selected wallet password to sign CreateContributionTx.'
-            : 'Ready to post proof-of-work.';
+            : !contributionForm.contributionId.trim()
+              ? 'Enter a contribution ID for this proof-of-work.'
+              : !contributionForm.title.trim()
+                ? 'Enter a title for this proof-of-work.'
+                : 'Ready to post proof-of-work.';
+
+  async function postContribution() {
+    const ok = await submit('createContribution', { circleId, ...contributionForm });
+    if (ok) {
+      await refreshState();
+      setComposerOpen(false);
+    }
+  }
+
+  function emptyFeedAction() {
+    if (!currentAddress) return <Button to="/key-management" variant="secondary">Select wallet</Button>;
+    if (!profile) return <Button to="/key-management" variant="secondary">Create profile</Button>;
+    if (!circle) return <Button to="/repuring/circles" variant="secondary">Discover communities</Button>;
+    if (!isMember) return <Button to="/repuring/circles" variant="secondary">Join community</Button>;
+    return <Button onClick={() => setComposerOpen(true)}>Post first proof-of-work</Button>;
+  }
+
+  function reviewAction(item: ContributionView, selected: boolean) {
+    const ownWork = Boolean(currentAddress && cleanHex(item.authorAddress) === cleanHex(currentAddress));
+    if (!currentAddress) return <Button to="/key-management" variant="secondary">Select wallet</Button>;
+    if (!profile) return <Button to="/key-management" variant="secondary">Create profile</Button>;
+    if (!isMember) return <Button to="/repuring/circles" variant="secondary">Join to review</Button>;
+    if (ownWork) return <p className="text-sm font-medium text-zinc-400">Own work - another member can review</p>;
+    if (item.slashed) return <p className="text-sm font-medium text-zinc-400">Review disabled</p>;
+    return (
+      <Button
+        variant={selected ? 'primary' : 'secondary'}
+        className="w-full sm:w-auto"
+        onClick={() => {
+          setSelectedContributionId(item.contributionId);
+          navigate('/repuring/endorse');
+        }}
+      >
+        Review this work
+      </Button>
+    );
+  }
 
   return (
     <RepuRingPage>
@@ -49,7 +92,13 @@ export default function RepuRingContributions(): JSX.Element {
         eyebrow="Contribution feed"
         title="Project Contribution Feed"
         copy="A contribution is a proof-of-work post stored for the selected project circle. Peer endorsements increase the author's profile reputation."
-        actions={<Button variant="secondary" onClick={refreshState}>Refresh feed</Button>}
+        actions={(
+          <>
+            <Button variant="secondary" onClick={refreshState}>Refresh feed</Button>
+            <Button to="/repuring/community" variant="secondary">Open community</Button>
+            <Button to="/repuring/circles" variant="secondary">Discover communities</Button>
+          </>
+        )}
       />
 
       <ActiveWalletBanner
@@ -66,17 +115,18 @@ export default function RepuRingContributions(): JSX.Element {
             <SectionHeader
               eyebrow="Composer"
               title="Post proof-of-work"
-              copy="Publish proof-of-work with a selected wallet that has already joined this project circle."
-              actions={<Button onClick={() => setComposerOpen((open) => !open)}>{composerOpen ? 'Close composer' : 'Create Contribution'}</Button>}
+              copy="Publish proof-of-work in the current project community after your wallet has joined it."
+              actions={<Button onClick={() => setComposerOpen((open) => !open)}>{composerOpen ? 'Close composer' : 'Open composer'}</Button>}
             />
             <div className="grid gap-3 sm:grid-cols-2">
-              <MetricCard label="Circle" value={circle?.name || circleId || 'Not selected'} detail={circle?.description || 'Select or create a project circle.'} tone="cyan" />
-              <MetricCard label="Posting status" value={isMember ? 'Ready' : 'Join first'} detail={isMember ? 'Selected account is a circle member.' : 'Join the circle before posting contribution proofs.'} tone={isMember ? 'emerald' : 'neutral'} />
+              <MetricCard label="Community" value={circle?.name || 'No community selected'} detail={circle?.description || 'Open or join a project community from Discover communities.'} tone="cyan" />
+              <MetricCard label="Circle ID" value={circle?.circleId || circleId || 'Not selected'} detail="Current community context for new contribution proofs." />
+              <MetricCard label="Members" value={String(circle?.members?.length || 0)} detail="Joined wallets in this community." tone="emerald" />
+              <MetricCard label="Posting status" value={postingStatus(currentAddress, Boolean(profile), Boolean(circle), isMember)} detail={postHelp} tone={isMember ? 'emerald' : 'neutral'} />
             </div>
             {composerOpen && (
               <div className="space-y-4 rounded-3xl border border-white/10 bg-black/20 p-4">
                 <Input label="Signing key password" type="password" value={password} onChange={setPassword} placeholder="Required for BLS signing" />
-                <Input label="Circle ID" value={circleId} onChange={setCircleId} placeholder="pharos-builders" />
                 <Input label="Contribution ID" value={contributionForm.contributionId} onChange={(contributionId) => setContributionForm({ ...contributionForm, contributionId })} placeholder="pharos-guide-v1" />
                 <Input label="Title" value={contributionForm.title} onChange={(title) => setContributionForm({ ...contributionForm, title })} placeholder="Wrote Pharos testnet guide" />
                 <Input label="Description" value={contributionForm.description} onChange={(description) => setContributionForm({ ...contributionForm, description })} multiline />
@@ -88,10 +138,17 @@ export default function RepuRingContributions(): JSX.Element {
                   </select>
                 </label>
                 <div className="flex flex-wrap items-center gap-3">
-                  <Button disabled={postDisabled} onClick={() => { void submit('createContribution', { circleId, ...contributionForm }); }}>Post proof-of-work</Button>
+                  <Button disabled={postDisabled} onClick={postContribution}>Post proof-of-work</Button>
                   <Badge tone="zinc">CreateContributionTx</Badge>
                 </div>
                 <p className="text-sm text-zinc-500">{postHelp}</p>
+                <details className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                  <summary className="cursor-pointer text-sm font-semibold text-zinc-200">Advanced: change current circle ID</summary>
+                  <div className="mt-4">
+                    <Input label="Circle ID" value={circleId} onChange={setCircleId} placeholder="pharos-builders" />
+                  </div>
+                  <p className="mt-3 text-xs leading-5 text-zinc-500">Use this only to switch the current community context manually. The main composer posts to the current community.</p>
+                </details>
               </div>
             )}
           </Panel>
@@ -120,17 +177,23 @@ export default function RepuRingContributions(): JSX.Element {
             title="Contribution feed"
             copy="Each card reflects contribution state returned by RPC: author, proof, category, endorsement count, and active/slashed status."
           />
-          {visibleContributions.length === 0 ? (
+          {contributions.length === 0 ? (
             <EmptyState
               title="No contributions yet"
-              copy="Be the first member to post proof-of-work for this project. A profile, circle membership, selected wallet, and signing password are required."
-              actions={<Button onClick={() => setComposerOpen(true)}>Post first proof-of-work</Button>}
+              copy="No proof-of-work has been posted in this community yet."
+              actions={emptyFeedAction()}
+            />
+          ) : visibleContributions.length === 0 ? (
+            <EmptyState
+              title="No contributions match this category"
+              copy="The current community has contributions, but none match the selected category filter."
+              actions={<Button variant="secondary" onClick={() => setFilter('all')}>Clear filter</Button>}
             />
           ) : (
             <div className="grid gap-4">
               {visibleContributions.map((item) => {
                 const selected = selectedContributionId === item.contributionId;
-                const reviews = endorsements.filter((endorsement) => endorsement.contributionId === item.contributionId);
+                const reviews = endorsements.filter((endorsement) => endorsement.contributionId === item.contributionId && (!endorsement.circleId || endorsement.circleId === item.circleId));
                 return (
                   <SocialCard key={item.contributionId} selected={selected}>
                     <div className="flex flex-wrap items-start justify-between gap-4">
@@ -152,9 +215,9 @@ export default function RepuRingContributions(): JSX.Element {
                       <div className="flex min-w-0 flex-wrap justify-between gap-2">
                         <span className="text-zinc-500">Proof</span>
                         {item.proofUrl ? (
-                          <a className="break-all font-mono text-cyan-200 underline-offset-4 hover:underline" href={item.proofUrl} target="_blank" rel="noreferrer">External proof link</a>
+                          <a className="break-all font-mono text-cyan-200 underline-offset-4 hover:underline" href={item.proofUrl} title={item.proofUrl} target="_blank" rel="noreferrer">{proofLabel(item.proofUrl)}</a>
                         ) : (
-                          <span className="text-zinc-500">Not provided</span>
+                          <span className="text-zinc-500">No proof URL provided</span>
                         )}
                       </div>
                       <div className="flex min-w-0 flex-wrap justify-between gap-2">
@@ -168,9 +231,7 @@ export default function RepuRingContributions(): JSX.Element {
                     </div>
                     <ContributionReviews endorsements={reviews} />
                     <div className="mt-5">
-                      <Button variant={selected ? 'primary' : 'secondary'} className="w-full sm:w-auto" onClick={() => setSelectedContributionId(item.contributionId)}>
-                        {selected ? 'Selected for Endorsement' : 'Select for Endorsement'}
-                      </Button>
+                      {reviewAction(item, selected)}
                     </div>
                   </SocialCard>
                 );
@@ -183,4 +244,23 @@ export default function RepuRingContributions(): JSX.Element {
       <TxStatusCard status={status} lastTx={lastTx} onRefresh={refreshState} />
     </RepuRingPage>
   );
+}
+
+function postingStatus(currentAddress: string, hasProfile: boolean, hasCircle: boolean, isMember: boolean) {
+  if (!currentAddress) return 'Select wallet';
+  if (!hasProfile) return 'Create profile';
+  if (!hasCircle) return 'No community';
+  if (!isMember) return 'Join first';
+  return 'Ready';
+}
+
+function proofLabel(value: string) {
+  try {
+    const url = new URL(value);
+    const path = url.pathname && url.pathname !== '/' ? url.pathname : '';
+    const label = `${url.hostname}${path}`;
+    return label.length > 48 ? `${label.slice(0, 45)}...` : label;
+  } catch {
+    return value.length > 48 ? `${value.slice(0, 45)}...` : value;
+  }
 }
