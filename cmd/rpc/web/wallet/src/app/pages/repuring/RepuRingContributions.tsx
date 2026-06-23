@@ -14,7 +14,6 @@ export default function RepuRingContributions(): JSX.Element {
     password,
     setPassword,
     circleId,
-    setCircleId,
     circle,
     profile,
     contributionForm,
@@ -148,16 +147,10 @@ export default function RepuRingContributions(): JSX.Element {
                 </label>
                 <div className="flex flex-wrap items-center gap-3">
                   <Button disabled={postDisabled} onClick={postContribution}>Post proof-of-work</Button>
+                  <Button to="/repuring/circles" variant="secondary">Change community</Button>
                   <Badge tone="zinc">CreateContributionTx</Badge>
                 </div>
                 <p className="text-sm text-zinc-500">{postHelp}</p>
-                <details className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                  <summary className="cursor-pointer text-sm font-semibold text-zinc-200">Advanced: change current circle ID</summary>
-                  <div className="mt-4">
-                    <Input label="Circle ID" value={circleId} onChange={setCircleId} placeholder="pharos-builders" />
-                  </div>
-                  <p className="mt-3 text-xs leading-5 text-zinc-500">Advanced only. Changing this ID switches the current context after refresh. Normal users should change communities from Discover communities.</p>
-                </details>
               </div>
             )}
           </Panel>
