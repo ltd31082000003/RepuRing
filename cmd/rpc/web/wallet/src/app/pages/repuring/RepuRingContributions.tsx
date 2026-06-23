@@ -30,8 +30,12 @@ export default function RepuRingContributions(): JSX.Element {
   const [composerOpen, setComposerOpen] = React.useState(contributions.length === 0);
   const [filter, setFilter] = React.useState('all');
   const [customContributionId, setCustomContributionId] = React.useState('');
+  const [recentlySubmittedContributionId, setRecentlySubmittedContributionId] = React.useState('');
+  const [postNotice, setPostNotice] = React.useState('');
+  const [postCheckPending, setPostCheckPending] = React.useState(false);
   const isMember = Boolean(currentAddress && circle?.members?.some((address) => cleanHex(address) === cleanHex(currentAddress)));
   const visibleContributions = filter === 'all' ? contributions : contributions.filter((item) => item.category === filter);
+  const circleMismatch = Boolean(circle && circleId && circle.circleId !== circleId);
   const postDisabled = !currentAddress || !profile || !circle || !isMember || !password || !contributionForm.title.trim();
   const postHelp = !currentAddress
     ? 'Select a wallet in My Account.'
@@ -55,6 +59,17 @@ export default function RepuRingContributions(): JSX.Element {
     });
   }, [composerOpen, circle?.circleId, contributionForm.title, contributionForm.contributionId, setContributionForm]);
 
+  React.useEffect(() => {
+    if (!recentlySubmittedContributionId || postCheckPending) return;
+    const found = contributions.some((item) => item.contributionId === recentlySubmittedContributionId);
+    if (found) {
+      setPostNotice('Contribution posted and visible in the feed.');
+      setRecentlySubmittedContributionId('');
+      return;
+    }
+    setPostNotice('Contribution submitted, but it is not visible in the feed yet. Refresh again or check transaction status.');
+  }, [contributions, postCheckPending, recentlySubmittedContributionId]);
+
   function regenerateContributionId() {
     const nextCircleId = circle?.circleId || circleId || 'circle';
     setContributionForm({
@@ -71,13 +86,22 @@ export default function RepuRingContributions(): JSX.Element {
 
   async function postContribution() {
     if (!circle) return;
-    const contributionId = contributionForm.contributionId.trim() || generateContributionId(circle.circleId, contributionForm.title);
-    const ok = await submit('createContribution', { circleId: circle.circleId, ...contributionForm, contributionId });
+    const targetCircleId = circle.circleId;
+    const contributionId = contributionForm.contributionId.trim() || generateContributionId(targetCircleId, contributionForm.title);
+    setPostNotice('');
+    setPostCheckPending(false);
+    const ok = await submit('createContribution', { circleId: targetCircleId, ...contributionForm, contributionId });
     if (ok) {
+      setRecentlySubmittedContributionId(contributionId);
+      setPostCheckPending(true);
+      setPostNotice('Contribution submitted. Checking the feed for the new post...');
       await refreshState();
+      setPostCheckPending(false);
       setComposerOpen(false);
       setContributionForm({ ...contributionForm, contributionId: '' });
+      return;
     }
+    setPostNotice(failureNoticeForStatus(status));
   }
 
   function composerAction() {
@@ -155,6 +179,16 @@ export default function RepuRingContributions(): JSX.Element {
               <MetricCard label="Members" value={String(circle?.members?.length || 0)} detail="Joined wallets in this community." tone="emerald" />
               <MetricCard label="Posting status" value={postingStatus(currentAddress, Boolean(profile), Boolean(circle), isMember)} detail={postHelp} tone={isMember ? 'emerald' : 'neutral'} />
             </div>
+            {circleMismatch && (
+              <div className="rounded-2xl border border-amber-300/30 bg-amber-300/10 p-4 text-sm font-medium leading-6 text-amber-100">
+                Current form will post to the loaded community <span className="font-mono">{circle?.circleId}</span>. Reopen the community if the context looks stale.
+              </div>
+            )}
+            {postNotice && (
+              <div className={`rounded-2xl border p-4 text-sm font-medium leading-6 ${postNoticeClass(postNotice)}`}>
+                {postNotice}
+              </div>
+            )}
             {composerOpen && (
               <div className="space-y-4 rounded-3xl border border-white/10 bg-black/20 p-4">
                 <Input label="Signing key password" type="password" value={password} onChange={setPassword} placeholder="Required for BLS signing" />
@@ -321,4 +355,22 @@ function generateContributionId(circleId: string, title: string): string {
   const titleSlug = slugifyContributionTitle(title);
   const suffix = Date.now().toString(36).slice(-6);
   return `${circleSlug}-${titleSlug}-${suffix}`;
+}
+
+function failureNoticeForStatus(status: string): string {
+  const value = status.toLowerCase();
+  if (value.includes('contribution') && value.includes('exists')) {
+    return 'This contribution record ID already exists. Regenerate ID and try again.';
+  }
+  if (value.includes('member')) return 'Join this community before posting.';
+  if (value.includes('circle') && (value.includes('not found') || value.includes('does not exist'))) {
+    return 'Current community could not be found. Reopen it from Community or Circles.';
+  }
+  return 'Contribution could not be submitted. Check transaction status below. If the record ID already exists, regenerate ID and try again.';
+}
+
+function postNoticeClass(message: string): string {
+  if (message.includes('not visible') || message.includes('could not')) return 'border-amber-300/30 bg-amber-300/10 text-amber-100';
+  if (message.includes('visible in the feed')) return 'border-emerald-300/20 bg-emerald-300/10 text-emerald-100';
+  return 'border-cyan-300/20 bg-cyan-300/10 text-cyan-100';
 }

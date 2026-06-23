@@ -53,7 +53,7 @@ export function RepuRingProvider({ children }: { children: React.ReactNode }): J
   const [profileForm, setProfileForm] = React.useState({ username: '', bio: '', avatarUrl: '' });
   const [circleForm, setCircleForm] = React.useState({ name: 'Pharos Builders', description: 'Community for contributors helping the Pharos ecosystem.' });
   const [contributionForm, setContributionForm] = React.useState({
-    contributionId: 'pharos-guide',
+    contributionId: '',
     title: 'Wrote Pharos testnet guide',
     description: 'Created a guide to help new users test the Pharos ecosystem.',
     proofUrl: 'https://example.com/pharos-guide',
