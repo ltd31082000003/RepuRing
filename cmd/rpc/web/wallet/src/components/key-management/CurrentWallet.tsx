@@ -342,16 +342,16 @@ export const CurrentWallet = ({
 
   const content = (
     <>
-      <div className="space-y-5">
-        <section className="rounded-2xl border border-white/10 bg-white/[0.045] p-5 shadow-[0_18px_48px_rgba(0,0,0,0.22)]">
+      <div className="space-y-4 sm:space-y-5">
+        <section className="rounded-2xl border border-white/10 bg-white/[0.045] p-4 shadow-[0_18px_48px_rgba(0,0,0,0.22)] sm:p-5">
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex items-start gap-3">
-              <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-primary/25 bg-primary/10 text-primary">
+              <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-primary/25 bg-primary/10 text-primary sm:h-11 sm:w-11 sm:rounded-2xl">
                 <UserCircle className="h-5 w-5" />
               </span>
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Connected Account</p>
-                <h2 className="mt-1 text-xl font-semibold text-foreground">
+                <h2 className="mt-1 text-lg font-semibold text-foreground sm:text-xl">
                   {selectedAccount ? (selectedKeyEntry?.keyNickname || selectedAccount.nickname) : "No account connected"}
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
@@ -459,7 +459,7 @@ export const CurrentWallet = ({
               </div>
             </div>
           ) : (
-            <div className="mt-4 rounded-2xl border border-dashed border-white/15 bg-black/20 p-5 text-center">
+            <div className="mt-4 rounded-2xl border border-dashed border-white/15 bg-black/20 p-4 text-center sm:p-5">
               <p className="text-base font-semibold text-foreground">No account connected</p>
               <p className="mx-auto mt-2 max-w-xl text-sm text-muted-foreground">
                 Select an existing account or create a new one to start using RepuRing.
@@ -469,7 +469,7 @@ export const CurrentWallet = ({
         </section>
 
         <section className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
-          <div className="rounded-2xl border border-primary/15 bg-primary/[0.06] p-5">
+          <div className="rounded-2xl border border-primary/15 bg-primary/[0.06] p-4 sm:p-5">
             <div className="flex items-start gap-3">
               <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-primary/25 bg-primary/10 text-primary">
                 <WalletCards className="h-5 w-5" />
@@ -487,7 +487,7 @@ export const CurrentWallet = ({
             </div>
           </div>
 
-          <div className="rounded-2xl border border-white/10 bg-white/[0.045] p-5">
+          <div className="rounded-2xl border border-white/10 bg-white/[0.045] p-4 sm:p-5">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Local Demo Wallet Tools</p>
             <h3 className="mt-1 text-lg font-semibold text-foreground">Create or bring an identity</h3>
             <div className="mt-4 grid gap-2 sm:grid-cols-3 xl:grid-cols-1">
@@ -507,7 +507,7 @@ export const CurrentWallet = ({
           </div>
         </section>
 
-        <section className="rounded-2xl border border-[#ff1845]/25 bg-[#ff1845]/[0.045] p-5">
+        <section className="rounded-2xl border border-[#ff1845]/25 bg-[#ff1845]/[0.045] p-4 sm:p-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="flex items-start gap-3">
               <AlertTriangle className="mt-1 h-5 w-5 text-[#ff6b84]" />
@@ -701,7 +701,7 @@ export const CurrentWallet = ({
   return (
     <motion.div
       variants={panelVariants}
-      className="bg-card rounded-2xl p-6 border border-border/80 shadow-[0_14px_34px_rgba(0,0,0,0.2)]"
+      className="bg-card rounded-2xl border border-border/80 p-4 shadow-[0_14px_34px_rgba(0,0,0,0.2)] sm:p-6"
     >
       {content}
     </motion.div>

@@ -56,3 +56,4 @@ node_modules
 cache/solidity-files-cache.json
 # Local build/run logs (not for VCS)
 cmd/.logs/
+ui-screenshots/

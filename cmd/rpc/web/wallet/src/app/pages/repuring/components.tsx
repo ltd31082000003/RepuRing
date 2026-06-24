@@ -1,29 +1,305 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useDS } from '@/core/useDs';
 import { cleanHex } from './RepuRingProvider';
+
+const repuNavItems = [
+  { name: 'Overview', to: '/repuring' },
+  { name: 'Circles', to: '/repuring/circles' },
+  { name: 'Community', to: '/repuring/community' },
+  { name: 'Post Work', to: '/repuring/contributions' },
+  { name: 'Review Work', to: '/repuring/endorse' },
+  { name: 'Leaderboard', to: '/repuring/leaderboard' },
+  { name: 'Admin', to: '/repuring/admin' },
+  { name: 'My Account', to: '/key-management' },
+];
+
+export function GlassCard({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+  return (
+    <section className={`rounded-[28px] border border-[rgba(115,255,198,0.12)] bg-[#071c17]/78 shadow-[0_28px_90px_rgba(0,0,0,0.32)] backdrop-blur-xl ${className}`}>
+      {children}
+    </section>
+  );
+}
+
+function MiniLogo() {
+  return (
+    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[16px] border border-[rgba(115,255,198,0.12)] bg-[#103d31] text-[#54f3b3]">
+      <span className="h-3 w-3 rounded-full border-2 border-current" />
+    </span>
+  );
+}
+
+export function DashboardPreview({
+  currentAddress,
+  profileName,
+  hasProfile,
+  communityState,
+  reputation,
+  role,
+}: {
+  currentAddress: string;
+  profileName: string;
+  hasProfile: boolean;
+  communityState: OverviewCommunityState;
+  reputation: number;
+  role: string;
+}) {
+  const { data: blockHeight } = useDS<{ height: number }>('height', {}, {
+    staleTimeMs: 10_000,
+    refetchIntervalMs: 10_000,
+  });
+  const chainOnline = blockHeight != null;
+
+  return (
+    <GlassCard className="overflow-hidden">
+      <div className="min-w-0">
+          <div className="flex items-center justify-between border-b border-[rgba(115,255,198,0.1)] px-5 py-4 sm:px-8 lg:px-10">
+            <div className="flex flex-wrap gap-2">
+              <Badge tone="cyan">RPC 50002 / 50003</Badge>
+              <Badge tone={chainOnline ? 'emerald' : 'red'}>{chainOnline ? `chain #${blockHeight.height.toLocaleString()}` : 'chain offline'}</Badge>
+            </div>
+            <Button to="/key-management" variant="secondary" className="!px-4 !py-2 text-xs">My Account</Button>
+          </div>
+
+          <div className="space-y-6 p-5 sm:p-8 lg:p-10">
+            <section className="grid gap-8 rounded-[24px] border border-[rgba(115,255,198,0.12)] bg-[#0a211b] p-6 sm:p-8 lg:grid-cols-[1fr_auto] lg:items-center lg:p-10">
+              <div>
+                <p className="text-[11px] font-extrabold uppercase tracking-[0.32em] text-[#54f3b3]">RepuRing / Social-Fi on Canopy</p>
+                <h1 className="mt-5 max-w-4xl text-4xl font-extrabold leading-[1.04] text-[#f2fff8] sm:text-5xl lg:text-6xl">Onchain Social-Fi for Web3 contributors.</h1>
+                <p className="mt-6 max-w-3xl text-sm font-semibold leading-7 text-[#9db9af] sm:text-base">
+                  Create a contributor identity, join a community circle, post proof-of-work, get peer-reviewed, build reputation, and claim community status on Canopy testnet.
+                </p>
+              </div>
+              <div className="flex flex-col gap-3 lg:min-w-[220px]">
+                <Button to="/repuring/community">Open Community</Button>
+                <Button to="/key-management" variant="secondary">{hasProfile ? 'Profile created' : 'Create Profile'}</Button>
+                <Button to="/repuring/circles" variant="secondary">Discover Circles</Button>
+              </div>
+            </section>
+
+            <section className="rounded-[24px] border border-[rgba(115,255,198,0.12)] bg-[#071c17] p-5 sm:p-7">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex min-w-0 items-center gap-4">
+                  <AvatarFallback label={profileName || currentAddress} />
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-[#9db9af]">Current profile</p>
+                    <h2 className="truncate text-2xl font-extrabold text-[#f2fff8]">{profileName || 'Profile not created'}</h2>
+                  </div>
+                </div>
+                <StatusPill tone={profileName ? 'success' : 'warning'}>{profileName ? 'Active' : 'Needed'}</StatusPill>
+              </div>
+              <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <MetricCard label="Wallet" value={shortAddress(currentAddress) || 'No wallet'} detail={currentAddress || 'Open My Account to select a local signing key.'} />
+                <MetricCard label="Current Community" value={communityState.value} subValue={communityState.countLabel} detail={communityState.helper} tone={communityState.active ? 'cyan' : 'neutral'} />
+                <MetricCard label="Global Reputation" value={String(reputation)} detail="Earned from endorsed proof-of-work." tone="emerald" />
+                <MetricCard label="Role" value={roleBadge(role)} detail="Claim role from the Admin page." />
+              </div>
+              <div className="mt-5 flex flex-col gap-3 rounded-[18px] border border-[rgba(115,255,198,0.12)] bg-[#0a211b] p-4 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm font-semibold leading-6 text-[#9db9af]">{communityState.helper}</p>
+                <Button to={communityState.ctaTo} variant={communityState.active ? 'secondary' : 'primary'} className="w-full sm:w-auto">
+                  {communityState.ctaLabel}
+                </Button>
+              </div>
+            </section>
+
+            <section className="rounded-[24px] border border-[rgba(115,255,198,0.12)] bg-[#041612] p-5 sm:p-7">
+              <SectionHeader eyebrow="Core loop" title="Identity to community status" copy="Every MVP screen supports this Social-Fi contribution loop." />
+              <div className="mt-6 grid gap-4 md:grid-cols-3">
+                {[
+                  ['01', 'Profile', 'Create a local contributor identity and connect a signing key.'],
+                  ['02', 'Circle', 'Join builders, submit work, and review what peers ship.'],
+                  ['03', 'Community', 'Turn verified contribution into reputation, role, and status.'],
+                ].map(([num, title, copy]) => (
+                  <div key={title} className="rounded-[18px] border border-[rgba(115,255,198,0.12)] bg-[#071c17] p-5">
+                    <p className="text-xs font-extrabold text-[#54f3b3]">{num}</p>
+                    <h3 className="mt-4 text-lg font-extrabold text-[#f2fff8]">{title}</h3>
+                    <p className="mt-3 text-sm font-medium leading-6 text-[#9db9af]">{copy}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </div>
+      </div>
+    </GlassCard>
+  );
+}
+
+export function WorkspaceMapSection() {
+  const cards = [
+    ['Circles', 'Discover, create, or open builder circles and organize work around shared standards.'],
+    ['Leaderboard', 'Rank contributors by earned reputation, endorsed proof-of-work, and community status.'],
+    ['Admin', 'Claim roles, validate community actions, and manage the lightweight trust layer.'],
+  ];
+  return (
+    <section className="space-y-8">
+      <div className="grid gap-8 lg:grid-cols-[1fr_1.4fr] lg:items-end">
+        <div>
+          <p className="text-[11px] font-extrabold uppercase tracking-[0.32em] text-[#54f3b3]">Workspace map</p>
+          <h2 className="mt-5 max-w-lg text-4xl font-extrabold leading-[1.05] text-[#f2fff8]">Every navigation item becomes a clear contribution station.</h2>
+        </div>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <ActionCard title="Post Work" copy="Submit proof-of-work with context, evidence, and circle alignment." to="/repuring/contributions" highlight />
+        <ActionCard title="Review Work" copy="Endorse contribution without burying reviewers in noise." to="/repuring/endorse" />
+      </div>
+      <div className="grid gap-4 md:grid-cols-3">
+        {cards.map(([title, copy]) => (
+          <ActionCard key={title} title={title} copy={copy} to={title === 'Circles' ? '/repuring/circles' : title === 'Admin' ? '/repuring/admin' : '/repuring/leaderboard'} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+export function ActionCard({ title, copy, to, highlight = false }: { title: string; copy: string; to: string; highlight?: boolean }) {
+  return (
+    <Link to={to} className={`group relative block min-h-[170px] rounded-[24px] border p-6 transition hover:-translate-y-1 hover:border-[rgba(115,255,198,0.28)] ${highlight ? 'border-[rgba(115,255,198,0.16)] bg-[#103d31]' : 'border-[rgba(115,255,198,0.12)] bg-[#071c17]'}`}>
+      {highlight && <span className="absolute right-6 top-6 flex h-10 w-10 items-center justify-center rounded-[16px] bg-[#54f3b3] text-lg font-extrabold text-[#03120f]">↗</span>}
+      <p className="text-sm font-extrabold text-[#54f3b3]">{title}</p>
+      <h3 className="mt-4 max-w-md text-2xl font-extrabold leading-tight text-[#f2fff8]">{title === 'Post Work' ? 'Submit proof-of-work with context, evidence, and circle alignment.' : title === 'Review Work' ? 'Endorse contribution without burying reviewers in noise.' : title}</h3>
+      <p className="mt-5 max-w-lg text-sm font-medium leading-6 text-[#9db9af]">{copy}</p>
+    </Link>
+  );
+}
+
+export function ReputationModelSection({
+  currentAddress,
+  reputation,
+  communityState,
+  role,
+  hasProfile,
+}: {
+  currentAddress: string;
+  reputation: number;
+  communityState: OverviewCommunityState;
+  role: string;
+  hasProfile: boolean;
+}) {
+  const walletState = currentAddress
+    ? ['Wallet selected', 'This account is the source for profile and community checks.']
+    : ['No wallet', 'Select a wallet before profile and community state can be trusted.'];
+
+  return (
+    <GlassCard className="grid gap-8 p-8 lg:grid-cols-[1fr_1.25fr] lg:items-center lg:p-10">
+      <div>
+        <p className="text-[11px] font-extrabold uppercase tracking-[0.32em] text-[#54f3b3]">Reputation model</p>
+        <h2 className="mt-5 max-w-lg text-4xl font-extrabold leading-[1.05] text-[#f2fff8]">Reputation is earned from endorsed work, not profile decoration.</h2>
+        <p className="mt-6 max-w-lg text-sm font-semibold leading-7 text-[#9db9af]">
+          RepuRing makes missing profile state explicit, then guides a contributor toward wallet selection, circle creation, proof submission, review, and role claim.
+        </p>
+      </div>
+      <div className="relative min-h-[330px] rounded-[24px] border border-[rgba(115,255,198,0.12)] bg-[#041612] p-6">
+        <div className="absolute left-1/2 top-1/2 z-10 flex h-32 w-32 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-[#103d31] shadow-[0_0_70px_rgba(84,243,179,0.18)]">
+          <div className="text-center">
+            <p className="text-4xl font-extrabold text-[#f2fff8]">{reputation}</p>
+            <p className="mt-1 text-[10px] font-extrabold uppercase tracking-[0.22em] text-[#54f3b3]">Global Rep</p>
+          </div>
+        </div>
+        {[
+          ['left-6 top-6', walletState[0], walletState[1]],
+          ['right-6 top-14', communityState.active ? communityState.value : 'Community pending', communityState.helper],
+          ['left-10 bottom-10', roleBadge(role), 'Role language stays honest until reputation conditions are met.'],
+          ['right-8 bottom-8', hasProfile ? 'Active' : 'Needed', 'Empty states become useful prompts instead of dead panels.'],
+        ].map(([pos, title, copy]) => (
+          <div key={title} className={`absolute ${pos} max-w-[230px] rounded-[18px] border border-[rgba(115,255,198,0.12)] bg-[#071c17] p-4`}>
+            <p className="text-xs font-extrabold text-[#54f3b3]">{title}</p>
+            <p className="mt-2 text-xs font-semibold leading-5 text-[#9db9af]">{copy}</p>
+          </div>
+        ))}
+      </div>
+    </GlassCard>
+  );
+}
+
+export function AccountStateSection({ profileName, hasProfile }: { profileName: string; hasProfile: boolean }) {
+  return (
+    <section className="grid gap-5 lg:grid-cols-[0.9fr_1.8fr]">
+      <GlassCard className="p-6">
+        <p className="text-[11px] font-extrabold uppercase tracking-[0.32em] text-[#54f3b3]">Account state</p>
+        <h2 className="mt-5 text-3xl font-extrabold text-[#f2fff8]">{profileName || 'Profile not created'}</h2>
+        <p className="mt-5 text-sm font-medium leading-7 text-[#9db9af]">A contributor should always understand what is missing, what is possible, and what action comes next.</p>
+      </GlassCard>
+      <GlassCard className="grid gap-4 bg-[#103d31]/70 p-5 md:grid-cols-3">
+        <ActionCard title={hasProfile ? 'Profile created' : 'Create Profile'} copy={hasProfile ? 'Your contributor identity is active for this wallet.' : 'Start the contributor identity and prepare the wallet state.'} to="/key-management" highlight />
+        <ActionCard title="Open Community" copy="Enter the active circle and see community contribution paths." to="/repuring/community" />
+        <ActionCard title="Discover Circles" copy="Browse builder groups before committing proof-of-work." to="/repuring/circles" />
+      </GlassCard>
+    </section>
+  );
+}
+
+export function RepuRingFooter() {
+  const { data: blockHeight } = useDS<{ height: number }>('height', {}, {
+    staleTimeMs: 10_000,
+    refetchIntervalMs: 10_000,
+  });
+  const chainOnline = blockHeight != null;
+
+  return (
+    <footer className="grid gap-8 border-t border-[rgba(115,255,198,0.12)] py-10 lg:grid-cols-[1.4fr_1fr_1fr]">
+      <div>
+        <Link to="/repuring" className="flex items-center gap-3">
+          <MiniLogo />
+          <span>
+            <span className="block text-sm font-extrabold text-[#f2fff8]">RepuRing</span>
+            <span className="block text-[10px] font-extrabold uppercase tracking-[0.28em] text-[#54f3b3]">Social-Fi</span>
+          </span>
+        </Link>
+        <p className="mt-5 max-w-sm text-sm font-medium leading-7 text-[#68867b]">Onchain Social-Fi for Web3 contributors building reputation through circles, proof-of-work, reviews, and community status.</p>
+        <p className="mt-8 text-xs font-medium text-[#68867b]">© 2026 RepuRing. Contributor reputation interface.</p>
+      </div>
+      <div>
+        <p className="text-[11px] font-extrabold uppercase tracking-[0.32em] text-[#68867b]">Navigation</p>
+        <div className="mt-5 grid grid-cols-2 gap-3">
+          {repuNavItems.slice(0, 8).map((item) => (
+            <Link key={item.name} to={item.to} className="text-sm font-bold text-[#9db9af] transition hover:text-[#54f3b3]">{item.name}</Link>
+          ))}
+        </div>
+      </div>
+      <div>
+        <p className="text-[11px] font-extrabold uppercase tracking-[0.32em] text-[#68867b]">Network</p>
+        <div className="mt-5 space-y-3">
+          <div className="flex items-center justify-between rounded-[18px] border border-[rgba(115,255,198,0.12)] bg-[#071c17] px-5 py-3 text-sm font-bold text-[#9db9af]"><span>RPC</span><span className="text-[#54f3b3]">50002 / 50003</span></div>
+          <div className={`flex items-center justify-between rounded-[18px] border px-5 py-3 text-sm font-bold ${chainOnline ? 'border-[rgba(115,255,198,0.18)] bg-[#103d31] text-[#54f3b3]' : 'border-[#3b2525] bg-[#3b2525] text-[#d8b6b6]'}`}>
+            <span>Chain</span>
+            <span>{chainOnline ? `#${blockHeight.height.toLocaleString()}` : 'offline'}</span>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
+export type OverviewCommunityState = {
+  value: string;
+  countLabel?: string;
+  helper: string;
+  ctaLabel: string;
+  ctaTo: string;
+  active: boolean;
+};
 
 export function RepuRingPage({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[#070b14] bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.12),transparent_34%),linear-gradient(135deg,rgba(8,13,25,0.96),rgba(7,11,20,1))] text-zinc-100">
-      <div className="pointer-events-none fixed inset-0 -z-10">
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.025)_1px,transparent_1px)] bg-[size:42px_42px]" />
-      </div>
-      <main className="mx-auto min-w-0 max-w-7xl space-y-6 p-4 sm:p-6 lg:p-8">{children}</main>
+    <div className="min-w-0 overflow-x-hidden text-[#f2fff8]">
+      <main className="min-w-0 space-y-10 sm:space-y-12 lg:space-y-16">{children}</main>
     </div>
   );
 }
 
 export function PageHeader({ eyebrow, title, copy, actions }: { eyebrow: string; title: string; copy: string; actions?: React.ReactNode }) {
   return (
-    <section className="relative min-w-0 overflow-hidden rounded-3xl border border-white/10 bg-white/[0.045] p-5 shadow-2xl shadow-black/30 backdrop-blur-xl sm:p-6 lg:p-8">
-      <div className="absolute inset-0 bg-gradient-to-br from-emerald-400/10 via-transparent to-cyan-400/10" />
-      <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+    <section className="relative min-w-0 overflow-hidden rounded-[28px] border border-[rgba(115,255,198,0.12)] bg-[#071c17]/88 p-6 shadow-[0_28px_90px_rgba(0,0,0,0.34)] backdrop-blur-xl sm:p-8 lg:p-10">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_14%_0%,rgba(84,243,179,0.12),transparent_38%)]" />
+      <div className="relative flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div className="min-w-0 max-w-3xl">
-          <p className="break-words text-xs font-semibold uppercase text-emerald-300">{eyebrow}</p>
-          <h1 className="mt-3 break-words text-3xl font-semibold text-white">{title}</h1>
-          <p className="mt-4 break-words text-base leading-7 text-zinc-300">{copy}</p>
+          <p className="break-words text-[11px] font-extrabold uppercase tracking-[0.32em] text-[#54f3b3] sm:text-xs">{eyebrow}</p>
+          <h1 className="mt-4 break-words text-3xl font-extrabold leading-[1.05] text-[#f2fff8] sm:text-5xl">{title}</h1>
+          <p className="mt-5 max-w-2xl break-words text-sm font-medium leading-7 text-[#9db9af] sm:text-base">{copy}</p>
         </div>
-        {actions && <div className="flex w-full flex-wrap gap-3 sm:w-auto">{actions}</div>}
+        {actions && <div className="flex w-full flex-wrap gap-3 sm:w-auto lg:flex-col">{actions}</div>}
       </div>
     </section>
   );
@@ -33,9 +309,9 @@ export function SectionHeader({ eyebrow, title, copy, actions }: { eyebrow?: str
   return (
     <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
       <div className="min-w-0">
-        {eyebrow && <p className="break-words text-xs font-semibold uppercase text-emerald-300">{eyebrow}</p>}
-        <h2 className="mt-1 break-words text-xl font-semibold text-white">{title}</h2>
-        {copy && <p className="mt-2 max-w-2xl break-words text-sm leading-6 text-zinc-400">{copy}</p>}
+        {eyebrow && <p className="break-words text-[11px] font-extrabold uppercase tracking-[0.28em] text-[#54f3b3]">{eyebrow}</p>}
+        <h2 className="mt-2 break-words text-2xl font-extrabold leading-tight text-[#f2fff8]">{title}</h2>
+        {copy && <p className="mt-3 max-w-2xl break-words text-sm font-medium leading-6 text-[#9db9af]">{copy}</p>}
       </div>
       {actions && <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:justify-end">{actions}</div>}
     </div>
@@ -44,11 +320,11 @@ export function SectionHeader({ eyebrow, title, copy, actions }: { eyebrow?: str
 
 export function Panel({ id, title, eyebrow, className = '', children }: { id?: string; title?: string; eyebrow?: string; className?: string; children: React.ReactNode }) {
   return (
-    <section id={id} className={`min-w-0 scroll-mt-20 rounded-3xl border border-white/10 bg-white/[0.045] p-4 sm:p-5 shadow-xl shadow-black/20 backdrop-blur-xl ${className}`}>
+    <section id={id} className={`min-w-0 scroll-mt-20 rounded-[24px] border border-[rgba(115,255,198,0.12)] bg-[#071c17]/78 p-5 shadow-[0_22px_70px_rgba(0,0,0,0.24)] backdrop-blur-xl sm:p-6 ${className}`}>
       {(title || eyebrow) && (
         <div className="mb-4">
-          {eyebrow && <p className="text-xs font-semibold uppercase text-emerald-300">{eyebrow}</p>}
-          {title && <h2 className="mt-1 text-lg font-semibold text-white">{title}</h2>}
+          {eyebrow && <p className="text-[11px] font-extrabold uppercase tracking-[0.28em] text-[#54f3b3]">{eyebrow}</p>}
+          {title && <h2 className="mt-2 text-xl font-extrabold text-[#f2fff8]">{title}</h2>}
         </div>
       )}
       <div className="space-y-4">{children}</div>
@@ -58,7 +334,7 @@ export function Panel({ id, title, eyebrow, className = '', children }: { id?: s
 
 export function SocialCard({ children, selected = false, className = '' }: { children: React.ReactNode; selected?: boolean; className?: string }) {
   return (
-    <article className={`min-w-0 overflow-hidden rounded-3xl border p-4 shadow-xl shadow-black/20 backdrop-blur-xl transition sm:p-5 ${selected ? 'border-emerald-300/40 bg-emerald-300/10' : 'border-white/10 bg-white/[0.04]'} ${className}`}>
+    <article className={`min-w-0 overflow-hidden rounded-[22px] border p-5 shadow-[0_18px_60px_rgba(0,0,0,0.22)] backdrop-blur-xl transition hover:border-[rgba(115,255,198,0.28)] ${selected ? 'border-[rgba(115,255,198,0.28)] bg-[#103d31]/80' : 'border-[rgba(115,255,198,0.12)] bg-[#071c17]/76'} ${className}`}>
       {children}
     </article>
   );
@@ -84,18 +360,19 @@ export function StatCard({ label, value, detail }: { label: string; value: strin
   );
 }
 
-export function MetricCard({ label, value, detail, tone = 'neutral' }: { label: string; value: string; detail?: string; tone?: 'neutral' | 'emerald' | 'cyan' | 'red' }) {
+export function MetricCard({ label, value, subValue, detail, tone = 'neutral' }: { label: string; value: string; subValue?: string; detail?: string; tone?: 'neutral' | 'emerald' | 'cyan' | 'red' }) {
   const tones = {
-    neutral: 'from-white/[0.055] to-white/[0.025] border-white/10',
-    emerald: 'from-emerald-400/15 to-white/[0.025] border-emerald-300/20',
-    cyan: 'from-cyan-400/15 to-white/[0.025] border-cyan-300/20',
-    red: 'from-red-400/15 to-white/[0.025] border-red-300/20',
+    neutral: 'from-[#0a211b] to-[#071c17] border-[rgba(115,255,198,0.12)]',
+    emerald: 'from-[#103d31] to-[#071c17] border-[rgba(115,255,198,0.18)]',
+    cyan: 'from-[#0e2b24] to-[#071c17] border-[rgba(115,255,198,0.18)]',
+    red: 'from-[#3b2525] to-[#071c17] border-[#3b2525]',
   };
   return (
-    <div className={`rounded-3xl border bg-gradient-to-br p-4 shadow-lg shadow-black/20 ${tones[tone]}`}>
-      <p className="text-xs uppercase text-zinc-500">{label}</p>
-      <p className="mt-2 break-words text-xl font-semibold text-white">{value}</p>
-      {detail && <p className="mt-2 line-clamp-2 break-words text-sm text-zinc-400">{detail}</p>}
+    <div className={`rounded-[18px] border bg-gradient-to-br p-5 shadow-[0_16px_50px_rgba(0,0,0,0.18)] ${tones[tone]}`}>
+      <p className="text-[10px] font-extrabold uppercase tracking-[0.26em] text-[#68867b]">{label}</p>
+      <p className="mt-3 break-words text-xl font-extrabold text-[#f2fff8]">{value}</p>
+      {subValue && <p className="mt-1 break-words text-3xl font-extrabold leading-tight text-[#54f3b3]">{subValue}</p>}
+      {detail && <p className="mt-3 line-clamp-2 break-words text-sm font-medium leading-6 text-[#9db9af]">{detail}</p>}
     </div>
   );
 }
@@ -120,12 +397,12 @@ export function AvatarFallback({ label, src }: { label?: string; src?: string })
 
 export function Badge({ children, tone = 'emerald' }: { children: React.ReactNode; tone?: 'emerald' | 'cyan' | 'zinc' | 'red' }) {
   const tones = {
-    emerald: 'border-emerald-300/25 bg-emerald-300/10 text-emerald-200',
-    cyan: 'border-cyan-300/25 bg-cyan-300/10 text-cyan-200',
-    zinc: 'border-white/10 bg-white/5 text-zinc-300',
-    red: 'border-red-300/30 bg-red-400/10 text-red-200',
+    emerald: 'border-[rgba(115,255,198,0.28)] bg-[#103d31] text-[#54f3b3]',
+    cyan: 'border-[rgba(115,255,198,0.18)] bg-[#0e2b24] text-[#9ff6d1]',
+    zinc: 'border-[rgba(115,255,198,0.12)] bg-[#0a211b] text-[#9db9af]',
+    red: 'border-[#3b2525] bg-[#3b2525] text-[#f0b9b9]',
   };
-  return <span className={`inline-flex max-w-full items-center rounded-full border px-3 py-1 text-center text-xs font-semibold leading-5 [overflow-wrap:anywhere] ${tones[tone]}`}>{children}</span>;
+  return <span className={`inline-flex max-w-full items-center rounded-full border px-3 py-1 text-center text-xs font-bold leading-5 [overflow-wrap:anywhere] ${tones[tone]}`}>{children}</span>;
 }
 
 export function CategoryBadge({ category }: { category: string }) {
@@ -147,21 +424,21 @@ export function ReputationBadge({ value }: { value: number }) {
 
 export function StatusPill({ children, tone }: { children: React.ReactNode; tone: 'success' | 'warning' | 'danger' | 'neutral' }) {
   const tones = {
-    success: 'border-emerald-300/30 bg-emerald-400/10 text-emerald-200',
-    warning: 'border-amber-300/30 bg-amber-400/10 text-amber-200',
-    danger: 'border-red-300/30 bg-red-400/10 text-red-200',
-    neutral: 'border-white/10 bg-white/5 text-zinc-300',
+    success: 'border-[rgba(115,255,198,0.28)] bg-[#103d31] text-[#54f3b3]',
+    warning: 'border-[#514f22] bg-[#514f22] text-[#f3e98a]',
+    danger: 'border-[#3b2525] bg-[#3b2525] text-[#f0b9b9]',
+    neutral: 'border-[rgba(115,255,198,0.12)] bg-[#0a211b] text-[#9db9af]',
   };
-  return <span className={`inline-flex max-w-full rounded-full border px-3 py-1 text-center text-xs font-semibold leading-5 [overflow-wrap:anywhere] ${tones[tone]}`}>{children}</span>;
+  return <span className={`inline-flex max-w-full rounded-full border px-3 py-1 text-center text-xs font-bold leading-5 [overflow-wrap:anywhere] ${tones[tone]}`}>{children}</span>;
 }
 
 export function EmptyState({ title, copy, actions }: { title: string; copy: string; actions?: React.ReactNode }) {
   return (
-    <div className="rounded-3xl border border-dashed border-white/10 bg-black/20 p-5 text-center sm:p-8">
-      <div className="mx-auto mb-4 h-12 w-12 rounded-2xl border border-white/10 bg-white/[0.04]" />
+    <div className="rounded-2xl border border-dashed border-white/10 bg-black/20 p-4 text-center sm:p-6 lg:rounded-3xl">
+      <div className="mx-auto mb-3 h-10 w-10 rounded-2xl border border-white/10 bg-white/[0.04]" />
       <p className="font-semibold text-white">{title}</p>
       <p className="mt-2 break-words text-sm text-zinc-500">{copy}</p>
-      {actions && <div className="mt-5 flex flex-wrap justify-center gap-2">{actions}</div>}
+      {actions && <div className="mt-4 flex flex-wrap justify-center gap-2">{actions}</div>}
     </div>
   );
 }
@@ -398,14 +675,14 @@ export function RoleProgressCard({ reputation, embedded = false }: { reputation:
 }
 export function DangerPanel({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-3xl border border-red-300/25 bg-gradient-to-br from-red-500/15 to-black/20 p-5 shadow-xl shadow-red-950/20">
+    <div className="rounded-2xl border border-red-300/25 bg-gradient-to-br from-red-500/15 to-black/20 p-4 shadow-lg shadow-red-950/20 lg:rounded-3xl lg:p-5">
       {children}
     </div>
   );
 }
 
 export function Input({ label, value, onChange, type = 'text', placeholder, multiline = false }: { label: string; value: string; onChange: (v: string) => void; type?: string; placeholder?: string; multiline?: boolean }) {
-  const inputClass = 'min-w-0 w-full rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:border-emerald-300/60 focus:ring-2 focus:ring-emerald-400/20';
+  const inputClass = 'min-w-0 w-full rounded-xl border border-white/10 bg-black/35 px-3 py-2.5 text-sm leading-5 text-white outline-none transition placeholder:text-zinc-600 focus:border-emerald-300/60 focus:ring-2 focus:ring-emerald-400/20 sm:rounded-2xl sm:px-4 sm:py-3';
   return (
     <label className="block">
       <span className="mb-2 block text-sm font-medium text-zinc-300">{label}</span>
@@ -420,11 +697,11 @@ export function Input({ label, value, onChange, type = 'text', placeholder, mult
 
 export function Button({ children, onClick, variant = 'primary', to, className = '', disabled = false }: { children: React.ReactNode; onClick?: () => Promise<void> | void; variant?: 'primary' | 'secondary' | 'danger'; to?: string; className?: string; disabled?: boolean }) {
   const variants = {
-    primary: 'border-emerald-300/30 bg-gradient-to-r from-emerald-300 to-cyan-300 text-slate-950 hover:shadow-emerald-500/20',
-    secondary: 'border-white/10 bg-white/[0.08] text-white hover:bg-white/[0.12]',
-    danger: 'border-red-300/30 bg-red-500/15 text-red-100 hover:bg-red-500/25',
+    primary: 'border-transparent bg-[#54f3b3] text-[#03120f] hover:bg-[#7bf7c6]',
+    secondary: 'border-[rgba(115,255,198,0.12)] bg-[#0a211b] text-[#f2fff8] hover:border-[rgba(115,255,198,0.28)] hover:bg-[#103d31]',
+    danger: 'border-[#3b2525] bg-[#3b2525] text-[#f0b9b9] hover:bg-[#4a2b2b]',
   };
-  const buttonClass = `inline-flex max-w-full items-center justify-center whitespace-normal rounded-2xl border px-5 py-3 text-center text-sm font-semibold leading-5 shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#070b14] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 ${variants[variant]} ${className}`;
+  const buttonClass = `inline-flex max-w-full items-center justify-center whitespace-normal rounded-[18px] border px-5 py-3 text-center text-sm font-extrabold leading-5 shadow-[0_16px_42px_rgba(0,0,0,0.22)] transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#54f3b3]/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#03120f] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 ${variants[variant]} ${className}`;
   if (to) return <Link className={buttonClass} to={to}>{children}</Link>;
   return (
     <button type="button" disabled={disabled} aria-disabled={disabled} className={buttonClass} onClick={() => !disabled && void Promise.resolve(onClick?.()).catch((e) => alert(e.message || String(e)))}>
@@ -487,22 +764,22 @@ export function ActiveWalletBanner({
   hasProfile: boolean;
 }) {
   return (
-    <Panel className="border-cyan-300/15 bg-cyan-300/[0.055]">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <Panel className="border-cyan-300/15 bg-cyan-300/[0.045]">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase text-cyan-200/80">Active wallet / community role</p>
-          <div className="mt-2 flex flex-wrap items-center gap-2">
+          <p className="text-[11px] font-semibold uppercase text-cyan-200/80 sm:text-xs">Active wallet / community role</p>
+          <div className="mt-2 flex flex-wrap items-center gap-1.5 sm:gap-2">
             <Badge tone={currentAddress ? 'cyan' : 'zinc'}>{currentAddress ? shortAddress(currentAddress) : 'No wallet selected'}</Badge>
             <Badge tone={hasProfile ? 'emerald' : 'zinc'}>{hasProfile ? (username || 'Profile active') : 'No profile'}</Badge>
             <Badge tone={isMember ? 'emerald' : 'zinc'}>{isMember ? 'Circle member' : 'Not joined'}</Badge>
           </div>
-          <p className="mt-2 break-words text-sm text-zinc-400">
+          <p className="mt-2 break-words text-sm leading-6 text-zinc-400">
             {currentAddress
               ? 'This wallet signs transactions for ' + (circleName || 'the current circle') + '. Confirm the active wallet before submitting.'
               : 'Select a local account in My Account before submitting RepuRing transactions.'}
           </p>
         </div>
-        <Button to="/key-management" variant="secondary">Open My Account</Button>
+        <Button to="/key-management" variant="secondary" className="w-full md:w-auto">Open My Account</Button>
       </div>
     </Panel>
   );
@@ -527,7 +804,7 @@ export function ActionGate({
       ? 'border-amber-300/25 bg-amber-400/10 text-amber-100'
       : 'border-white/10 bg-black/20 text-zinc-300';
   return (
-    <div className={`rounded-2xl border p-4 ${toneClass}`}>
+    <div className={`rounded-2xl border p-3.5 sm:p-4 ${toneClass}`}>
       <p className="font-semibold text-white">{title}</p>
       <p className="mt-2 break-words text-sm leading-6 opacity-85">{copy}</p>
       {children}
@@ -538,7 +815,7 @@ export function ActionGate({
 
 export function ReadinessRule({ checked, text }: { checked: boolean; text: string }) {
   return (
-    <div className={`rounded-2xl border p-4 text-sm ${checked ? 'border-emerald-300/20 bg-emerald-300/10 text-emerald-100' : 'border-white/10 bg-white/[0.03] text-zinc-400'}`}>
+    <div className={`rounded-2xl border p-3.5 text-sm ${checked ? 'border-emerald-300/20 bg-emerald-300/10 text-emerald-100' : 'border-white/10 bg-white/[0.03] text-zinc-400'}`}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="break-words">{text}</p>
         <StatusPill tone={checked ? 'success' : 'neutral'}>{checked ? 'Ready' : 'Check'}</StatusPill>
@@ -563,21 +840,21 @@ export function CommunityContextCard({
   actions?: React.ReactNode;
 }) {
   return (
-    <Panel className="border-cyan-300/15 bg-cyan-300/[0.045]">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+    <Panel className="border-cyan-300/15 bg-cyan-300/[0.035]">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase text-cyan-200/80">Current community context</p>
-          <h2 className="mt-2 break-words text-lg font-semibold text-white">{circle?.name || 'No community selected'}</h2>
+          <p className="text-[11px] font-semibold uppercase text-cyan-200/80 sm:text-xs">Current community context</p>
+          <h2 className="mt-1.5 break-words text-base font-semibold text-white sm:text-lg">{circle?.name || 'No community selected'}</h2>
           <p className="mt-2 max-w-3xl break-words text-sm leading-6 text-zinc-400">
             {circle?.description || 'Circle-scoped actions use this selected community. Open or join a community before posting, reviewing, ranking, or claiming a role.'}
           </p>
-          <div className="mt-4 flex flex-wrap gap-2">
+          <div className="mt-3 flex flex-wrap gap-1.5 sm:gap-2">
             <Badge tone="cyan">Onchain community ID: {circle?.circleId || circleId || 'none'}</Badge>
             <Badge tone={isMember ? 'emerald' : 'zinc'}>{isMember ? 'Member' : 'Not joined'}</Badge>
             {isCreator && <Badge>Creator/admin</Badge>}
             <Badge tone="zinc">{circle?.members?.length || 0} member{(circle?.members?.length || 0) === 1 ? '' : 's'}</Badge>
           </div>
-          {currentAddress && <p className="mt-3 break-all font-mono text-xs text-zinc-500">Active wallet: {shortAddress(currentAddress)}</p>}
+          {currentAddress && <p className="mt-2 break-all font-mono text-xs text-zinc-500">Active wallet: {shortAddress(currentAddress)}</p>}
         </div>
         {actions && <div className="flex w-full flex-wrap gap-2 lg:w-auto lg:justify-end">{actions}</div>}
       </div>
@@ -679,7 +956,7 @@ export function VisibilityNotice({ message }: { message: string }) {
     : lower.includes('visible in the feed') || lower.includes('visible under this contribution')
       ? 'border-emerald-300/20 bg-emerald-300/10 text-emerald-100'
       : 'border-cyan-300/20 bg-cyan-300/10 text-cyan-100';
-  return <div className={`rounded-2xl border p-4 text-sm font-medium leading-6 ${className}`}>{message}</div>;
+  return <div className={`rounded-2xl border p-3.5 text-sm font-medium leading-6 sm:p-4 ${className}`}>{message}</div>;
 }
 
 export function PostVisibilityNotice({ message }: { message: string }) {
@@ -705,7 +982,7 @@ export function ConfirmationPanel({
     ? 'border-red-300/30 bg-red-500/10'
     : 'border-amber-300/30 bg-amber-300/10';
   return (
-    <div className={`rounded-3xl border p-4 ${toneClass}`}>
+    <div className={`rounded-2xl border p-4 lg:rounded-3xl ${toneClass}`}>
       <SectionHeader eyebrow={eyebrow} title={title} copy={copy} />
       <div className="mt-4">{children}</div>
       <div className="mt-4 flex flex-wrap gap-3">{actions}</div>

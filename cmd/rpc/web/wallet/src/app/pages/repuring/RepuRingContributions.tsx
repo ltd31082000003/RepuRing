@@ -216,14 +216,14 @@ export default function RepuRingContributions(): JSX.Element {
             )}
             <PostVisibilityNotice message={postNotice} />
             {composerOpen && (
-              <div className="space-y-4 rounded-3xl border border-white/10 bg-black/20 p-4">
+              <div className="space-y-4 rounded-2xl border border-white/10 bg-black/20 p-4 lg:rounded-3xl">
                 <Input label="Signing key password" type="password" value={password} onChange={setPassword} placeholder="Required for BLS signing" />
                 <Input label="Title" value={contributionForm.title} onChange={(title) => setContributionForm({ ...contributionForm, title })} placeholder="Wrote Pharos testnet guide" />
                 <Input label="Description" value={contributionForm.description} onChange={(description) => setContributionForm({ ...contributionForm, description })} multiline />
                 <Input label="Proof URL" value={contributionForm.proofUrl} onChange={(proofUrl) => setContributionForm({ ...contributionForm, proofUrl })} placeholder="https://..." />
                 <label className="block">
                   <span className="mb-2 block text-sm font-medium text-zinc-300">Category</span>
-                  <select className="w-full rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-sm text-white outline-none transition focus:border-emerald-300/60 focus:ring-2 focus:ring-emerald-400/20" value={contributionForm.category} onChange={(e) => setContributionForm({ ...contributionForm, category: e.target.value })}>
+                  <select className="w-full rounded-xl border border-white/10 bg-black/35 px-3 py-2.5 text-sm leading-5 text-white outline-none transition focus:border-emerald-300/60 focus:ring-2 focus:ring-emerald-400/20 sm:rounded-2xl sm:px-4 sm:py-3" value={contributionForm.category} onChange={(e) => setContributionForm({ ...contributionForm, category: e.target.value })}>
                     {categories.map((category) => <option key={category}>{category}</option>)}
                   </select>
                 </label>

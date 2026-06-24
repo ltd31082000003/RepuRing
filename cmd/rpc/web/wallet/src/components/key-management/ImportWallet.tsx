@@ -3,8 +3,7 @@ import { motion } from 'framer-motion';
 import { AlertTriangle, Eye, EyeOff, FileJson } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useToast } from '@/toast/ToastContext';
-import { useDSFetcher } from '@/core/dsFetch';
-import { useQueryClient } from '@tanstack/react-query';
+import { useAccountsList } from '@/app/providers/AccountsProvider';
 
 interface EncryptedKeyFile {
     publicKey: string;
@@ -16,21 +15,20 @@ interface EncryptedKeyFile {
 
 export const ImportWallet = ({ embedded = false, onSuccess }: { embedded?: boolean; onSuccess?: () => void }): JSX.Element => {
     const toast = useToast();
-    const dsFetch = useDSFetcher();
-    const queryClient = useQueryClient();
+    const { importRawAccount, importEncryptedAccount } = useAccountsList();
 
+    const [isImporting, setIsImporting] = useState(false);
     const [showPrivateKey, setShowPrivateKey] = useState(false);
     const [activeTab, setActiveTab] = useState<'key' | 'keystore'>('key');
     const [importForm, setImportForm] = useState({
         privateKey: '',
         password: '',
-        confirmPassword: '',
-        nickname: ''
+        confirmPassword: ''
     });
 
-    const [keystoreForm, setKeystoreForm] = useState({ nickname: '' });
     const [keystoreFile, setKeystoreFile] = useState<EncryptedKeyFile | null>(null);
     const [keystoreFileName, setKeystoreFileName] = useState('');
+    const [keystoreNickname, setKeystoreNickname] = useState('');
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const panelVariants = {
@@ -42,21 +40,9 @@ export const ImportWallet = ({ embedded = false, onSuccess }: { embedded?: boole
         }
     };
 
-    const invalidateKeystore = async () => {
-        await queryClient.invalidateQueries({ queryKey: ['ds', 'keystore'] });
-        setTimeout(() => {
-            queryClient.invalidateQueries({ queryKey: ['ds', 'keystore'] });
-        }, 500);
-    };
-
     const handleImportWallet = async () => {
         if (!importForm.privateKey) {
             toast.error({ title: 'Missing private key', description: 'Please enter a private key.' });
-            return;
-        }
-
-        if (!importForm.nickname) {
-            toast.error({ title: 'Missing wallet name', description: 'Please enter a wallet name.' });
             return;
         }
 
@@ -86,21 +72,16 @@ export const ImportWallet = ({ embedded = false, onSuccess }: { embedded?: boole
         });
 
         try {
-            await dsFetch('keystoreImportRaw', {
-                nickname: importForm.nickname,
-                password: importForm.password,
-                privateKey: cleanPrivateKey
-            });
-
-            await invalidateKeystore();
+            setIsImporting(true);
+            await importRawAccount('', importForm.password, cleanPrivateKey);
 
             toast.dismiss(loadingToast);
             toast.success({
                 title: 'Wallet imported',
-                description: `Wallet "${importForm.nickname}" has been imported successfully.`,
+                description: 'Wallet has been imported successfully.',
             });
 
-            setImportForm({ privateKey: '', password: '', confirmPassword: '', nickname: '' });
+            setImportForm({ privateKey: '', password: '', confirmPassword: '' });
             onSuccess?.();
         } catch (error) {
             toast.dismiss(loadingToast);
@@ -108,6 +89,8 @@ export const ImportWallet = ({ embedded = false, onSuccess }: { embedded?: boole
                 title: 'Error importing wallet',
                 description: error instanceof Error ? error.message : String(error)
             });
+        } finally {
+            setIsImporting(false);
         }
     };
 
@@ -136,21 +119,32 @@ export const ImportWallet = ({ embedded = false, onSuccess }: { embedded?: boole
                     });
                     setKeystoreFile(null);
                     setKeystoreFileName('');
+                    setKeystoreNickname('');
+                    return;
+                }
+
+                const nickname = epk.keyNickname
+                    || (parsed.nicknameMap ? Object.keys(parsed.nicknameMap as Record<string, string>)[0] : '');
+
+                if (!nickname) {
+                    toast.error({
+                        title: 'Missing wallet name',
+                        description: 'This keystore file does not include a wallet name.'
+                    });
+                    setKeystoreFile(null);
+                    setKeystoreFileName('');
+                    setKeystoreNickname('');
                     return;
                 }
 
                 setKeystoreFile(epk);
                 setKeystoreFileName(file.name);
-
-                const nickname = epk.keyNickname
-                    || (parsed.nicknameMap ? Object.keys(parsed.nicknameMap as Record<string, string>)[0] : '');
-                if (nickname && !keystoreForm.nickname) {
-                    setKeystoreForm(prev => ({ ...prev, nickname }));
-                }
+                setKeystoreNickname(nickname);
             } catch {
                 toast.error({ title: 'Invalid file', description: 'Could not parse JSON keystore file.' });
                 setKeystoreFile(null);
                 setKeystoreFileName('');
+                setKeystoreNickname('');
             }
         };
         reader.readAsText(file);
@@ -162,9 +156,9 @@ export const ImportWallet = ({ embedded = false, onSuccess }: { embedded?: boole
             return;
         }
 
-        const nickname = keystoreForm.nickname || keystoreFile.keyNickname || '';
+        const nickname = keystoreNickname || keystoreFile.keyNickname || '';
         if (!nickname) {
-            toast.error({ title: 'Missing wallet name', description: 'Please enter a wallet name.' });
+            toast.error({ title: 'Missing wallet name', description: 'This keystore file does not include a wallet name.' });
             return;
         }
 
@@ -175,7 +169,8 @@ export const ImportWallet = ({ embedded = false, onSuccess }: { embedded?: boole
         });
 
         try {
-            await dsFetch('keystoreImport', {
+            setIsImporting(true);
+            await importEncryptedAccount({
                 nickname,
                 address: keystoreFile.keyAddress,
                 publicKey: keystoreFile.publicKey,
@@ -184,17 +179,15 @@ export const ImportWallet = ({ embedded = false, onSuccess }: { embedded?: boole
                 keyAddress: keystoreFile.keyAddress,
             });
 
-            await invalidateKeystore();
-
             toast.dismiss(loadingToast);
             toast.success({
                 title: 'Keystore imported',
                 description: `Wallet "${nickname}" has been imported successfully.`,
             });
 
-            setKeystoreForm({ nickname: '' });
             setKeystoreFile(null);
             setKeystoreFileName('');
+            setKeystoreNickname('');
             if (fileInputRef.current) fileInputRef.current.value = '';
             onSuccess?.();
         } catch (error) {
@@ -203,6 +196,8 @@ export const ImportWallet = ({ embedded = false, onSuccess }: { embedded?: boole
                 title: 'Error importing keystore',
                 description: error instanceof Error ? error.message : String(error)
             });
+        } finally {
+            setIsImporting(false);
         }
     };
 
@@ -217,6 +212,7 @@ export const ImportWallet = ({ embedded = false, onSuccess }: { embedded?: boole
 
             <div className="grid grid-cols-2 gap-2 mb-6">
                 <button
+                    type="button"
                     onClick={() => setActiveTab('key')}
                     className={`px-3 py-2.5 text-sm font-medium rounded-lg transition-all border ${activeTab === 'key'
                         ? 'border-[#272729] bg-[#0f0f0f] text-foreground'
@@ -226,6 +222,7 @@ export const ImportWallet = ({ embedded = false, onSuccess }: { embedded?: boole
                     Private Key
                 </button>
                 <button
+                    type="button"
                     onClick={() => setActiveTab('keystore')}
                     className={`px-3 py-2.5 text-sm font-medium rounded-lg transition-all border ${activeTab === 'keystore'
                         ? 'border-[#272729] bg-[#0f0f0f] text-foreground'
@@ -240,30 +237,18 @@ export const ImportWallet = ({ embedded = false, onSuccess }: { embedded?: boole
                 <div className="space-y-4">
                     <div>
                         <label className="block text-sm font-medium text-foreground/80 mb-2">
-                            Wallet Name
-                        </label>
-                        <input
-                            type="text"
-                            placeholder="Imported Wallet"
-                            value={importForm.nickname}
-                            onChange={(e) => setImportForm({ ...importForm, nickname: e.target.value })}
-                            className="w-full bg-muted border border-border rounded-lg px-3 py-2.5 text-foreground"
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-foreground/80 mb-2">
                             Private Key
                         </label>
                         <div className="relative">
                             <input
-                                type={showPrivateKey ? "text" : "password"}
+                                type={showPrivateKey ? 'text' : 'password'}
                                 placeholder="Enter your private key..."
                                 value={importForm.privateKey}
                                 onChange={(e) => setImportForm({ ...importForm, privateKey: e.target.value })}
                                 className="w-full rounded-lg border border-border bg-muted px-3 py-2.5 pr-10 text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/10"
                             />
                             <button
+                                type="button"
                                 onClick={() => setShowPrivateKey(!showPrivateKey)}
                                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
                             >
@@ -291,30 +276,21 @@ export const ImportWallet = ({ embedded = false, onSuccess }: { embedded?: boole
                         </label>
                         <input
                             type="password"
-                            placeholder="Confirm your password...."
+                            placeholder="Confirm your password..."
                             value={importForm.confirmPassword}
                             onChange={(e) => setImportForm({ ...importForm, confirmPassword: e.target.value })}
                             className="w-full bg-muted border border-border rounded-lg px-3 py-2.5 text-foreground"
                         />
                     </div>
 
-                    <div className="rounded-lg border border-[#272729] bg-[#0f0f0f] p-4">
-                        <div className="flex items-start gap-3">
-                            <AlertTriangle className="mt-0.5 h-5 w-5 text-white/60" />
-                            <div>
-                                <h4 className="mb-1 font-medium text-foreground">Import Security Warning</h4>
-                                <p className="text-sm text-muted-foreground">
-                                    Only import wallets from trusted sources. Verify all information before proceeding.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
+                    <ImportWarning />
 
                     <Button
                         onClick={handleImportWallet}
+                        disabled={isImporting}
                         className="h-11 w-full"
                     >
-                        Import Wallet
+                        {isImporting ? 'Importing Wallet...' : 'Import Wallet'}
                     </Button>
                 </div>
             )}
@@ -342,32 +318,19 @@ export const ImportWallet = ({ embedded = false, onSuccess }: { embedded?: boole
                         <label className="block text-sm font-medium text-foreground/80 mb-2">
                             Wallet Name
                         </label>
-                        <input
-                            type="text"
-                            placeholder="Imported Wallet"
-                            value={keystoreForm.nickname}
-                            onChange={(e) => setKeystoreForm({ ...keystoreForm, nickname: e.target.value })}
-                            className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-foreground"
-                        />
-                    </div>
-
-                    <div className="rounded-lg border border-[#272729] bg-[#0f0f0f] p-4">
-                        <div className="flex items-start gap-3">
-                            <AlertTriangle className="mt-0.5 h-5 w-5 text-white/60" />
-                            <div>
-                                <h4 className="mb-1 font-medium text-foreground">Import Security Warning</h4>
-                                <p className="text-sm text-muted-foreground">
-                                    Only import wallets from trusted sources. Verify all information before proceeding.
-                                </p>
-                            </div>
+                        <div className="w-full rounded-lg border border-border bg-muted px-3 py-2 text-sm text-foreground">
+                            {keystoreNickname || 'Select a keystore file to read its wallet name'}
                         </div>
                     </div>
 
+                    <ImportWarning />
+
                     <Button
                         onClick={handleImportKeystore}
+                        disabled={isImporting || !keystoreFile}
                         className="h-11 w-full"
                     >
-                        Import Keystore
+                        {isImporting ? 'Importing Keystore...' : 'Import Keystore'}
                     </Button>
                 </div>
             )}
@@ -387,3 +350,19 @@ export const ImportWallet = ({ embedded = false, onSuccess }: { embedded?: boole
         </motion.div>
     );
 };
+
+function ImportWarning() {
+    return (
+        <div className="rounded-lg border border-[#272729] bg-[#0f0f0f] p-4">
+            <div className="flex items-start gap-3">
+                <AlertTriangle className="mt-0.5 h-5 w-5 text-white/60" />
+                <div>
+                    <h4 className="mb-1 font-medium text-foreground">Import Security Warning</h4>
+                    <p className="text-sm text-muted-foreground">
+                        Only import wallets from trusted sources. Verify all information before proceeding.
+                    </p>
+                </div>
+            </div>
+        </div>
+    );
+}

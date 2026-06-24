@@ -78,7 +78,7 @@ export default function RepuRingLeaderboard(): JSX.Element {
           <SectionHeader eyebrow="Top contributors" title="Podium" copy="A quick demo-friendly view of the top three contributors." />
           <div className="grid gap-4 md:grid-cols-3">
             {podium.map((row, index) => (
-              <div key={row.address} className={`rounded-3xl border p-5 text-center ${index === 0 ? 'border-emerald-300/30 bg-emerald-300/10' : 'border-white/10 bg-black/25'}`}>
+              <div key={row.address} className={`rounded-2xl border p-4 text-center lg:rounded-3xl lg:p-5 ${index === 0 ? 'border-emerald-300/30 bg-emerald-300/10' : 'border-white/10 bg-black/25'}`}>
                 <div className="mx-auto w-fit"><AvatarFallback label={row.username || row.address} /></div>
                 <p className="mt-4 text-sm text-zinc-500">Rank #{index + 1}</p>
                 <h3 className="mt-1 break-words text-lg font-semibold text-white">{row.username || 'Unnamed'}</h3>
@@ -110,7 +110,7 @@ export default function RepuRingLeaderboard(): JSX.Element {
                 <LeaderboardRowCard key={row.address} row={row} rank={index + 1} currentAddress={currentAddress} />
               ))}
             </div>
-            <div className="hidden rounded-3xl border border-white/10 md:block">
+            <div className="hidden overflow-hidden rounded-2xl border border-white/10 lg:rounded-3xl md:block">
               <table className="w-full text-left text-sm">
                 <thead className="bg-white/[0.04] text-xs uppercase text-zinc-500">
                   <tr>

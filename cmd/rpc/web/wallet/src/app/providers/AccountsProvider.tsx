@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useCallback, useMemo } from 'react'
-import { AccountsListProvider, useAccountsList, Account } from './AccountsListProvider'
+import { AccountsListProvider, useAccountsList, Account, EncryptedAccountImport } from './AccountsListProvider'
 import { SelectedAccountProvider, useSelectedAccount } from './SelectedAccountProvider'
 
 // Re-export Account type for backward compatibility
@@ -19,6 +19,8 @@ type AccountsContextValue = {
 
     switchAccount: (id: string | null) => void
     createNewAccount: (nickname: string, password: string) => Promise<string>
+    importRawAccount: (nickname: string, password: string, privateKey: string) => Promise<string>
+    importEncryptedAccount: (account: EncryptedAccountImport) => Promise<string>
     deleteAccount: (accountId: string, password: string) => Promise<void>
     refetch: () => Promise<any>
     disconnectAccount: () => void
@@ -65,6 +67,8 @@ export function useAccounts(): AccountsContextValue {
         isReady: list.isReady,
         refetch: list.refetch,
         createNewAccount: list.createNewAccount,
+        importRawAccount: list.importRawAccount,
+        importEncryptedAccount: list.importEncryptedAccount,
         deleteAccount,
 
         // From SelectedAccountProvider

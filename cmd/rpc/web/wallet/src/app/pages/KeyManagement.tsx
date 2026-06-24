@@ -49,7 +49,7 @@ export const KeyManagement = (): JSX.Element => {
     };
 
     return (
-        <div className="space-y-6 pb-16 lg:pb-8">
+        <div className="space-y-4 pb-16 lg:space-y-6 lg:pb-8">
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -64,7 +64,7 @@ export const KeyManagement = (): JSX.Element => {
             </motion.div>
 
             <motion.div
-                className="grid grid-cols-1 gap-6"
+                className="grid grid-cols-1 gap-4 lg:gap-6"
                 variants={containerVariants}
                 initial="hidden"
                 animate="visible"
@@ -137,12 +137,12 @@ function RepuRingProfileCard(): JSX.Element {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
-            className="overflow-hidden rounded-3xl border border-white/10 bg-white/[0.045] shadow-[0_18px_48px_rgba(0,0,0,0.22)]"
+            className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.045] shadow-[0_18px_48px_rgba(0,0,0,0.22)] lg:rounded-3xl"
         >
-            <div className="border-b border-white/10 bg-gradient-to-br from-primary/10 via-transparent to-cyan-400/10 p-5 sm:p-6">
+            <div className="border-b border-white/10 bg-gradient-to-br from-primary/10 via-transparent to-cyan-400/10 p-4 sm:p-5 lg:p-6">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                    <div className="flex min-w-0 items-start gap-4">
-                        <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-primary/25 bg-primary/10 text-xl font-bold text-primary">
+                    <div className="flex min-w-0 items-start gap-3 sm:gap-4">
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-primary/25 bg-primary/10 text-base font-bold text-primary sm:h-14 sm:w-14 sm:rounded-2xl sm:text-xl">
                             {profile?.avatarUrl ? (
                                 <img src={profile.avatarUrl} alt={profile.username} className="h-full w-full object-cover" />
                             ) : (
@@ -151,7 +151,7 @@ function RepuRingProfileCard(): JSX.Element {
                         </div>
                         <div>
                             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">RepuRing Profile</p>
-                            <h2 className="mt-1 break-words text-2xl font-semibold text-foreground">
+                            <h2 className="mt-1 break-words text-xl font-semibold text-foreground sm:text-2xl">
                                 {profile ? profile.username : 'Create your RepuRing Profile'}
                             </h2>
                             <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
@@ -170,7 +170,7 @@ function RepuRingProfileCard(): JSX.Element {
                 </div>
             </div>
 
-            <div className="grid gap-5 p-5 sm:p-6 lg:grid-cols-[1fr_auto] lg:items-end">
+            <div className="grid gap-4 p-4 sm:p-5 lg:grid-cols-[1fr_auto] lg:items-end lg:p-6">
                 <div className="grid gap-3 sm:grid-cols-3">
                     <ProfileMetric label="Wallet" value={shortAddress(currentAddress) || 'No account selected'} />
                     <ProfileMetric label="Reputation" value={String(profile?.reputation ?? 0)} />
@@ -203,7 +203,7 @@ function RepuRingProfileCard(): JSX.Element {
                 )}
             </div>
 
-            <div className="border-t border-white/10 bg-black/20 px-5 py-4 sm:px-6">
+            <div className="border-t border-white/10 bg-black/20 px-4 py-3 sm:px-5 sm:py-4 lg:px-6">
                 <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
                     <div className="min-w-0" aria-live="polite">
                         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Profile transaction status</p>
@@ -271,7 +271,7 @@ function RepuRingProfileCard(): JSX.Element {
 
 function ProfileMetric({ label, value }: { label: string; value: string }) {
     return (
-        <div className="min-w-0 rounded-2xl border border-white/10 bg-black/25 p-4">
+        <div className="min-w-0 rounded-xl border border-white/10 bg-black/25 p-3 sm:rounded-2xl sm:p-4">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
             <p className="mt-2 break-all text-sm font-semibold text-foreground">{value}</p>
         </div>

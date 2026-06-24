@@ -18,13 +18,13 @@ import {
 
 const navItems = [
     { name: 'Overview', path: '/repuring', icon: BadgeCheck },
-    { name: 'My Account', path: '/key-management', icon: UserCircle },
     { name: 'Circles', path: '/repuring/circles', icon: Users },
     { name: 'Community', path: '/repuring/community', icon: PanelsTopLeft },
     { name: 'Post Work', path: '/repuring/contributions', icon: ClipboardCheck },
     { name: 'Review Work', path: '/repuring/endorse', icon: HeartHandshake },
     { name: 'Leaderboard', path: '/repuring/leaderboard', icon: Trophy },
     { name: 'Admin', path: '/repuring/admin', icon: ShieldCheck },
+    { name: 'My Account', path: '/key-management', icon: UserCircle },
 ];
 
 /** Matches canopy-frontend `MainNav` + shell: rounded-xl rows, zinc borders, white/active pill. */
@@ -57,7 +57,7 @@ export const AppSidebar = (): JSX.Element => {
     return (
         <>
             <motion.aside
-                className="relative z-30 hidden h-screen min-h-screen flex-shrink-0 flex-col overflow-hidden border-r border-zinc-800 bg-bg-secondary pb-4 lg:flex"
+                className="relative z-30 hidden h-screen min-h-screen flex-shrink-0 flex-col overflow-hidden border-r border-zinc-800 bg-bg-secondary pb-4"
                 animate={{ width: sidebarW }}
                 transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
             >
@@ -163,7 +163,7 @@ export const AppSidebar = (): JSX.Element => {
             </motion.aside>
 
             <div className="lg:hidden">
-                <header className="fixed inset-x-0 top-0 z-40 flex h-16 items-center justify-between border-b border-border/40 bg-bg-secondary px-4">
+                <header className="fixed inset-x-0 top-0 z-40 flex h-14 items-center justify-between border-b border-border/40 bg-bg-secondary px-4">
                     <button
                         type="button"
                         onClick={() => setMobileOpen(true)}
@@ -201,7 +201,7 @@ export const AppSidebar = (): JSX.Element => {
                                 transition={{ duration: 0.26, ease: 'easeOut' }}
                                 className="fixed bottom-0 left-0 top-0 z-50 flex w-72 flex-col border-r border-zinc-800 bg-bg-secondary"
                             >
-                                <div className="flex h-16 flex-shrink-0 items-center border-b border-zinc-800 px-4">
+                                <div className="flex h-14 flex-shrink-0 items-center border-b border-zinc-800 px-4">
                                     <div className="flex h-full w-full items-center justify-between">
                                         <Link
                                             to="/repuring"

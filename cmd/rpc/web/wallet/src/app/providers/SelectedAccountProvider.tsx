@@ -17,7 +17,12 @@ const STORAGE_KEY = 'activeAccountId'
 const DISCONNECTED_KEY = 'accountManuallyDisconnected'
 
 export function SelectedAccountProvider({ children }: { children: React.ReactNode }) {
-    const { accounts, isReady: accountsReady } = useAccountsList()
+    const {
+        accounts,
+        isReady: accountsReady,
+        pendingCreatedAccountId,
+        clearPendingCreatedAccount,
+    } = useAccountsList()
 
     const [selectedId, setSelectedId] = useState<string | null>(null)
     const [isInitialized, setIsInitialized] = useState(false)
@@ -46,9 +51,25 @@ export function SelectedAccountProvider({ children }: { children: React.ReactNod
         return () => window.removeEventListener('storage', onStorage)
     }, [])
 
+    // User-created wallets should become the active account after the keystore refetch sees them.
+    useEffect(() => {
+        if (!isInitialized || !accountsReady || !pendingCreatedAccountId) return
+
+        const createdAccount = accounts.find(account => account.id === pendingCreatedAccountId)
+        if (!createdAccount) return
+
+        setSelectedId(createdAccount.id)
+        if (typeof window !== 'undefined') {
+            localStorage.setItem(STORAGE_KEY, createdAccount.id)
+            localStorage.removeItem(DISCONNECTED_KEY)
+        }
+        clearPendingCreatedAccount()
+    }, [isInitialized, accountsReady, pendingCreatedAccountId, accounts, clearPendingCreatedAccount])
+
     // Keep selection valid as the keystore changes, unless the user manually disconnected.
     useEffect(() => {
         if (!isInitialized || !accountsReady) return
+        if (pendingCreatedAccountId) return
         const disconnected = typeof window !== 'undefined' && localStorage.getItem(DISCONNECTED_KEY) === 'true'
         if (disconnected) return
 
@@ -65,7 +86,7 @@ export function SelectedAccountProvider({ children }: { children: React.ReactNod
                 localStorage.removeItem(STORAGE_KEY)
             }
         }
-    }, [isInitialized, accountsReady, selectedId, accounts])
+    }, [isInitialized, accountsReady, pendingCreatedAccountId, selectedId, accounts])
 
     const selectedAccount = useMemo(
         () => accounts.find(a => a.id === selectedId) ?? null,
