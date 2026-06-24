@@ -24,6 +24,7 @@ These laws apply across all RepuRing MVP documents and screens.
 6. Endorsement is an onchain attestation. A peer endorsement is not a like/unlike toggle. A reviewer can endorse a contribution once. Reviewers cannot self-cancel endorsements in MVP.
 7. Reputation wording must be honest. MVP reputation is global profile reputation displayed in selected community context. Do not imply circle-scoped reputation exists yet.
 8. MVP boundaries are strict. Token rewards, NFT badges, staking, DAO voting, marketplace features, private messaging, global social feed, project-scoped reputation, and reviewer endorsement withdrawal are not MVP features.
+9. Shared UI system is mandatory. RepuRing pages must reuse the shared typography, layout, spacing, cards, badges, banners, empty states, confirmation panels, and status components. Pages should feel like one product, not separate transaction forms.
 
 ## Document Set
 
@@ -79,6 +80,10 @@ Use this to implement:
 - visual hierarchy
 - action gating
 - navigation behavior
+- shared UI design system
+- typography and spacing rules
+- component reuse rules
+- page responsibility boundaries
 
 ### 3. System Flow Specification
 
