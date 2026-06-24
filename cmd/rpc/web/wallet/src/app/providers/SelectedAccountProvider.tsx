@@ -24,36 +24,46 @@ export function SelectedAccountProvider({ children }: { children: React.ReactNod
 
     // Load from localStorage on mount
     useEffect(() => {
+        const onStorage = (e: StorageEvent) => {
+            if (e.key === STORAGE_KEY) setSelectedId(e.newValue ?? null)
+            if (e.key === DISCONNECTED_KEY && e.newValue === 'true') setSelectedId(null)
+        }
+
         try {
             const saved = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null
             const disconnected = typeof window !== 'undefined' ? localStorage.getItem(DISCONNECTED_KEY) === 'true' : false
             if (disconnected) {
                 setSelectedId(null)
-                return
+            } else if (saved) {
+                setSelectedId(saved)
             }
-            if (saved) setSelectedId(saved)
         } finally {
             setIsInitialized(true)
         }
 
         // Listen for changes from other tabs
-        const onStorage = (e: StorageEvent) => {
-            if (e.key === STORAGE_KEY) setSelectedId(e.newValue ?? null)
-            if (e.key === DISCONNECTED_KEY && e.newValue === 'true') setSelectedId(null)
-        }
         window.addEventListener('storage', onStorage)
         return () => window.removeEventListener('storage', onStorage)
     }, [])
 
-    // Auto-select first account on initial load unless the user manually disconnected.
+    // Keep selection valid as the keystore changes, unless the user manually disconnected.
     useEffect(() => {
         if (!isInitialized || !accountsReady) return
         const disconnected = typeof window !== 'undefined' && localStorage.getItem(DISCONNECTED_KEY) === 'true'
         if (disconnected) return
-        if (!selectedId && accounts.length > 0) {
-            const first = accounts[0].id
-            setSelectedId(first)
-            if (typeof window !== 'undefined') localStorage.setItem(STORAGE_KEY, first)
+
+        const selectedExists = selectedId ? accounts.some(account => account.id === selectedId) : false
+        if (selectedExists) return
+
+        const nextId = accounts[0]?.id ?? null
+        setSelectedId(nextId)
+
+        if (typeof window !== 'undefined') {
+            if (nextId) {
+                localStorage.setItem(STORAGE_KEY, nextId)
+            } else {
+                localStorage.removeItem(STORAGE_KEY)
+            }
         }
     }, [isInitialized, accountsReady, selectedId, accounts])
 

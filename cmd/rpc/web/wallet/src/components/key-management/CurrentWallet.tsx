@@ -18,13 +18,6 @@ import {
   WalletCards,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/Select";
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 import { useToast } from "@/toast/ToastContext";
 import { useAccounts } from "@/app/providers/AccountsProvider";
@@ -362,7 +355,7 @@ export const CurrentWallet = ({
                   {selectedAccount ? (selectedKeyEntry?.keyNickname || selectedAccount.nickname) : "No account connected"}
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  {selectedAccount ? "Selected for RepuRing signing and local demo transactions." : "Select an existing account or create a new one to start using RepuRing."}
+                  {selectedAccount ? "Selected for RepuRing signing and local demo transactions." : "Use the account selector in the top bar, or create/import a wallet to start using RepuRing."}
                 </p>
               </div>
             </div>
@@ -375,22 +368,14 @@ export const CurrentWallet = ({
           </div>
 
           <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
-            <div>
-              <label className="mb-2 block text-sm font-medium text-foreground/80">
-                Switch account
-              </label>
-              <Select value={selectedAccount?.id || ""} onValueChange={switchAccount}>
-                <SelectTrigger className="h-11 w-full rounded-xl border-border bg-muted text-foreground focus:ring-2 focus:ring-primary/35">
-                  <SelectValue placeholder={accounts.length ? "Select account" : "No local accounts"} />
-                </SelectTrigger>
-                <SelectContent className="border-border bg-muted">
-                  {accounts.map((account) => (
-                    <SelectItem key={account.id} value={account.id} className="text-foreground">
-                      {account.nickname}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="min-w-0 rounded-xl border border-border bg-muted px-3 py-2.5">
+              <p className="text-xs font-semibold uppercase text-muted-foreground">Active signing wallet</p>
+              <p className="mt-1 truncate text-sm font-semibold text-foreground">
+                {selectedAccount ? (selectedKeyEntry?.keyNickname || selectedAccount.nickname) : "No account selected"}
+              </p>
+              <p className="mt-1 break-all font-mono text-xs text-muted-foreground">
+                {selectedAccount?.address || (accounts.length ? "Choose an account from the top bar selector." : "Create or import a wallet first.")}
+              </p>
             </div>
             <div className="flex flex-wrap gap-2">
               <Button type="button" variant="outline" className="h-11" onClick={() => selectedAccount && copyToClipboard(selectedAccount.address, "Wallet address")} disabled={!selectedAccount}>

@@ -2,21 +2,18 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { useAccounts } from "@/app/providers/AccountsProvider";
+import { useAccountsList } from "@/app/providers/AccountsProvider";
 import { useToast } from '@/toast/ToastContext';
-import { useDSFetcher } from '@/core/dsFetch';
-import { useQueryClient } from '@tanstack/react-query';
 
 export const NewKey = ({ embedded = false, onSuccess }: { embedded?: boolean; onSuccess?: () => void }): JSX.Element => {
-    const { switchAccount } = useAccounts();
+    const { createNewAccount } = useAccountsList();
     const toast = useToast();
-    const dsFetch = useDSFetcher();
-    const queryClient = useQueryClient();
 
     const [newKeyForm, setNewKeyForm] = useState({
         password: '',
         walletName: ''
     });
+    const [isCreating, setIsCreating] = useState(false);
 
     const panelVariants = {
         hidden: { opacity: 0, y: 20 },
@@ -28,7 +25,9 @@ export const NewKey = ({ embedded = false, onSuccess }: { embedded?: boolean; on
     };
 
     const handleCreateWallet = async () => {
-        if (!newKeyForm.walletName) {
+        const walletName = newKeyForm.walletName.trim();
+
+        if (!walletName) {
             toast.error({ title: 'Missing wallet name', description: 'Please enter a wallet name.' });
             return;
         }
@@ -45,35 +44,25 @@ export const NewKey = ({ embedded = false, onSuccess }: { embedded?: boolean; on
         });
 
         try {
-            const response = await dsFetch('keystoreNewKey', {
-                nickname: newKeyForm.walletName,
-                password: newKeyForm.password
-            });
-
-            await queryClient.invalidateQueries({ queryKey: ['ds', 'keystore'] });
+            setIsCreating(true);
+            await createNewAccount(walletName, newKeyForm.password);
 
             toast.dismiss(loadingToast);
             toast.success({
                 title: 'Wallet created',
-                description: `Wallet "${newKeyForm.walletName}" is ready.`,
+                description: `Wallet "${walletName}" is ready.`,
             });
 
             setNewKeyForm({ password: '', walletName: '' });
             onSuccess?.();
-
-            const newAddress = typeof response === 'string' ? response.replace(/"/g, '') : (response as any)?.address;
-            if (newAddress) {
-                switchAccount(newAddress);
-                setTimeout(() => {
-                    queryClient.invalidateQueries({ queryKey: ['ds', 'keystore'] });
-                }, 500);
-            }
         } catch (error) {
             toast.dismiss(loadingToast);
             toast.error({
                 title: 'Error creating wallet',
                 description: error instanceof Error ? error.message : String(error),
             });
+        } finally {
+            setIsCreating(false);
         }
     };
 
@@ -122,9 +111,10 @@ export const NewKey = ({ embedded = false, onSuccess }: { embedded?: boolean; on
 
                 <Button
                     onClick={handleCreateWallet}
+                    disabled={isCreating}
                     className="mt-5 h-11 w-full"
                 >
-                    Create Wallet
+                    {isCreating ? 'Creating Wallet...' : 'Create Wallet'}
                 </Button>
             </div>
         </>

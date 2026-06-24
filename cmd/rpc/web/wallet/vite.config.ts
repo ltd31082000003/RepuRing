@@ -23,7 +23,9 @@ export default defineConfig(({ mode }) => {
 
     // Development server configuration
     server: {
+      host: "0.0.0.0",
       port: 5173,
+      allowedHosts: true,
       proxy: {
         // Proxy /rpc to RPC server
         '/rpc': {
