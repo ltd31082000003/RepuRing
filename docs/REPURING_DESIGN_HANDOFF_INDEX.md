@@ -12,7 +12,36 @@ This is not a smart-contract rewrite request and not a mainnet tokenomics plan. 
 Identity → Circle → Proof-of-Work → Peer Endorsement → Reputation → Role / Status
 ```
 
+## Global MVP Product Laws
+
+These laws apply across all RepuRing MVP documents and screens.
+
+1. Product-first, protocol-second. User-facing UI must describe product actions first. Transaction names may appear only as secondary technical badges, status logs, or advanced details.
+2. Current community context is mandatory. Circle-scoped pages must operate inside the selected community context. Contributions, reviews, leaderboard, role, and admin moderation must refresh when the selected community changes.
+3. Technical IDs are metadata. Normal users should not manually type circle IDs, contribution IDs, or endorsement IDs. IDs may appear as readonly technical metadata. Manual overrides belong only in advanced/debug sections.
+4. No fake protocol actions. The UI must not show actions that the current protocol cannot perform. Do not show Cancel endorsement or Withdraw endorsement in MVP unless a real withdraw transaction exists.
+5. Post visibility must be verified. After posting proof-of-work, the UI must verify that the new contribution appears in the selected community feed.
+6. Endorsement is an onchain attestation. A peer endorsement is not a like/unlike toggle. A reviewer can endorse a contribution once. Reviewers cannot self-cancel endorsements in MVP.
+7. Reputation wording must be honest. MVP reputation is global profile reputation displayed in selected community context. Do not imply circle-scoped reputation exists yet.
+8. MVP boundaries are strict. Token rewards, NFT badges, staking, DAO voting, marketplace features, private messaging, global social feed, project-scoped reputation, and reviewer endorsement withdrawal are not MVP features.
+
 ## Document Set
+
+### 0. Design Handoff Index
+
+File:
+
+```text
+docs/REPURING_DESIGN_HANDOFF_INDEX.md
+```
+
+Use this to understand:
+
+- document order
+- design authority
+- global MVP product laws
+- MVP boundaries
+- how engineering should use the handoff docs
 
 ### 1. Product Design
 
@@ -107,12 +136,13 @@ Use this to understand:
 
 The recommended implementation order is:
 
-1. Read `REPURING_PRODUCT_DESIGN_V1.md` to understand the product.
-2. Read `REPURING_UX_UI_SPEC_V1.md` to understand what screens should feel like.
-3. Read `REPURING_SYSTEM_FLOW_SPEC_V1.md` to understand rules, flow, and state transitions.
-4. Read `REPURING_SCREEN_WIREFRAMES_V1.md` to understand layout hierarchy.
-5. Use `REPURING_DELIVERY_PHASES_V1.md` to break work into issues/tasks.
-6. Keep transaction names and protocol behavior stable unless a later protocol-design document explicitly changes them.
+1. Read `REPURING_DESIGN_HANDOFF_INDEX.md` first to understand the global MVP laws and authority order.
+2. Read `REPURING_PRODUCT_DESIGN_V1.md` to understand the product meaning.
+3. Read `REPURING_UX_UI_SPEC_V1.md` to understand what screens should feel like.
+4. Read `REPURING_SYSTEM_FLOW_SPEC_V1.md` to understand rules, flow, and state transitions.
+5. Read `REPURING_SCREEN_WIREFRAMES_V1.md` to understand layout hierarchy.
+6. Use `REPURING_DELIVERY_PHASES_V1.md` to break work into issues/tasks.
+7. Keep transaction names and protocol behavior stable unless a later protocol-design document explicitly changes them.
 
 ## Development Principle
 
@@ -149,16 +179,19 @@ MVP excludes:
 - private messaging
 - follow/friend system
 - AI matching
-- full Twitter-like social feed
+- full Twitter-like global social feed
+- project-scoped reputation
+- reviewer self-cancel / withdraw endorsement
 
 ## Design Authority
 
 When code and product direction conflict, the MVP product direction should follow the documents in this order:
 
-1. `REPURING_PRODUCT_DESIGN_V1.md`
-2. `REPURING_UX_UI_SPEC_V1.md`
-3. `REPURING_SYSTEM_FLOW_SPEC_V1.md`
-4. `REPURING_SCREEN_WIREFRAMES_V1.md`
-5. `REPURING_DELIVERY_PHASES_V1.md`
+1. `REPURING_DESIGN_HANDOFF_INDEX.md`
+2. `REPURING_PRODUCT_DESIGN_V1.md`
+3. `REPURING_UX_UI_SPEC_V1.md`
+4. `REPURING_SYSTEM_FLOW_SPEC_V1.md`
+5. `REPURING_SCREEN_WIREFRAMES_V1.md`
+6. `REPURING_DELIVERY_PHASES_V1.md`
 
 Engineering may adjust implementation details, but should not change product meaning without updating the design docs.
