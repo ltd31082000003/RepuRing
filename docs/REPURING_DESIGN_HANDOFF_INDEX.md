@@ -26,6 +26,114 @@ These laws apply across all RepuRing MVP documents and screens.
 8. MVP boundaries are strict. Token rewards, NFT badges, staking, DAO voting, marketplace features, private messaging, global social feed, project-scoped reputation, and reviewer endorsement withdrawal are not MVP features.
 9. Shared UI system is mandatory. RepuRing pages must reuse the shared typography, layout, spacing, cards, badges, banners, empty states, confirmation panels, and status components. Pages should feel like one product, not separate transaction forms.
 
+## Implementation Governance
+
+These governance rules apply before coding any RepuRing UI change.
+
+### 1. Every page must have a clear owner
+
+Community Workspace owns:
+
+- dashboard
+- overview
+- navigation
+
+Post Work owns:
+
+- contribution feed
+- contribution posting
+
+Review Work owns:
+
+- endorsement workflow
+
+Admin owns:
+
+- moderation workflow
+
+Pages may preview information owned by another page, but should not duplicate the full workflow.
+
+### 2. Repeated UI must become a shared component
+
+If a UI block appears on more than one page, it should become or reuse a shared component.
+
+Examples:
+
+- `ContributionCard`
+- `ReviewCard`
+- `CommunityContextCard`
+- `ActiveWalletBanner`
+- `ActionGate`
+- `TxStatusCard`
+- `ConfirmationPanel`
+- `PostVisibilityNotice`
+
+Do not create page-specific versions unless behavior is materially different.
+
+### 3. Every implementation task must map to the design docs
+
+Before coding any feature, engineering should identify:
+
+- owning page
+- reused shared component
+- user state
+- protocol action
+- acceptance criteria
+
+Every task should be traceable back to:
+
+- Product Design
+- UX/UI Specification
+- System Flow
+- Wireframes
+- Delivery Phases
+
+### 4. No UI flow without defined states
+
+A new action should not be implemented unless the following are defined:
+
+- preconditions
+- disabled state
+- locked state
+- empty state
+- loading state
+- success state
+- error state
+- refresh behavior
+
+The user should never experience an undefined state transition.
+
+### 5. Preview pages cannot own full workflows
+
+If a page displays data owned by another page, it should remain preview-only.
+
+Examples:
+
+Community Workspace may show:
+
+- recent contributions
+- recent reviews
+- leaderboard preview
+
+But must route users to:
+
+- Post Work
+- Review Work
+- Leaderboard
+- Admin
+
+for full workflows.
+
+### 6. Protocol support must exist before UI support
+
+No new UI action should be implemented unless:
+
+- product meaning is defined
+- state behavior is defined
+- protocol support exists
+
+The UI must not advertise protocol capabilities that do not exist.
+
 ## Document Set
 
 ### 0. Design Handoff Index
@@ -41,6 +149,7 @@ Use this to understand:
 - document order
 - design authority
 - global MVP product laws
+- implementation governance
 - MVP boundaries
 - how engineering should use the handoff docs
 
@@ -116,6 +225,7 @@ Use this to plan engineering work:
 - delivery phases
 - implementation priorities
 - acceptance criteria
+- implementation governance
 - QA checklist
 - release readiness
 - what should not be built in MVP
@@ -141,7 +251,7 @@ Use this to understand:
 
 The recommended implementation order is:
 
-1. Read `REPURING_DESIGN_HANDOFF_INDEX.md` first to understand the global MVP laws and authority order.
+1. Read `REPURING_DESIGN_HANDOFF_INDEX.md` first to understand the global MVP laws, implementation governance, and authority order.
 2. Read `REPURING_PRODUCT_DESIGN_V1.md` to understand the product meaning.
 3. Read `REPURING_UX_UI_SPEC_V1.md` to understand what screens should feel like.
 4. Read `REPURING_SYSTEM_FLOW_SPEC_V1.md` to understand rules, flow, and state transitions.
