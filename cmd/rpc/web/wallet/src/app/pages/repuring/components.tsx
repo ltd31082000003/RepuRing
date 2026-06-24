@@ -64,6 +64,16 @@ export function SocialCard({ children, selected = false, className = '' }: { chi
   );
 }
 
+export function QuickActionCard({ title, copy, to }: { title: string; copy: string; to: string }) {
+  return (
+    <SocialCard>
+      <h3 className="text-lg font-semibold text-white">{title}</h3>
+      <p className="mt-2 min-h-12 text-sm leading-6 text-zinc-400">{copy}</p>
+      <Button to={to} variant="secondary" className="mt-4 w-full">Open</Button>
+    </SocialCard>
+  );
+}
+
 export function StatCard({ label, value, detail }: { label: string; value: string; detail: string }) {
   return (
     <Panel>
@@ -526,6 +536,17 @@ export function ActionGate({
   );
 }
 
+export function ReadinessRule({ checked, text }: { checked: boolean; text: string }) {
+  return (
+    <div className={`rounded-2xl border p-4 text-sm ${checked ? 'border-emerald-300/20 bg-emerald-300/10 text-emerald-100' : 'border-white/10 bg-white/[0.03] text-zinc-400'}`}>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="break-words">{text}</p>
+        <StatusPill tone={checked ? 'success' : 'neutral'}>{checked ? 'Ready' : 'Check'}</StatusPill>
+      </div>
+    </div>
+  );
+}
+
 export function CommunityContextCard({
   circle,
   circleId,
@@ -593,6 +614,35 @@ export function CommunityCard({
       </div>
       {children}
       {actions && <div className="mt-4 flex flex-wrap items-center gap-2">{actions}</div>}
+    </SocialCard>
+  );
+}
+
+export function LeaderboardRowCard({
+  row,
+  rank,
+  currentAddress,
+}: {
+  row: { address: string; username?: string; reputation: number; role?: string };
+  rank: number;
+  currentAddress: string;
+}) {
+  const isCurrent = cleanHex(row.address) === cleanHex(currentAddress);
+  return (
+    <SocialCard selected={isCurrent}>
+      <div className="flex min-w-0 items-start gap-3">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] font-mono text-sm text-emerald-200">#{rank}</span>
+        <AvatarFallback label={row.username || row.address} />
+        <div className="min-w-0 flex-1">
+          <p className="break-words font-semibold text-white">{row.username || 'Unnamed'}</p>
+          <p className="mt-1 font-mono text-xs text-zinc-500">{shortAddress(row.address)}</p>
+          {isCurrent && <p className="mt-1 text-xs text-emerald-200">Current account</p>}
+        </div>
+      </div>
+      <div className="mt-4 flex flex-wrap gap-2">
+        <ReputationBadge value={row.reputation} />
+        <Badge tone="cyan">{roleBadge(row.role || roleForReputation(row.reputation))}</Badge>
+      </div>
     </SocialCard>
   );
 }

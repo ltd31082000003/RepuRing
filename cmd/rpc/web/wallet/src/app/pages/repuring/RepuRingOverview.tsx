@@ -1,5 +1,5 @@
 import React from 'react';
-import { AvatarFallback, Badge, Button, DemoReadinessCard, MetricCard, PageHeader, Panel, RepuRingPage, RoleProgressCard, SectionHeader, SocialFiJourney, StatusPill, TxStatusCard, roleBadge, roleForReputation, shortAddress } from './components';
+import { AvatarFallback, Badge, Button, DemoReadinessCard, MetricCard, PageHeader, Panel, QuickActionCard, RepuRingPage, RoleProgressCard, SectionHeader, SocialFiJourney, StatusPill, TxStatusCard, roleBadge, roleForReputation, shortAddress } from './components';
 import { useRepuRing } from './useRepuRing';
 
 const flow = ['Profile', 'Circle', 'Community', 'Contribution', 'Endorsement', 'Role'];
@@ -106,26 +106,16 @@ export default function RepuRingOverview(): JSX.Element {
           copy="Move from identity to contribution proof, peer validation, reputation, and role without leaving the real Canopy RPC path."
         />
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
-          <QuickAction title="My Account" copy="Create or edit your RepuRing identity." to="/key-management" />
-          <QuickAction title="Create or Join Circle" copy="Set up a community circle." to="/repuring/circles" />
-          <QuickAction title="Community Workspace" copy="Open the current community." to="/repuring/community" />
-          <QuickAction title="Post Work" copy="Publish proof-of-work to the feed." to="/repuring/contributions" />
-          <QuickAction title="Review Work" copy="Review and endorse useful proofs." to="/repuring/endorse" />
-          <QuickAction title="View Leaderboard" copy="See reputation and role rankings." to="/repuring/leaderboard" />
+          <QuickActionCard title="My Account" copy="Create or edit your RepuRing identity." to="/key-management" />
+          <QuickActionCard title="Create or Join Circle" copy="Set up a community circle." to="/repuring/circles" />
+          <QuickActionCard title="Community Workspace" copy="Open the current community." to="/repuring/community" />
+          <QuickActionCard title="Post Work" copy="Publish proof-of-work to the feed." to="/repuring/contributions" />
+          <QuickActionCard title="Review Work" copy="Review and endorse useful proofs." to="/repuring/endorse" />
+          <QuickActionCard title="View Leaderboard" copy="See reputation and role rankings." to="/repuring/leaderboard" />
         </div>
       </Panel>
 
       <TxStatusCard status={status} lastTx={lastTx} onRefresh={refreshState} />
     </RepuRingPage>
-  );
-}
-
-function QuickAction({ title, copy, to }: { title: string; copy: string; to: string }) {
-  return (
-    <div className="rounded-3xl border border-white/10 bg-black/25 p-5">
-      <h3 className="text-lg font-semibold text-white">{title}</h3>
-      <p className="mt-2 min-h-12 text-sm leading-6 text-zinc-400">{copy}</p>
-      <Button to={to} variant="secondary" className="mt-4 w-full">Open</Button>
-    </div>
   );
 }

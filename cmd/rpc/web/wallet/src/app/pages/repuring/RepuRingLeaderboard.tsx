@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActiveWalletBanner, AvatarFallback, Badge, Button, CommunityContextCard, EmptyState, MetricCard, PageHeader, Panel, ReputationBadge, RepuRingPage, RoleProgressCard, SectionHeader, TxStatusCard, roleBadge, roleForReputation, shortAddress } from './components';
+import { ActiveWalletBanner, AvatarFallback, Badge, Button, CommunityContextCard, EmptyState, LeaderboardRowCard, MetricCard, PageHeader, Panel, ReputationBadge, RepuRingPage, RoleProgressCard, SectionHeader, TxStatusCard, roleBadge, roleForReputation, shortAddress } from './components';
 import { cleanHex } from './RepuRingProvider';
 import { useRepuRing } from './useRepuRing';
 
@@ -106,26 +106,9 @@ export default function RepuRingLeaderboard(): JSX.Element {
         ) : (
           <>
             <div className="grid gap-3 md:hidden">
-              {leaderboard.map((row, index) => {
-                const isCurrent = cleanHex(row.address) === cleanHex(currentAddress);
-                return (
-                  <div key={row.address} className={`rounded-3xl border p-4 ${isCurrent ? 'border-emerald-300/30 bg-emerald-300/10' : 'border-white/10 bg-black/20'}`}>
-                    <div className="flex min-w-0 items-start gap-3">
-                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] font-mono text-sm text-emerald-200">#{index + 1}</span>
-                      <AvatarFallback label={row.username || row.address} />
-                      <div className="min-w-0 flex-1">
-                        <p className="break-words font-semibold text-white">{row.username || 'Unnamed'}</p>
-                        <p className="mt-1 font-mono text-xs text-zinc-500">{shortAddress(row.address)}</p>
-                        {isCurrent && <p className="mt-1 text-xs text-emerald-200">Current account</p>}
-                      </div>
-                    </div>
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      <ReputationBadge value={row.reputation} />
-                      <Badge tone="cyan">{roleBadge(row.role || roleForReputation(row.reputation))}</Badge>
-                    </div>
-                  </div>
-                );
-              })}
+              {leaderboard.map((row, index) => (
+                <LeaderboardRowCard key={row.address} row={row} rank={index + 1} currentAddress={currentAddress} />
+              ))}
             </div>
             <div className="hidden rounded-3xl border border-white/10 md:block">
               <table className="w-full text-left text-sm">

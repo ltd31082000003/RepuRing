@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActiveWalletBanner, ActionGate, Badge, Button, CommunityContextCard, ConfirmationPanel, ContributionCard, ContributionReviews, EmptyState, Input, MetricCard, PageHeader, Panel, RepuRingPage, ReviewCard, SectionHeader, StatusPill, TxStatusCard, shortAddress } from './components';
+import { ActiveWalletBanner, ActionGate, Badge, Button, CommunityContextCard, ConfirmationPanel, ContributionCard, ContributionReviews, EmptyState, Input, MetricCard, PageHeader, Panel, ReadinessRule, RepuRingPage, ReviewCard, SectionHeader, StatusPill, TxStatusCard, shortAddress } from './components';
 import { cleanHex } from './RepuRingProvider';
 import { useRepuRing } from './useRepuRing';
 
@@ -224,11 +224,11 @@ export default function RepuRingEndorse(): JSX.Element {
           <Panel>
             <SectionHeader eyebrow="Endorsement readiness" title="Onchain validation checklist" copy="The selected wallet must be another active circle member, and the contribution must be active." />
             <div className="grid gap-3">
-              <Rule checked={isMember} text="Selected endorser wallet is a member of this circle." />
-              <Rule checked={Boolean(selectedContribution)} text="A contribution proof exists and is selected for review." />
-              <Rule checked={!selectedAuthorIsSelf && Boolean(selectedContribution)} text="Selected wallet belongs to another member, not the contribution author." />
-              <Rule checked={Boolean(selectedContribution && !selectedContribution.slashed)} text="Contribution is active and has not been slashed." />
-              <Rule checked={Boolean(selectedContribution && !alreadyEndorsed)} text="Current wallet has not already endorsed this contribution." />
+              <ReadinessRule checked={isMember} text="Selected endorser wallet is a member of this circle." />
+              <ReadinessRule checked={Boolean(selectedContribution)} text="A contribution proof exists and is selected for review." />
+              <ReadinessRule checked={!selectedAuthorIsSelf && Boolean(selectedContribution)} text="Selected wallet belongs to another member, not the contribution author." />
+              <ReadinessRule checked={Boolean(selectedContribution && !selectedContribution.slashed)} text="Contribution is active and has not been slashed." />
+              <ReadinessRule checked={Boolean(selectedContribution && !alreadyEndorsed)} text="Current wallet has not already endorsed this contribution." />
             </div>
           </Panel>
 
@@ -323,14 +323,6 @@ export default function RepuRingEndorse(): JSX.Element {
 
       <TxStatusCard status={status} lastTx={lastTx} onRefresh={refreshState} />
     </RepuRingPage>
-  );
-}
-
-function Rule({ checked, text }: { checked: boolean; text: string }) {
-  return (
-    <div className={`rounded-2xl border p-4 text-sm ${checked ? 'border-emerald-300/20 bg-emerald-300/10 text-emerald-100' : 'border-white/10 bg-white/[0.03] text-zinc-400'}`}>
-      {checked ? 'Ready' : 'Check'} - {text}
-    </div>
   );
 }
 
