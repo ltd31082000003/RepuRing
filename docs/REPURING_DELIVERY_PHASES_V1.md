@@ -16,6 +16,7 @@ The delivery strategy is:
 Stabilize the product meaning first.
 Then improve UX clarity.
 Then strengthen system flow.
+Then enforce shared UI design system.
 Then add future protocol features only after MVP loop works.
 ```
 
@@ -37,7 +38,143 @@ Identity → Circle → Proof → Endorsement → Reputation → Role
 - Reviewer self-cancel endorsement is not supported in MVP.
 - Reputation is global profile reputation displayed in selected community context.
 
-## 3. Priority Levels
+## 3. UI Design System Delivery Requirements
+
+The MVP UI must use a shared design system. Devs should not recreate the same component logic separately on every page.
+
+### 3.1 Typography requirements
+
+| Text type | Size | Weight | Required use |
+| --- | --- | --- | --- |
+| Page title | Desktop: 32-40px; Mobile: 28-32px | 700/800 | Main page header title |
+| Section title | 20-24px | 700 | Major panels and sections |
+| Card title | 16-18px | 600/700 | Contribution title, community name, review title |
+| Body text | 14-16px | 400/500 | Descriptions and helper text |
+| Small metadata | 12-13px | 400/500 | Wallet address, Circle ID, onchain record ID, tx badge |
+| Button text | 14px | 600 | Button labels |
+
+Acceptance criteria:
+
+- Page headers use page title typography.
+- Panel headings use section title typography.
+- Contribution/community/review titles use card title typography.
+- Technical IDs, addresses, and tx hashes use small metadata typography.
+- Technical IDs, addresses, and tx hashes are never more visually prominent than contribution/community/review titles.
+
+### 3.2 Layout requirements
+
+Default page layout order:
+
+```text
+Page Header
+→ Current Context / Active Wallet Banner
+→ Primary page action
+→ Supporting panels
+→ Technical status
+```
+
+Spacing requirements:
+
+| Layout token | Value |
+| --- | --- |
+| Page vertical gap | 24-32px |
+| Panel padding | Desktop: 20-24px; Mobile: 16px |
+| Card gap | 12-16px |
+| Grid gap | 16-20px |
+| Button group gap | 8-12px |
+
+Responsive requirements:
+
+Mobile:
+
+- 1 column
+- buttons full width when inside form/action blocks
+- metadata wraps or uses break-all
+- no horizontal scroll
+
+Desktop:
+
+- 2 column layout where useful
+- primary action left/top
+- supporting info right/bottom
+
+Acceptance criteria:
+
+- Product context and primary actions appear before technical status.
+- TxStatusCard is not placed above the primary product action.
+- Mobile has no horizontal overflow from metadata or tables.
+- Buttons in mobile forms/action blocks are full width where appropriate.
+
+### 3.3 Shared component requirements
+
+Required shared components:
+
+- `PageHeader`
+- `ActiveWalletBanner`
+- `CommunityContextCard`
+- `MetricCard`
+- `StatusPill`
+- `Badge`
+- `SocialCard`
+- `ContributionCard`
+- `ReviewCard`
+- `RoleProgressCard`
+- `EmptyState`
+- `TxStatusCard`
+- `ActionGate`
+- `ConfirmationPanel`
+- `PostVisibilityNotice`
+- `GeneratedRecordIdBlock`
+
+Acceptance criteria:
+
+- Contribution previews, feed items, and Review Work selector use `ContributionCard` variants instead of separate card implementations.
+- Community recent reviews, contribution reviews, and admin moderation queue use `ReviewCard` variants instead of separate card implementations.
+- Every circle-scoped page uses `CommunityContextCard`.
+- Transaction/RPC status uses `TxStatusCard` and remains secondary.
+- Missing preconditions are handled through consistent `ActionGate` behavior.
+- Endorse and slash confirmations use `ConfirmationPanel`.
+- Post Work uses `GeneratedRecordIdBlock` and `PostVisibilityNotice`.
+
+### 3.4 Page responsibility requirements
+
+Community Workspace role:
+
+```text
+Dashboard / overview / navigation hub
+```
+
+Community Workspace may include:
+
+- recent contributions
+- recent reviews
+- leaderboard preview
+- role preview
+- admin shortcut
+- joined communities switcher
+
+Community Workspace should not include:
+
+- full contribution management
+- full review flow
+- full moderation flow
+- full leaderboard table
+
+Specialist page ownership:
+
+- Post proof-of-work → `/repuring/contributions`
+- Review work → `/repuring/endorse`
+- View leaderboard → `/repuring/leaderboard`
+- Open moderation → `/repuring/admin`
+
+Acceptance criteria:
+
+- Community Workspace uses preview cards and route buttons, not full workflows.
+- Post Work owns posting, filtering, full contribution list, post visibility, and review CTA.
+- Review Work owns contribution selection, own/already/slashed state, review writing, confirmation, and already-endorsed state.
+- Admin owns review selection, slash confirmation, reason entry, and moderation queue.
+
+## 4. Priority Levels
 
 ### P0 — Must-have MVP corrections
 
@@ -53,11 +190,11 @@ P1 items improve usability, reduce friction, and make RepuRing feel more product
 
 P2 items should wait until the MVP loop is stable.
 
-## 4. Phase 1 — Product Language and Navigation Cleanup
+## 5. Phase 1 — Product Language, Navigation, and Design System Setup
 
 ### Goal
 
-Make the app read like a Social-Fi Web3 product instead of a raw transaction demo.
+Make the app read like a Social-Fi Web3 product instead of a raw transaction demo, and establish reusable UI primitives before deeper page work.
 
 ### Scope
 
@@ -66,6 +203,7 @@ Make the app read like a Social-Fi Web3 product instead of a raw transaction dem
 - update CTA text
 - preserve protocol transaction badges as secondary details
 - keep Canopy testnet wording clear
+- create or standardize shared components from the UI Design System
 
 ### Required changes
 
@@ -100,8 +238,10 @@ Use product CTAs:
 - Transaction names are not the primary CTA.
 - Canopy testnet/local RPC is mentioned where relevant.
 - User can understand the app from the Overview page without reading README.
+- PageHeader, CommunityContextCard, ContributionCard, ReviewCard, TxStatusCard, ConfirmationPanel, PostVisibilityNotice, and GeneratedRecordIdBlock are available or explicitly mapped to existing components.
+- Typography hierarchy is applied consistently enough that content titles visually dominate technical metadata.
 
-## 5. Phase 2 — Overview and Journey Checklist
+## 6. Phase 2 — Overview and Journey Checklist
 
 ### Goal
 
@@ -125,8 +265,9 @@ Make `/repuring` the user's orientation page.
 - User can see the next required action.
 - Missing wallet/profile/circle/member state is handled with clear CTAs.
 - Dev/testnet readiness is visible but secondary.
+- Technical status appears after product context and journey actions.
 
-## 6. Phase 3 — Circles and Community Context
+## 7. Phase 3 — Circles and Community Context
 
 ### Goal
 
@@ -146,12 +287,13 @@ Make community circles feel like real Social-Fi spaces.
 - User does not need to manually remember circle ID in normal flow.
 - Switching circle refreshes feed, reviews, leaderboard, and role context.
 - Community Workspace is reachable from every circle card.
+- Every circle-scoped route uses a consistent CommunityContextCard.
 
-## 7. Phase 4 — Community Workspace Productization
+## 8. Phase 4 — Community Workspace Productization
 
 ### Goal
 
-Make `/repuring/community` the main product workspace.
+Make `/repuring/community` the main product workspace without turning it into a duplicate of every specialist page.
 
 ### Required sections
 
@@ -167,6 +309,26 @@ Make `/repuring/community` the main product workspace.
 10. Admin moderation shortcut if creator/admin
 11. Joined communities switcher
 
+### Page responsibility
+
+Community Workspace is a dashboard / overview / navigation hub.
+
+Allowed:
+
+- recent contributions
+- recent reviews
+- leaderboard preview
+- role preview
+- admin shortcut
+- joined communities switcher
+
+Not allowed as full workflows:
+
+- full contribution management
+- full review flow
+- full moderation flow
+- full leaderboard table
+
 ### Acceptance criteria
 
 - A member can understand community activity from this page alone.
@@ -174,8 +336,9 @@ Make `/repuring/community` the main product workspace.
 - A creator/admin sees moderation entry points.
 - Recent contributions and reviews are visible in the same community context.
 - Leaderboard and role context match selected circle.
+- Community Workspace routes users to specialist pages for full workflows.
 
-## 8. Phase 5 — Proof-of-Work Feed Improvements
+## 9. Phase 5 — Proof-of-Work Feed Improvements
 
 ### Goal
 
@@ -210,6 +373,13 @@ Advanced/debug-only:
 - show proof URL helper text
 - show contribution card after refresh
 
+### Component requirements
+
+- Use `GeneratedRecordIdBlock` for generated contribution ID.
+- Use `PostVisibilityNotice` for submitted/checking/visible/not-visible-yet/failed states.
+- Use `ContributionCard` for feed items.
+- Use `TxStatusCard` only in the secondary technical status area.
+
 ### Acceptance criteria
 
 - Member can post without typing contribution ID.
@@ -218,8 +388,9 @@ Advanced/debug-only:
 - Duplicate generated/custom ID failure keeps composer open and shows clear error.
 - Contribution appears in selected circle feed after Canopy refresh.
 - Contribution card shows title, category, author, proof URL, endorsement count, and review CTA.
+- Contribution title is visually stronger than onchain record ID.
 
-## 9. Phase 6 — Review / Endorse Work Improvements
+## 10. Phase 6 — Review / Endorse Work Improvements
 
 ### Goal
 
@@ -257,6 +428,14 @@ Rules:
 - UI must not show fake Cancel endorsement.
 - Invalid endorsements are handled by creator/admin `SlashEndorsementTx`.
 
+### Component requirements
+
+- Use `CommunityContextCard` at the top.
+- Use `ContributionCard` for selector entries and selected contribution preview.
+- Use `ReviewCard` for existing reviews.
+- Use `ConfirmationPanel` before submitting the endorsement.
+- Use `ActionGate` for no wallet/no profile/not member/own/already/slashed states.
+
 ### Copy requirements
 
 Use:
@@ -287,8 +466,9 @@ This endorsement is an onchain attestation. After confirmation, you cannot self-
 - Bob cannot review his own contribution.
 - Slashed contribution cannot be reviewed.
 - Legacy direct user endorsement remains clearly marked as legacy.
+- Contribution title and review message are visually stronger than technical IDs.
 
-## 10. Phase 7 — Leaderboard and Role Progression
+## 11. Phase 7 — Leaderboard and Role Progression
 
 ### Goal
 
@@ -308,6 +488,12 @@ Make reputation and role feel like visible Social-Fi status.
 MVP leaderboard uses global profile reputation displayed in the selected community context. Circle-specific reputation is planned for a later version.
 ```
 
+### Component requirements
+
+- Use `CommunityContextCard` at the top.
+- Use `RoleProgressCard` for role thresholds/progress.
+- Use `Badge`/`StatusPill` consistently for role/status indicators.
+
 ### Acceptance criteria
 
 - User can see current reputation and role.
@@ -315,7 +501,7 @@ MVP leaderboard uses global profile reputation displayed in the selected communi
 - Role threshold display matches protocol rules.
 - UI does not imply circle-specific reputation exists yet.
 
-## 11. Phase 8 — Admin Moderation Productization
+## 12. Phase 8 — Admin Moderation Productization
 
 ### Goal
 
@@ -341,6 +527,14 @@ Make slashing an understandable moderation action instead of manual ID operation
 - admin selects review card to slash
 - already slashed reviews cannot be slashed again
 
+### Component requirements
+
+- Use `CommunityContextCard` at the top.
+- Use `ReviewCard` for moderation queue items.
+- Use `ConfirmationPanel` for slash confirmation/reason.
+- Use `ActionGate` for non-admin states.
+- Use `TxStatusCard` as secondary technical status.
+
 ### Required confirmation copy
 
 ```text
@@ -356,8 +550,9 @@ This will mark the review as slashed and reduce the target contributor's reputat
 - Target reputation decreases by 2, floored at 0.
 - Linked contribution endorsement count decreases by 1, floored at 0.
 - Manual endorsement ID is not required in normal moderation flow.
+- Review title/message is visually stronger than endorsement ID.
 
-## 12. Phase 9 — QA and Demo Readiness
+## 13. Phase 9 — QA and Demo Readiness
 
 ### Goal
 
@@ -388,8 +583,10 @@ Ensure the canonical Alice/Bob demo works end to end on Canopy testnet/local Can
 - RPC failures show recoverable UI.
 - Last transaction/status is visible.
 - README demo story and UI flow match.
+- Mobile layout has no horizontal scroll from metadata or tables.
+- Technical IDs/addresses/tx hashes stay visually secondary across the demo.
 
-## 13. Phase 10 — Documentation Cleanup
+## 14. Phase 10 — Documentation Cleanup
 
 ### Goal
 
@@ -411,22 +608,24 @@ Keep docs aligned with the actual product.
 - Product docs do not claim mainnet/token/NFT functionality.
 - Product docs clearly state Canopy testnet/local environment.
 - Dev-facing TODOs are separated from user-facing product claims.
+- UI Design System rules stay aligned across UX/UI spec, screen wireframes, and delivery phases.
 
-## 14. Suggested Implementation Order
+## 15. Suggested Implementation Order
 
 Recommended order for engineering issues:
 
 ```text
 P0-1 Product language cleanup
-P0-2 Overview next-step journey checklist
-P0-3 Circle discovery/open community UX
-P0-4 Community Workspace centralization
-P0-5 Auto-generate contribution ID
-P0-6 Post visibility verification
-P0-7 Review work UX, self-review guards, already-endorsed state
-P0-8 Leaderboard/role wording cleanup
-P0-9 Card-based admin slash flow
-P0-10 Alice/Bob demo QA
+P0-2 Shared UI design system component setup
+P0-3 Overview next-step journey checklist
+P0-4 Circle discovery/open community UX
+P0-5 Community Workspace centralization
+P0-6 Auto-generate contribution ID
+P0-7 Post visibility verification
+P0-8 Review work UX, self-review guards, already-endorsed state
+P0-9 Leaderboard/role wording cleanup
+P0-10 Card-based admin slash flow
+P0-11 Alice/Bob demo QA
 ```
 
 Then:
@@ -437,6 +636,7 @@ P1-2 Contribution detail view
 P1-3 Review history polish
 P1-4 Joined communities switcher polish
 P1-5 Testnet status panel polish
+P1-6 Responsive/mobile polish
 ```
 
 Future only:
@@ -450,7 +650,7 @@ P2-5 Reviewer endorsement withdrawal transaction
 P2-6 Token/NFT/reward extensions
 ```
 
-## 15. Definition of Done for MVP Productization
+## 16. Definition of Done for MVP Productization
 
 The MVP productization work is done when:
 
@@ -465,10 +665,13 @@ The MVP productization work is done when:
 - Contribution posting and peer review feel social, not only transactional.
 - Reputation and role progression are understandable.
 - Admin moderation is card-based and safe.
+- Shared UI components are reused consistently.
+- Typography, spacing, responsive behavior, and metadata hierarchy follow the UI Design System.
+- Community Workspace is a dashboard/navigation hub and does not duplicate full specialist workflows.
 - The Alice/Bob demo works from UI.
 - No screen implies token, NFT, mainnet reward, or project-scoped reputation functionality.
 
-## 16. What Not To Build Yet
+## 17. What Not To Build Yet
 
 Do not build these until the MVP loop is stable and separately scoped:
 
@@ -485,7 +688,7 @@ Do not build these until the MVP loop is stable and separately scoped:
 - project-scoped reputation, unless protocol work is explicitly approved
 - reviewer endorsement self-cancel / withdrawal, unless a real protocol transaction is explicitly approved
 
-## 17. Final Delivery Principle
+## 18. Final Delivery Principle
 
 Build the smallest complete Social-Fi loop first:
 
