@@ -17,6 +17,7 @@ Stabilize the product meaning first.
 Then improve UX clarity.
 Then strengthen system flow.
 Then enforce shared UI design system.
+Then enforce implementation governance.
 Then add future protocol features only after MVP loop works.
 ```
 
@@ -38,11 +39,159 @@ Identity → Circle → Proof → Endorsement → Reputation → Role
 - Reviewer self-cancel endorsement is not supported in MVP.
 - Reputation is global profile reputation displayed in selected community context.
 
-## 3. UI Design System Delivery Requirements
+## 3. Implementation Governance
+
+Before coding any RepuRing UI change, engineering must identify:
+
+- owning page
+- reused shared component
+- current community context behavior
+- required user state/preconditions
+- disabled/locked state
+- empty state
+- loading state
+- success state
+- error/recovery state
+- refresh behavior after transaction
+- acceptance criteria from docs
+
+### 3.1 Page ownership rule
+
+Every page must have a clear owner.
+
+Community Workspace owns:
+
+- dashboard
+- overview
+- navigation
+
+Post Work owns:
+
+- contribution feed
+- contribution posting
+- post visibility state
+
+Review Work owns:
+
+- contribution selection for review
+- own/already/slashed state
+- endorsement confirmation
+- already-endorsed state
+
+Admin owns:
+
+- moderation queue
+- review card selection
+- slash confirmation
+- reason entry
+
+If a page shows data owned by another page, it must be preview-only and link to the owner page.
+
+### 3.2 Shared component rule
+
+If a UI block appears on more than one page, it should become or reuse a shared component.
+
+Required reusable patterns include:
+
+- `ContributionCard`
+- `ReviewCard`
+- `CommunityContextCard`
+- `ActiveWalletBanner`
+- `ActionGate`
+- `TxStatusCard`
+- `ConfirmationPanel`
+- `PostVisibilityNotice`
+- `GeneratedRecordIdBlock`
+
+Do not write separate page-specific versions unless behavior is materially different.
+
+### 3.3 Design-doc traceability rule
+
+Every implementation task must map to the design docs.
+
+Before coding a feature, engineering should identify:
+
+- which page owns it
+- which component owns it
+- which state controls it
+- which protocol action supports it
+- which acceptance criteria validate it
+
+Every task should be traceable back to one or more of:
+
+- `REPURING_PRODUCT_DESIGN_V1.md`
+- `REPURING_UX_UI_SPEC_V1.md`
+- `REPURING_SYSTEM_FLOW_SPEC_V1.md`
+- `REPURING_SCREEN_WIREFRAMES_V1.md`
+- `REPURING_DELIVERY_PHASES_V1.md`
+
+### 3.4 State-definition rule
+
+No new UI flow should be implemented unless its product meaning, state behavior, and protocol support are already defined.
+
+A new action must define:
+
+- precondition
+- disabled state
+- locked state, if applicable
+- empty state
+- loading state
+- success state
+- error/recovery state
+- refresh behavior after transaction or query
+
+The user should never experience an undefined state transition.
+
+### 3.5 Preview-only rule
+
+Preview pages cannot own full workflows.
+
+Examples:
+
+Community Workspace may show:
+
+- recent contributions
+- recent reviews
+- leaderboard preview
+- role preview
+- admin shortcut
+
+But it must route users to:
+
+- Post Work for contribution posting and full feed
+- Review Work for endorsement workflow
+- Leaderboard for full ranking
+- Admin for moderation workflow
+
+### 3.6 Protocol-support rule
+
+No new UI action should be implemented unless:
+
+- product meaning is defined
+- state behavior is defined
+- protocol support exists
+
+The UI must not advertise protocol capabilities that do not exist.
+
+### 3.7 Pull request governance checklist
+
+A pull request should not be considered complete unless:
+
+- page ownership is respected
+- shared components are reused
+- state transitions are defined
+- current community context behavior is clear
+- disabled, empty, success, error, and refresh states are handled
+- acceptance criteria are satisfied
+- UX/UI Specification remains consistent
+- System Flow remains consistent
+- MVP product laws remain intact
+
+## 4. UI Design System Delivery Requirements
 
 The MVP UI must use a shared design system. Devs should not recreate the same component logic separately on every page.
 
-### 3.1 Typography requirements
+### 4.1 Typography requirements
 
 | Text type | Size | Weight | Required use |
 | --- | --- | --- | --- |
@@ -61,7 +210,7 @@ Acceptance criteria:
 - Technical IDs, addresses, and tx hashes use small metadata typography.
 - Technical IDs, addresses, and tx hashes are never more visually prominent than contribution/community/review titles.
 
-### 3.2 Layout requirements
+### 4.2 Layout requirements
 
 Default page layout order:
 
@@ -105,7 +254,7 @@ Acceptance criteria:
 - Mobile has no horizontal overflow from metadata or tables.
 - Buttons in mobile forms/action blocks are full width where appropriate.
 
-### 3.3 Shared component requirements
+### 4.3 Shared component requirements
 
 Required shared components:
 
@@ -136,7 +285,7 @@ Acceptance criteria:
 - Endorse and slash confirmations use `ConfirmationPanel`.
 - Post Work uses `GeneratedRecordIdBlock` and `PostVisibilityNotice`.
 
-### 3.4 Page responsibility requirements
+### 4.4 Page responsibility requirements
 
 Community Workspace role:
 
@@ -174,7 +323,7 @@ Acceptance criteria:
 - Review Work owns contribution selection, own/already/slashed state, review writing, confirmation, and already-endorsed state.
 - Admin owns review selection, slash confirmation, reason entry, and moderation queue.
 
-## 4. Priority Levels
+## 5. Priority Levels
 
 ### P0 — Must-have MVP corrections
 
@@ -190,7 +339,7 @@ P1 items improve usability, reduce friction, and make RepuRing feel more product
 
 P2 items should wait until the MVP loop is stable.
 
-## 5. Phase 1 — Product Language, Navigation, and Design System Setup
+## 6. Phase 1 — Product Language, Navigation, and Design System Setup
 
 ### Goal
 
@@ -240,8 +389,9 @@ Use product CTAs:
 - User can understand the app from the Overview page without reading README.
 - PageHeader, CommunityContextCard, ContributionCard, ReviewCard, TxStatusCard, ConfirmationPanel, PostVisibilityNotice, and GeneratedRecordIdBlock are available or explicitly mapped to existing components.
 - Typography hierarchy is applied consistently enough that content titles visually dominate technical metadata.
+- Implementation tasks identify owner page, reused component, state behavior, and acceptance criteria before code begins.
 
-## 6. Phase 2 — Overview and Journey Checklist
+## 7. Phase 2 — Overview and Journey Checklist
 
 ### Goal
 
@@ -267,7 +417,7 @@ Make `/repuring` the user's orientation page.
 - Dev/testnet readiness is visible but secondary.
 - Technical status appears after product context and journey actions.
 
-## 7. Phase 3 — Circles and Community Context
+## 8. Phase 3 — Circles and Community Context
 
 ### Goal
 
@@ -289,7 +439,7 @@ Make community circles feel like real Social-Fi spaces.
 - Community Workspace is reachable from every circle card.
 - Every circle-scoped route uses a consistent CommunityContextCard.
 
-## 8. Phase 4 — Community Workspace Productization
+## 9. Phase 4 — Community Workspace Productization
 
 ### Goal
 
@@ -338,7 +488,7 @@ Not allowed as full workflows:
 - Leaderboard and role context match selected circle.
 - Community Workspace routes users to specialist pages for full workflows.
 
-## 9. Phase 5 — Proof-of-Work Feed Improvements
+## 10. Phase 5 — Proof-of-Work Feed Improvements
 
 ### Goal
 
@@ -390,7 +540,7 @@ Advanced/debug-only:
 - Contribution card shows title, category, author, proof URL, endorsement count, and review CTA.
 - Contribution title is visually stronger than onchain record ID.
 
-## 10. Phase 6 — Review / Endorse Work Improvements
+## 11. Phase 6 — Review / Endorse Work Improvements
 
 ### Goal
 
@@ -468,7 +618,7 @@ This endorsement is an onchain attestation. After confirmation, you cannot self-
 - Legacy direct user endorsement remains clearly marked as legacy.
 - Contribution title and review message are visually stronger than technical IDs.
 
-## 11. Phase 7 — Leaderboard and Role Progression
+## 12. Phase 7 — Leaderboard and Role Progression
 
 ### Goal
 
@@ -501,7 +651,7 @@ MVP leaderboard uses global profile reputation displayed in the selected communi
 - Role threshold display matches protocol rules.
 - UI does not imply circle-specific reputation exists yet.
 
-## 12. Phase 8 — Admin Moderation Productization
+## 13. Phase 8 — Admin Moderation Productization
 
 ### Goal
 
@@ -552,7 +702,7 @@ This will mark the review as slashed and reduce the target contributor's reputat
 - Manual endorsement ID is not required in normal moderation flow.
 - Review title/message is visually stronger than endorsement ID.
 
-## 13. Phase 9 — QA and Demo Readiness
+## 14. Phase 9 — QA and Demo Readiness
 
 ### Goal
 
@@ -585,8 +735,9 @@ Ensure the canonical Alice/Bob demo works end to end on Canopy testnet/local Can
 - README demo story and UI flow match.
 - Mobile layout has no horizontal scroll from metadata or tables.
 - Technical IDs/addresses/tx hashes stay visually secondary across the demo.
+- Demo task or PR documents owning page, reused component, state behavior, refresh behavior, and acceptance criteria.
 
-## 14. Phase 10 — Documentation Cleanup
+## 15. Phase 10 — Documentation Cleanup
 
 ### Goal
 
@@ -609,23 +760,25 @@ Keep docs aligned with the actual product.
 - Product docs clearly state Canopy testnet/local environment.
 - Dev-facing TODOs are separated from user-facing product claims.
 - UI Design System rules stay aligned across UX/UI spec, screen wireframes, and delivery phases.
+- Implementation Governance rules stay aligned across index and delivery phases.
 
-## 15. Suggested Implementation Order
+## 16. Suggested Implementation Order
 
 Recommended order for engineering issues:
 
 ```text
 P0-1 Product language cleanup
 P0-2 Shared UI design system component setup
-P0-3 Overview next-step journey checklist
-P0-4 Circle discovery/open community UX
-P0-5 Community Workspace centralization
-P0-6 Auto-generate contribution ID
-P0-7 Post visibility verification
-P0-8 Review work UX, self-review guards, already-endorsed state
-P0-9 Leaderboard/role wording cleanup
-P0-10 Card-based admin slash flow
-P0-11 Alice/Bob demo QA
+P0-3 Implementation governance checklist in issue/PR template
+P0-4 Overview next-step journey checklist
+P0-5 Circle discovery/open community UX
+P0-6 Community Workspace centralization
+P0-7 Auto-generate contribution ID
+P0-8 Post visibility verification
+P0-9 Review work UX, self-review guards, already-endorsed state
+P0-10 Leaderboard/role wording cleanup
+P0-11 Card-based admin slash flow
+P0-12 Alice/Bob demo QA
 ```
 
 Then:
@@ -650,7 +803,7 @@ P2-5 Reviewer endorsement withdrawal transaction
 P2-6 Token/NFT/reward extensions
 ```
 
-## 16. Definition of Done for MVP Productization
+## 17. Definition of Done for MVP Productization
 
 The MVP productization work is done when:
 
@@ -668,10 +821,11 @@ The MVP productization work is done when:
 - Shared UI components are reused consistently.
 - Typography, spacing, responsive behavior, and metadata hierarchy follow the UI Design System.
 - Community Workspace is a dashboard/navigation hub and does not duplicate full specialist workflows.
+- Implementation tasks map to owning page, shared component, state behavior, refresh behavior, and acceptance criteria.
 - The Alice/Bob demo works from UI.
 - No screen implies token, NFT, mainnet reward, or project-scoped reputation functionality.
 
-## 17. What Not To Build Yet
+## 18. What Not To Build Yet
 
 Do not build these until the MVP loop is stable and separately scoped:
 
@@ -688,7 +842,7 @@ Do not build these until the MVP loop is stable and separately scoped:
 - project-scoped reputation, unless protocol work is explicitly approved
 - reviewer endorsement self-cancel / withdrawal, unless a real protocol transaction is explicitly approved
 
-## 18. Final Delivery Principle
+## 19. Final Delivery Principle
 
 Build the smallest complete Social-Fi loop first:
 
