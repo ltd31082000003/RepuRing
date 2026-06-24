@@ -63,9 +63,11 @@ Examples:
 
 ### 2.3 Community context must be visible
 
-Every RepuRing page must show or imply the selected community circle.
+Every RepuRing circle-scoped page must show the selected community circle.
 
 The user should never wonder which circle their contribution, endorsement, leaderboard, or role action applies to.
+
+Circle-scoped pages must use the current community context. Review Work, Contributions, Leaderboard, Role, and Admin pages should not maintain independent manual circle IDs in normal UI.
 
 ### 2.4 The Community Workspace is the product center
 
@@ -85,6 +87,37 @@ Developer/testnet details should live in:
 - last transaction details
 
 The main product surfaces should emphasize identity, community, proof, review, reputation, and role.
+
+### 2.6 Never show fake protocol actions
+
+The UI must not offer actions that the current protocol cannot execute.
+
+Examples:
+
+- Do not show Cancel endorsement unless a real withdraw endorsement transaction exists.
+- Do not invite duplicate endorsement if the current wallet already endorsed the selected contribution.
+- Do not show manual Circle ID editing on Review Work if the page is supposed to use current community context.
+
+If a user expects an unsupported action, explain the protocol limitation and show the supported correction path.
+
+Required unsupported-action wording:
+
+```text
+This action is not supported in the current MVP protocol.
+```
+
+For invalid endorsements, the supported MVP correction path is creator/admin moderation through `SlashEndorsementTx`.
+
+### 2.7 Technical IDs are metadata
+
+Normal users should not manually create or memorize technical IDs.
+
+Rules:
+
+- Circle ID may appear as readonly current community metadata.
+- Contribution ID should be generated automatically and shown as Onchain record ID.
+- Endorsement ID should appear only as moderation/technical metadata.
+- Manual ID input belongs in advanced/debug sections only.
 
 ## 3. Global Navigation
 
@@ -147,22 +180,6 @@ Purpose:
 - explain what the page does
 - show page-level actions
 
-Content:
-
-- eyebrow label
-- title
-- short copy
-- one to three action buttons
-
-Example:
-
-```text
-Eyebrow: Community Workspace
-Title: Pharos Builders
-Copy: View members, proof-of-work, peer reviews, leaderboard, and role status for this community.
-Actions: Refresh community / Post work / Review work / View leaderboard
-```
-
 ### 5.2 Active Wallet Banner
 
 Purpose:
@@ -187,21 +204,9 @@ Purpose:
 - show selected circle
 - show member count
 - show whether user is member/admin
-
-Content:
-
-- circle name
-- circle ID
-- description
-- creator/admin address
-- member count
-- current user status
+- expose Circle ID as readonly metadata only
 
 ### 5.4 Proof-of-Work Card
-
-Purpose:
-
-- display contribution content in feed
 
 Required fields:
 
@@ -212,24 +217,17 @@ Required fields:
 - proof URL
 - endorsement count
 - slashed/active status
+- generated onchain record ID as readonly metadata
 - review CTA
-
-Primary actions:
-
-- View proof
-- Review this work
 
 Disabled states:
 
 - Own work → `Own work - switch wallet to review`
+- Already endorsed → `Already endorsed`
 - Not member → `Join to review`
 - Slashed → `Review disabled`
 
 ### 5.5 Peer Review Card
-
-Purpose:
-
-- display endorsement as social review/comment
 
 Required fields:
 
@@ -240,6 +238,7 @@ Required fields:
 - message
 - status active/slashed
 - slash reason if slashed
+- endorsement ID as collapsed technical metadata
 
 Admin action:
 
@@ -248,12 +247,9 @@ Admin action:
 Non-admin behavior:
 
 - show read-only review status
+- do not show reviewer self-cancel
 
 ### 5.6 Reputation / Role Progress Card
-
-Purpose:
-
-- make reputation feel like progression, not just a number
 
 Required fields:
 
@@ -271,10 +267,6 @@ Global reputation is used to claim a role in the selected community.
 
 ### 5.7 Transaction Status Card
 
-Purpose:
-
-- show Canopy testnet transaction/query state without dominating the UX
-
 Content:
 
 - current RPC status
@@ -291,14 +283,6 @@ Do not show raw technical errors as the only explanation. Pair them with user-fr
 ### Page goal
 
 Introduce RepuRing, summarize user status, and guide the next action.
-
-### Primary user questions
-
-- What is RepuRing?
-- Am I connected/selected?
-- Do I have a profile?
-- Which community am I using?
-- What should I do next?
 
 ### Required sections
 
@@ -324,47 +308,6 @@ Suggested description:
 Create a contributor identity, join a community circle, post proof-of-work, get peer-reviewed, build reputation, and claim community status on Canopy testnet.
 ```
 
-### Journey checklist
-
-Steps:
-
-1. Select wallet
-2. Create profile
-3. Create or join community circle
-4. Open community workspace
-5. Post proof-of-work
-6. Review another member's work
-7. Build reputation
-8. Claim role/status
-9. Moderate invalid reviews if admin
-
-Each step has status:
-
-- Done
-- Next
-- Locked
-- Optional
-
-### Empty states
-
-No wallet:
-
-```text
-Select a local signing wallet to start your RepuRing journey.
-```
-
-No profile:
-
-```text
-Create your contributor profile before joining communities or posting proof-of-work.
-```
-
-No circle:
-
-```text
-Create or join a community circle to start building reputation.
-```
-
 ## 6.2 `/key-management` — My Account / Profile
 
 ### Page goal
@@ -379,31 +322,12 @@ Let the user create/select local signing keys and create/update their RepuRing p
 4. Update Profile Form
 5. RepuRing Profile Preview
 
-### Profile form fields
-
-- username
-- bio
-- avatar URL
-
 ### UX rules
 
 - If wallet is not selected, profile form should be disabled or hidden behind guidance.
 - If profile already exists, show update form instead of create form.
 - Username should be treated as permanent in MVP if protocol does not support changing it.
 - Bio/avatar can be editable.
-
-### Success message
-
-```text
-Profile submitted. Your contributor identity will appear after Canopy state refresh.
-```
-
-### Error message examples
-
-- Username is required.
-- This wallet already has a profile.
-- Username is already taken.
-- Signing failed. Check wallet password.
 
 ## 6.3 `/repuring/circles` — Discover Circles
 
@@ -419,13 +343,7 @@ Let users create, discover, join, and open community circles.
 4. Joined / Created Circles
 5. Advanced Manual Circle ID Input
 
-### Create circle form fields
-
-- community name
-- community ID
-- description
-
-### UX recommendation
+### Create circle UX
 
 The UI should generate a suggested community ID from the name.
 
@@ -436,16 +354,7 @@ Community name: Pharos Builders
 Suggested ID: pharos-builders
 ```
 
-The user can edit the ID in advanced mode.
-
-### Circle card fields
-
-- name
-- circle ID
-- description
-- creator/admin
-- member count
-- current status: Creator / Joined / Not joined
+The user can edit the ID only in advanced/debug mode.
 
 ### Circle card actions
 
@@ -456,12 +365,6 @@ The user can edit the ID in advanced mode.
 | Not joined | Join community |
 | Joined | Open community |
 | Creator | Open admin / Open community |
-
-### Empty state
-
-```text
-No community circles found yet. Create the first circle to start the Social-Fi loop.
-```
 
 ## 6.4 `/repuring/community` — Community Workspace
 
@@ -482,28 +385,7 @@ This is the main product workspace for a selected circle.
 9. Admin Moderation Shortcut
 10. Joined Communities Switcher
 
-### Metrics row
-
-Recommended metrics:
-
-- Members
-- Contributions
-- Reviews
-- Your reputation
-- Your role
-
-### Primary actions
-
-- Refresh community
-- Post proof-of-work
-- Review work
-- View leaderboard
-- Claim role
-- Open moderation, admin only
-
 ### Community switching
-
-If the user belongs to multiple circles, show a joined communities panel.
 
 Switching a community should update:
 
@@ -520,24 +402,6 @@ Show confirmation:
 Community switched. Contributions, reviews, leaderboard, and role actions now use this community.
 ```
 
-### Empty state: selected community not found
-
-```text
-Selected community not found. Discover or create a community circle to continue.
-```
-
-### Empty state: no contributions
-
-```text
-No proof-of-work has been posted yet. Be the first member to contribute.
-```
-
-### Empty state: not a member
-
-```text
-Join this community before posting proof-of-work or reviewing contributions.
-```
-
 ## 6.5 `/repuring/contributions` — Proof Feed / Post Work
 
 ### Page goal
@@ -548,9 +412,11 @@ Let members post proof-of-work and browse existing contributions.
 
 1. Current Community Context
 2. Post Proof-of-Work Form
-3. Contribution Feed
-4. My Contributions Filter or Section
-5. Reviews Under Contribution, if available
+3. Generated Record ID block
+4. Post Visibility Notice
+5. Contribution Feed
+6. My Contributions Filter or Section
+7. Reviews Under Contribution, if available
 
 ### Form fields
 
@@ -561,55 +427,49 @@ Required:
 - proof URL
 - category
 
-Advanced/dev-only:
+Generated metadata:
 
-- contribution ID
+- contribution ID / onchain record ID
 
-### UX recommendation
+Advanced/debug-only:
 
-Auto-generate contribution ID in normal UI.
+- custom contribution ID
 
-Suggested algorithm behavior for design handoff:
-
-```text
-slug(title) + short timestamp or random suffix
-```
-
-Example:
+### Generated record ID block
 
 ```text
-wrote-pharos-testnet-guide-8472
+Label: Onchain record ID
+Value: <generated contribution id>
+Helper: This ID is generated for the onchain contribution record.
+Action: Regenerate ID
+Advanced: custom contribution ID
 ```
 
-This avoids making users manually invent IDs.
+### Post submit feedback
 
-### Category selector
+After submit, the page must show visible post feedback near the composer or feed.
 
-Use a select/dropdown or segmented control:
-
-- builder
-- helper
-- creator
-- researcher
-- tester
-- educator
-
-Each category should include helper text:
-
-- builder: code, integrations, technical work
-- helper: community support or onboarding
-- creator: content, visuals, media
-- researcher: analysis, reports, ecosystem research
-- tester: bug reports, QA, testnet testing
-- educator: guides, tutorials, learning resources
-
-### Proof URL behavior
-
-Proof URL should be clearly described:
+Required states:
 
 ```text
-Link to GitHub PR, article, guide, tweet, issue, demo, test report, or other proof.
+Contribution submitted. Checking feed...
+Contribution posted and visible in the feed.
+Contribution submitted but not visible yet. Refresh again or check transaction status.
+Failed: <friendly error>
 ```
+
+The composer must not silently disappear without feedback. If submit fails, keep the composer open and show a friendly error.
+
+### Feed behavior
+
+If the feed can contain many contributions, show a visible count and progressive display:
+
+```text
+Showing X of Y contributions
+[Show more]
+```
+
+Filter empty state must be different from a truly empty feed.
 
 ### Submit CTA
 
@@ -623,21 +483,6 @@ Secondary technical badge:
 CreateContributionTx
 ```
 
-### Disabled states
-
-| State | Message | Action |
-| --- | --- | --- |
-| No wallet | Select a wallet before posting work. | Select wallet |
-| No profile | Create a profile before posting work. | Create profile |
-| Not member | Join this community before posting work. | Join community |
-| No circle | Select or create a community circle first. | Discover circles |
-
-### Success message
-
-```text
-Proof-of-work submitted. It will appear in the feed after Canopy state refresh.
-```
-
 ## 6.6 `/repuring/endorse` — Review Work
 
 ### Page goal
@@ -646,42 +491,79 @@ Let members review and endorse useful work from other members.
 
 ### Required sections
 
-1. Current Community Context
+1. Readonly Community Context
 2. Selected Contribution Preview
 3. Contribution Picker / Feed
-4. Review Form
-5. Existing Reviews
-6. Reputation Impact Explanation
+4. Current Reviewer Endorsement State
+5. Review Form
+6. Confirmation Panel
+7. Existing Reviews
+8. Reputation Impact Explanation
 
-### Review form fields
+### Readonly community context
 
-- tag
-- review message
+Review Work must use the current selected community context. It should not ask normal users to type a circle ID.
 
-### Review tag selector
+Show:
 
-MVP uses existing tags:
+- community name
+- Circle ID as readonly metadata
+- member count
+- current wallet/member status
+- Change community action
 
-- builder
-- helper
-- creator
-- leader
-- trusted
+### Contribution selector status badges
 
-UI helper text should explain them as review intent, not protocol internals.
+Each contribution selector card should show one status badge:
 
-Suggested labels:
+- Slashed
+- Own work
+- Already endorsed
+- Ready to review
 
-- builder: strong technical contribution
-- helper: useful community help
-- creator: valuable creative/content work
-- leader: high-impact contribution
-- trusted: verified useful work
+### Already endorsed behavior
 
-### Reputation impact copy
+Review Work must detect whether the current wallet already endorsed the selected contribution.
+
+Behavior:
+
+- show `Already endorsed`
+- show the current wallet's existing review
+- disable `Review and continue`
+- do not show `Cancel endorsement`
+- explain that endorsements cannot be self-cancelled in the MVP protocol
+
+Required copy:
 
 ```text
-A valid peer endorsement gives +1 global reputation to the contribution author.
+You already endorsed this work. Your review is visible below. Endorsements cannot be self-cancelled in the MVP protocol.
+```
+
+### Confirmation panel
+
+The confirmation panel must warn:
+
+```text
+This endorsement is an onchain attestation. After confirmation, you cannot self-cancel it in the current MVP protocol. Only the circle creator/admin can moderate invalid endorsements.
+```
+
+Confirmation content:
+
+- contribution title
+- onchain record ID
+- author
+- community
+- tag
+- reviewer wallet
+- review message
+- reputation impact: +1 global reputation to author
+- warning: this endorsement cannot be self-cancelled in the current MVP protocol
+
+Actions:
+
+```text
+[Confirm endorsement]
+[Cancel]
 ```
 
 ### Submit CTA
@@ -704,14 +586,8 @@ EndorseContributionTx
 | No profile | Create a profile before reviewing work. | Create profile |
 | Not member | Join this community before reviewing work. | Join community |
 | Own contribution | You cannot review your own work. Switch to another member account. | Switch wallet |
-| Already reviewed | You already endorsed this contribution. | View reviews |
+| Already reviewed | You already endorsed this contribution. | View review |
 | Slashed contribution | Review is disabled for slashed work. | None |
-
-### Success message
-
-```text
-Review submitted. The author gains reputation after Canopy state refresh.
-```
 
 ## 6.7 `/repuring/leaderboard` — Reputation Rankings
 
@@ -727,24 +603,10 @@ Show social capital and role/status visibility.
 4. Current User Rank Card, if available
 5. Global Reputation Notice
 
-### Leaderboard columns
-
-- rank
-- contributor username/address
-- reputation
-- derived role
-- claimed role status if available
-
 ### Required notice
 
 ```text
 MVP leaderboard uses global profile reputation displayed in the selected community context. Circle-specific reputation is planned for a later version.
-```
-
-### Empty state
-
-```text
-No ranked contributors yet. Members will appear after profiles and endorsements are loaded.
 ```
 
 ## 6.8 `/repuring/admin` — Admin / Moderation
@@ -761,6 +623,20 @@ Let circle creator/admin protect the reputation economy by slashing invalid revi
 4. Slashed Review History or Status
 5. Last Transaction / Status
 
+### Moderation rule
+
+Admin moderation is the MVP correction path for invalid endorsements.
+
+Normal moderation must be card-based:
+
+- select review card
+- inspect reviewer, target, contribution, tag, message
+- enter slash reason
+- confirm reputation impact
+- submit `SlashEndorsementTx`
+
+Manual endorsement ID input is advanced/debug only.
+
 ### Eligibility states
 
 | State | UI behavior |
@@ -771,47 +647,12 @@ Let circle creator/admin protect the reputation economy by slashing invalid revi
 | Member, not creator | Can claim role, cannot slash |
 | Creator/admin | Can claim role and moderate reviews |
 
-### Moderation queue card fields
-
-- endorsement ID, technical but can be collapsed
-- linked contribution
-- reviewer
-- target contributor
-- tag
-- message
-- current status
-- slash reason, if already slashed
-
-### Slash action
-
-The admin should click a review card and enter a reason.
-
-Do not make manual endorsement ID entry the primary moderation experience.
-
-CTA:
-
-```text
-Slash invalid review
-```
-
-Reason placeholder:
-
-```text
-Explain why this endorsement is invalid, spam, or abusive.
-```
-
 ### Slash confirmation
 
 Before submit:
 
 ```text
 This will mark the review as slashed and reduce the target contributor's reputation by 2, floored at 0.
-```
-
-### Success message
-
-```text
-Review slashed. Reputation and endorsement count will update after Canopy state refresh.
 ```
 
 ## 7. Loading, Error, and Refresh Behavior
@@ -832,13 +673,6 @@ Show:
 
 ```text
 Canopy RPC is not reachable. Start the local/testnet RPC services and refresh.
-```
-
-Include technical ports only in detail:
-
-```text
-Query/tx RPC: 50002
-Admin/keystore RPC: 50003
 ```
 
 ### 7.3 Transaction pending
@@ -903,6 +737,7 @@ Preferred words:
 - role
 - status
 - Canopy testnet
+- onchain attestation
 
 Avoid overusing:
 
@@ -924,8 +759,11 @@ Before considering the UX implementation done, verify:
 - User never has to memorize a circle ID for normal flow.
 - User never has to manually create a contribution ID in normal flow.
 - User can post proof-of-work from a joined circle.
+- After posting, user sees submitted/checking, visible, or not-visible-yet state.
 - User can review another member's work.
 - User cannot review their own contribution.
+- User sees Already endorsed before duplicate review submit.
+- UI does not show Cancel endorsement or Withdraw endorsement in MVP.
 - User can see reputation and role progress.
 - Admin can slash from a review card.
 - Non-admin can understand why moderation is disabled.
