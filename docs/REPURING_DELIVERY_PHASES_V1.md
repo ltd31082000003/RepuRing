@@ -25,7 +25,19 @@ Engineering should avoid building new large features until the MVP loop is smoot
 Identity → Circle → Proof → Endorsement → Reputation → Role
 ```
 
-## 2. Priority Levels
+## 2. Non-Negotiable MVP Product Laws
+
+- RepuRing is a Social-Fi contribution reputation product, not a raw transaction demo.
+- UI must use product language first and protocol language second.
+- Circle-scoped pages must use the current community context.
+- Normal users must not manually type technical IDs in normal flow.
+- The UI must not show fake actions unsupported by protocol.
+- Contribution posting must verify visible feed state.
+- Endorsement is an onchain attestation, not a like/unlike toggle.
+- Reviewer self-cancel endorsement is not supported in MVP.
+- Reputation is global profile reputation displayed in selected community context.
+
+## 3. Priority Levels
 
 ### P0 — Must-have MVP corrections
 
@@ -41,7 +53,7 @@ P1 items improve usability, reduce friction, and make RepuRing feel more product
 
 P2 items should wait until the MVP loop is stable.
 
-## 3. Phase 1 — Product Language and Navigation Cleanup
+## 4. Phase 1 — Product Language and Navigation Cleanup
 
 ### Goal
 
@@ -57,8 +69,6 @@ Make the app read like a Social-Fi Web3 product instead of a raw transaction dem
 
 ### Required changes
 
-#### 3.1 Navigation labels
-
 Use these labels:
 
 ```text
@@ -72,8 +82,6 @@ Leaderboard
 Admin
 ```
 
-#### 3.2 CTA language
-
 Use product CTAs:
 
 | Current/protocol language | Product CTA |
@@ -86,22 +94,6 @@ Use product CTAs:
 | ClaimRoleTx | Claim role |
 | SlashEndorsementTx | Slash invalid review |
 
-#### 3.3 Page copy
-
-All major pages should describe the user benefit before technical action.
-
-Good:
-
-```text
-Post proof-of-work so peers can review your contribution and help you build reputation.
-```
-
-Avoid:
-
-```text
-Submit CreateContributionTx to the plugin.
-```
-
 ### Acceptance criteria
 
 - Every main route has product-first title and description.
@@ -109,19 +101,11 @@ Submit CreateContributionTx to the plugin.
 - Canopy testnet/local RPC is mentioned where relevant.
 - User can understand the app from the Overview page without reading README.
 
-## 4. Phase 2 — Overview and Journey Checklist
+## 5. Phase 2 — Overview and Journey Checklist
 
 ### Goal
 
 Make `/repuring` the user's orientation page.
-
-### Scope
-
-- improve hero copy
-- show wallet/profile/circle/reputation/role summary
-- show next-step journey checklist
-- show quick actions
-- show testnet readiness without dominating UI
 
 ### Required checklist steps
 
@@ -135,17 +119,6 @@ Make `/repuring` the user's orientation page.
 8. Claim role/status
 9. Moderate invalid reviews, admin optional
 
-### Status labels
-
-Use:
-
-```text
-Done
-Next
-Locked
-Optional
-```
-
 ### Acceptance criteria
 
 - User can see their current state.
@@ -153,53 +126,19 @@ Optional
 - Missing wallet/profile/circle/member state is handled with clear CTAs.
 - Dev/testnet readiness is visible but secondary.
 
-## 5. Phase 3 — Circles and Community Context
+## 6. Phase 3 — Circles and Community Context
 
 ### Goal
 
 Make community circles feel like real Social-Fi spaces.
 
-### Scope
+### Required changes
 
 - improve circle discovery cards
 - reduce need to memorize IDs
 - make selected community context visible across pages
 - make Community Workspace the center of the app
-
-### Required changes
-
-#### 5.1 Create circle UX
-
-Form fields:
-
-- community name
-- community ID
-- description
-
-Recommended behavior:
-
-- auto-suggest community ID from name
-- allow editing in advanced mode
-
-#### 5.2 Circle cards
-
-Each card must show:
-
-- name
-- ID
-- description
-- creator/admin
-- member count
-- status: Creator / Joined / Not joined
-- action: Join / Open community / Open admin
-
-#### 5.3 Community context
-
-On all circle-scoped pages, show:
-
-- selected circle name or ID
-- member status
-- shortcut to Community Workspace
+- treat Circle ID as readonly metadata in normal flow
 
 ### Acceptance criteria
 
@@ -208,7 +147,7 @@ On all circle-scoped pages, show:
 - Switching circle refreshes feed, reviews, leaderboard, and role context.
 - Community Workspace is reachable from every circle card.
 
-## 6. Phase 4 — Community Workspace Productization
+## 7. Phase 4 — Community Workspace Productization
 
 ### Goal
 
@@ -218,31 +157,15 @@ Make `/repuring/community` the main product workspace.
 
 1. Community identity header
 2. Active wallet/member status banner
-3. Metrics row
-4. Member list
-5. Recent proof-of-work posts
-6. Recent peer reviews
-7. Leaderboard preview
-8. Role progress
-9. Admin moderation shortcut if creator/admin
-10. Joined communities switcher
-
-### Required metrics
-
-- Members
-- Contributions
-- Reviews
-- Your reputation
-- Your role
-
-### Required actions
-
-- Refresh community
-- Post proof-of-work
-- Review work
-- View leaderboard
-- Claim role
-- Open moderation, admin only
+3. Readonly current community context
+4. Metrics row
+5. Member list
+6. Recent proof-of-work posts
+7. Recent peer reviews
+8. Leaderboard preview
+9. Role progress
+10. Admin moderation shortcut if creator/admin
+11. Joined communities switcher
 
 ### Acceptance criteria
 
@@ -252,7 +175,7 @@ Make `/repuring/community` the main product workspace.
 - Recent contributions and reviews are visible in the same community context.
 - Leaderboard and role context match selected circle.
 
-## 7. Phase 5 — Proof-of-Work Feed Improvements
+## 8. Phase 5 — Proof-of-Work Feed Improvements
 
 ### Goal
 
@@ -267,34 +190,36 @@ Required normal fields:
 - proof URL
 - category
 
-Advanced/dev-only:
+Generated metadata:
 
-- contribution ID
+- contribution ID / onchain record ID
+
+Advanced/debug-only:
+
+- custom contribution ID
 
 ### Required behavior
 
-- auto-generate contribution ID in normal UI
+- Provider/default form state must not ship with fixed contribution IDs such as `pharos-guide`.
+- Contribution ID is generated per post after title/community are available.
+- Normal form does not require manual contribution ID.
+- Post flow tracks submitted contribution ID.
+- UI verifies submitted contribution appears in selected circle feed.
+- UI shows submitted/checking, visible, or not-visible-yet state.
 - block submit if no wallet/profile/circle/membership
 - show proof URL helper text
 - show contribution card after refresh
 
-### Category helper text
-
-- builder: code, integrations, technical work
-- helper: community support or onboarding
-- creator: content, visuals, media
-- researcher: analysis, reports, ecosystem research
-- tester: bug reports, QA, testnet testing
-- educator: guides, tutorials, learning resources
-
 ### Acceptance criteria
 
-- Member can post proof-of-work without manually creating contribution ID.
-- Non-member cannot post and sees join CTA.
+- Member can post without typing contribution ID.
+- After post, user sees visible feedback near composer/feed.
+- If post does not appear after refresh, user sees recoverable notice.
+- Duplicate generated/custom ID failure keeps composer open and shows clear error.
 - Contribution appears in selected circle feed after Canopy refresh.
 - Contribution card shows title, category, author, proof URL, endorsement count, and review CTA.
 
-## 8. Phase 6 — Review / Endorse Work Improvements
+## 9. Phase 6 — Review / Endorse Work Improvements
 
 ### Goal
 
@@ -302,11 +227,14 @@ Make endorsement feel like peer review/comment with reputation impact.
 
 ### Required sections
 
-1. Selected contribution preview
-2. Contribution picker/feed
-3. Review form
-4. Existing reviews
-5. Reputation impact explanation
+1. Readonly current community context
+2. Selected contribution preview
+3. Contribution picker/feed
+4. Current reviewer endorsement state
+5. Review form
+6. Confirmation panel
+7. Existing reviews
+8. Reputation impact explanation
 
 ### Required behavior
 
@@ -315,6 +243,19 @@ Make endorsement feel like peer review/comment with reputation impact.
 - only circle members can review
 - slashed contributions cannot be reviewed
 - successful review increases author reputation after state refresh
+- current reviewer state becomes Already endorsed after successful review
+
+### Endorsement finality
+
+`EndorseContributionTx` is an onchain peer review / attestation.
+
+Rules:
+
+- A reviewer can endorse a contribution once.
+- MVP does not support reviewer self-cancel or withdraw.
+- UI must detect Already endorsed.
+- UI must not show fake Cancel endorsement.
+- Invalid endorsements are handled by creator/admin `SlashEndorsementTx`.
 
 ### Copy requirements
 
@@ -330,15 +271,24 @@ Explain:
 A valid peer endorsement gives +1 global reputation to the contribution author.
 ```
 
+Confirmation warning:
+
+```text
+This endorsement is an onchain attestation. After confirmation, you cannot self-cancel it in the current MVP protocol. Only the circle creator/admin can moderate invalid endorsements.
+```
+
 ### Acceptance criteria
 
-- Alice can review Bob's contribution.
+- Alice can review Bob's contribution once.
+- Alice cannot review Bob's same contribution twice.
+- UI shows Already endorsed before duplicate submit.
+- Alice's existing review is visible under the contribution.
+- Confirmation warns endorsement cannot be self-cancelled.
 - Bob cannot review his own contribution.
-- Alice cannot review the same contribution twice.
-- Bob's reputation increases after Alice's review.
-- Review message appears under or near the contribution as Social-Fi review/comment.
+- Slashed contribution cannot be reviewed.
+- Legacy direct user endorsement remains clearly marked as legacy.
 
-## 9. Phase 7 — Leaderboard and Role Progression
+## 10. Phase 7 — Leaderboard and Role Progression
 
 ### Goal
 
@@ -358,16 +308,6 @@ Make reputation and role feel like visible Social-Fi status.
 MVP leaderboard uses global profile reputation displayed in the selected community context. Circle-specific reputation is planned for a later version.
 ```
 
-### Role progress card
-
-Must show:
-
-- current global reputation
-- current derived role
-- next role
-- points needed for next role
-- thresholds
-
 ### Acceptance criteria
 
 - User can see current reputation and role.
@@ -375,7 +315,7 @@ Must show:
 - Role threshold display matches protocol rules.
 - UI does not imply circle-specific reputation exists yet.
 
-## 10. Phase 8 — Admin Moderation Productization
+## 11. Phase 8 — Admin Moderation Productization
 
 ### Goal
 
@@ -391,11 +331,14 @@ Make slashing an understandable moderation action instead of manual ID operation
 
 ### Required behavior
 
+- Slash invalid review is the MVP correction path for bad endorsements.
+- Reviewer withdrawal is future protocol work, not MVP.
+- Moderation must be card-based.
+- Manual endorsement ID input is advanced/debug only.
 - creator/admin can slash
 - non-admin can read but not slash
 - slash reason required
 - admin selects review card to slash
-- manual endorsement ID input is secondary/advanced only
 - already slashed reviews cannot be slashed again
 
 ### Required confirmation copy
@@ -412,8 +355,9 @@ This will mark the review as slashed and reduce the target contributor's reputat
 - Slashed review shows status and reason.
 - Target reputation decreases by 2, floored at 0.
 - Linked contribution endorsement count decreases by 1, floored at 0.
+- Manual endorsement ID is not required in normal moderation flow.
 
-## 11. Phase 9 — QA and Demo Readiness
+## 12. Phase 9 — QA and Demo Readiness
 
 ### Goal
 
@@ -427,11 +371,14 @@ Ensure the canonical Alice/Bob demo works end to end on Canopy testnet/local Can
 4. Alice creates `Pharos Builders` circle.
 5. Bob discovers and joins the circle.
 6. Bob posts `Wrote Pharos testnet guide` proof-of-work.
-7. Alice reviews Bob's contribution.
-8. Bob's reputation increases.
-9. Bob claims role.
-10. Alice slashes invalid endorsement if needed.
-11. Bob's reputation and contribution endorsement count update.
+7. After Bob posts proof-of-work, UI confirms the contribution is visible in the feed.
+8. Alice reviews Bob's contribution once.
+9. Alice sees Already endorsed if selecting the same contribution again.
+10. Bob cannot self-review.
+11. Bob sees reputation and endorsement count update after refresh.
+12. Bob claims role.
+13. Alice slashes invalid endorsement if needed.
+14. Bob's reputation and contribution endorsement count update.
 
 ### Acceptance criteria
 
@@ -442,7 +389,7 @@ Ensure the canonical Alice/Bob demo works end to end on Canopy testnet/local Can
 - Last transaction/status is visible.
 - README demo story and UI flow match.
 
-## 12. Phase 10 — Documentation Cleanup
+## 13. Phase 10 — Documentation Cleanup
 
 ### Goal
 
@@ -450,9 +397,11 @@ Keep docs aligned with the actual product.
 
 ### Required docs to maintain
 
+- `REPURING_DESIGN_HANDOFF_INDEX.md`
 - `REPURING_PRODUCT_DESIGN_V1.md`
 - `REPURING_UX_UI_SPEC_V1.md`
 - `REPURING_SYSTEM_FLOW_SPEC_V1.md`
+- `REPURING_SCREEN_WIREFRAMES_V1.md`
 - `REPURING_DELIVERY_PHASES_V1.md`
 - README demo section
 
@@ -463,7 +412,7 @@ Keep docs aligned with the actual product.
 - Product docs clearly state Canopy testnet/local environment.
 - Dev-facing TODOs are separated from user-facing product claims.
 
-## 13. Suggested Implementation Order
+## 14. Suggested Implementation Order
 
 Recommended order for engineering issues:
 
@@ -473,10 +422,11 @@ P0-2 Overview next-step journey checklist
 P0-3 Circle discovery/open community UX
 P0-4 Community Workspace centralization
 P0-5 Auto-generate contribution ID
-P0-6 Review work UX and self-review guards
-P0-7 Leaderboard/role wording cleanup
-P0-8 Card-based admin slash flow
-P0-9 Alice/Bob demo QA
+P0-6 Post visibility verification
+P0-7 Review work UX, self-review guards, already-endorsed state
+P0-8 Leaderboard/role wording cleanup
+P0-9 Card-based admin slash flow
+P0-10 Alice/Bob demo QA
 ```
 
 Then:
@@ -496,10 +446,11 @@ P2-1 Timestamps/created height
 P2-2 Circle-scoped reputation
 P2-3 Weighted endorsements
 P2-4 Anti-farming checks
-P2-5 Token/NFT/reward extensions
+P2-5 Reviewer endorsement withdrawal transaction
+P2-6 Token/NFT/reward extensions
 ```
 
-## 14. Definition of Done for MVP Productization
+## 15. Definition of Done for MVP Productization
 
 The MVP productization work is done when:
 
@@ -507,14 +458,17 @@ The MVP productization work is done when:
 - The app explicitly runs in Canopy testnet/local context.
 - The core loop is visible and usable.
 - Users are guided through missing prerequisites.
-- Normal users do not need to memorize or manually create technical IDs.
+- Normal users never need to manually type circle/contribution/endorsement IDs in normal flow.
+- Contribution posting verifies visible feed state.
+- Endorsement has confirmation, already-endorsed, and no-self-cancel states.
+- Admin moderation is the only MVP path for invalid endorsement correction.
 - Contribution posting and peer review feel social, not only transactional.
 - Reputation and role progression are understandable.
 - Admin moderation is card-based and safe.
 - The Alice/Bob demo works from UI.
-- No MVP screen implies token, NFT, staking, or mainnet reward mechanics.
+- No screen implies token, NFT, mainnet reward, or project-scoped reputation functionality.
 
-## 15. What Not To Build Yet
+## 16. What Not To Build Yet
 
 Do not build these until the MVP loop is stable and separately scoped:
 
@@ -529,8 +483,9 @@ Do not build these until the MVP loop is stable and separately scoped:
 - global social feed
 - AI recommendation system
 - project-scoped reputation, unless protocol work is explicitly approved
+- reviewer endorsement self-cancel / withdrawal, unless a real protocol transaction is explicitly approved
 
-## 16. Final Delivery Principle
+## 17. Final Delivery Principle
 
 Build the smallest complete Social-Fi loop first:
 
@@ -538,7 +493,9 @@ Build the smallest complete Social-Fi loop first:
 Alice creates a community.
 Bob joins.
 Bob posts useful work.
-Alice reviews it.
+UI verifies Bob's work appears in the feed.
+Alice reviews it once.
+Alice sees Already endorsed on repeat selection.
 Bob gains reputation.
 Bob claims role.
 Alice can moderate invalid reviews.
