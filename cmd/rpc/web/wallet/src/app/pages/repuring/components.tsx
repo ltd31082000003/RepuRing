@@ -19,8 +19,8 @@ export function PageHeader({ eyebrow, title, copy, actions }: { eyebrow: string;
       <div className="absolute inset-0 bg-gradient-to-br from-emerald-400/10 via-transparent to-cyan-400/10" />
       <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
         <div className="min-w-0 max-w-3xl">
-          <p className="break-words text-xs font-semibold uppercase tracking-[0.28em] text-emerald-300">{eyebrow}</p>
-          <h1 className="mt-3 break-words text-3xl font-semibold tracking-tight text-white md:text-5xl">{title}</h1>
+          <p className="break-words text-xs font-semibold uppercase text-emerald-300">{eyebrow}</p>
+          <h1 className="mt-3 break-words text-3xl font-semibold text-white">{title}</h1>
           <p className="mt-4 break-words text-base leading-7 text-zinc-300">{copy}</p>
         </div>
         {actions && <div className="flex w-full flex-wrap gap-3 sm:w-auto">{actions}</div>}
@@ -33,8 +33,8 @@ export function SectionHeader({ eyebrow, title, copy, actions }: { eyebrow?: str
   return (
     <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
       <div className="min-w-0">
-        {eyebrow && <p className="break-words text-xs font-semibold uppercase tracking-[0.22em] text-emerald-300">{eyebrow}</p>}
-        <h2 className="mt-1 break-words text-2xl font-semibold text-white">{title}</h2>
+        {eyebrow && <p className="break-words text-xs font-semibold uppercase text-emerald-300">{eyebrow}</p>}
+        <h2 className="mt-1 break-words text-xl font-semibold text-white">{title}</h2>
         {copy && <p className="mt-2 max-w-2xl break-words text-sm leading-6 text-zinc-400">{copy}</p>}
       </div>
       {actions && <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:justify-end">{actions}</div>}
@@ -47,8 +47,8 @@ export function Panel({ id, title, eyebrow, className = '', children }: { id?: s
     <section id={id} className={`min-w-0 scroll-mt-20 rounded-3xl border border-white/10 bg-white/[0.045] p-4 sm:p-5 shadow-xl shadow-black/20 backdrop-blur-xl ${className}`}>
       {(title || eyebrow) && (
         <div className="mb-4">
-          {eyebrow && <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-300">{eyebrow}</p>}
-          {title && <h2 className="mt-1 text-xl font-semibold text-white">{title}</h2>}
+          {eyebrow && <p className="text-xs font-semibold uppercase text-emerald-300">{eyebrow}</p>}
+          {title && <h2 className="mt-1 text-lg font-semibold text-white">{title}</h2>}
         </div>
       )}
       <div className="space-y-4">{children}</div>
@@ -77,8 +77,8 @@ export function QuickActionCard({ title, copy, to }: { title: string; copy: stri
 export function StatCard({ label, value, detail }: { label: string; value: string; detail: string }) {
   return (
     <Panel>
-      <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">{label}</p>
-      <p className="mt-2 break-words text-2xl font-semibold text-white">{value}</p>
+      <p className="text-xs uppercase text-zinc-500">{label}</p>
+      <p className="mt-2 break-words text-xl font-semibold text-white">{value}</p>
       <p className="mt-2 line-clamp-2 break-words text-sm text-zinc-400">{detail}</p>
     </Panel>
   );
@@ -93,8 +93,8 @@ export function MetricCard({ label, value, detail, tone = 'neutral' }: { label: 
   };
   return (
     <div className={`rounded-3xl border bg-gradient-to-br p-4 shadow-lg shadow-black/20 ${tones[tone]}`}>
-      <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">{label}</p>
-      <p className="mt-2 break-words text-2xl font-semibold text-white">{value}</p>
+      <p className="text-xs uppercase text-zinc-500">{label}</p>
+      <p className="mt-2 break-words text-xl font-semibold text-white">{value}</p>
       {detail && <p className="mt-2 line-clamp-2 break-words text-sm text-zinc-400">{detail}</p>}
     </div>
   );
@@ -327,17 +327,17 @@ export function DemoReadinessCard({
       </div>
       <div className="grid gap-3 rounded-2xl border border-cyan-300/20 bg-cyan-300/[0.06] p-4 text-sm md:grid-cols-2">
         <div>
-          <p className="text-xs uppercase tracking-[0.18em] text-cyan-200/70">Query and transaction RPC</p>
+          <p className="text-xs uppercase text-cyan-200/70">Query and transaction RPC</p>
           <p className="mt-1 break-all font-mono text-cyan-100">http://localhost:50002</p>
         </div>
         <div>
-          <p className="text-xs uppercase tracking-[0.18em] text-cyan-200/70">Admin and keystore RPC</p>
+          <p className="text-xs uppercase text-cyan-200/70">Admin and keystore RPC</p>
           <p className="mt-1 break-all font-mono text-cyan-100">http://localhost:50003</p>
         </div>
       </div>
       <div className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-black/20 p-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.18em] text-zinc-500">Live status</p>
+          <p className="text-xs uppercase text-zinc-500">Live status</p>
           <p className="mt-1 text-sm text-zinc-300">{status}</p>
           <p className="mt-1 break-all font-mono text-xs text-zinc-600">{lastTx || 'No transaction submitted yet'}</p>
         </div>
@@ -490,7 +490,7 @@ export function ActiveWalletBanner({
     <Panel className="border-cyan-300/15 bg-cyan-300/[0.055]">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-200/80">Active wallet / community role</p>
+          <p className="text-xs font-semibold uppercase text-cyan-200/80">Active wallet / community role</p>
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <Badge tone={currentAddress ? 'cyan' : 'zinc'}>{currentAddress ? shortAddress(currentAddress) : 'No wallet selected'}</Badge>
             <Badge tone={hasProfile ? 'emerald' : 'zinc'}>{hasProfile ? (username || 'Profile active') : 'No profile'}</Badge>
@@ -566,8 +566,8 @@ export function CommunityContextCard({
     <Panel className="border-cyan-300/15 bg-cyan-300/[0.045]">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-200/80">Current community context</p>
-          <h2 className="mt-2 break-words text-xl font-semibold text-white">{circle?.name || 'No community selected'}</h2>
+          <p className="text-xs font-semibold uppercase text-cyan-200/80">Current community context</p>
+          <h2 className="mt-2 break-words text-lg font-semibold text-white">{circle?.name || 'No community selected'}</h2>
           <p className="mt-2 max-w-3xl break-words text-sm leading-6 text-zinc-400">
             {circle?.description || 'Circle-scoped actions use this selected community. Open or join a community before posting, reviewing, ranking, or claiming a role.'}
           </p>
@@ -671,15 +671,19 @@ export function GeneratedRecordIdBlock({
   );
 }
 
-export function PostVisibilityNotice({ message }: { message: string }) {
+export function VisibilityNotice({ message }: { message: string }) {
   if (!message) return null;
   const lower = message.toLowerCase();
   const className = lower.includes('not visible') || lower.includes('failed') || lower.includes('could not')
     ? 'border-amber-300/30 bg-amber-300/10 text-amber-100'
-    : lower.includes('visible in the feed')
+    : lower.includes('visible in the feed') || lower.includes('visible under this contribution')
       ? 'border-emerald-300/20 bg-emerald-300/10 text-emerald-100'
       : 'border-cyan-300/20 bg-cyan-300/10 text-cyan-100';
   return <div className={`rounded-2xl border p-4 text-sm font-medium leading-6 ${className}`}>{message}</div>;
+}
+
+export function PostVisibilityNotice({ message }: { message: string }) {
+  return <VisibilityNotice message={message} />;
 }
 
 export function ConfirmationPanel({
@@ -750,7 +754,7 @@ export function ContributionCard({
           <StatusPill tone={contribution.slashed ? 'danger' : 'success'}>{contribution.slashed ? 'Slashed' : 'Active'}</StatusPill>
         </div>
       </div>
-      <h3 className={`${compact ? 'mt-4 text-lg' : 'mt-5 text-xl'} break-words font-semibold text-white`}>{contribution.title}</h3>
+      <h3 className={`${compact ? 'mt-4 text-base' : 'mt-5 text-lg'} break-words font-semibold text-white`}>{contribution.title}</h3>
       <p className={`${compact ? 'line-clamp-2' : ''} mt-3 break-words text-sm leading-6 text-zinc-300`}>{contribution.description || 'No description provided.'}</p>
       <div className={`${compact ? 'mt-4' : 'mt-5'} grid gap-3 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm`}>
         <div className="flex min-w-0 flex-wrap justify-between gap-2">
@@ -860,7 +864,7 @@ export function TxStatusCard({ status, lastTx, onRefresh }: { status: string; la
   return (
     <Panel className="grid gap-4 md:grid-cols-[1fr_auto] md:items-center">
       <div className="min-w-0" aria-live="polite">
-        <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">RPC status</p>
+        <p className="text-xs uppercase text-zinc-500">RPC status</p>
         <p className="mt-2 break-words text-sm text-zinc-300">{status}</p>
         <p className="mt-2 break-all font-mono text-xs text-zinc-500">{lastTx || 'No transaction submitted yet'}</p>
       </div>

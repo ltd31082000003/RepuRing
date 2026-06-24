@@ -81,7 +81,7 @@ export default function RepuRingLeaderboard(): JSX.Element {
               <div key={row.address} className={`rounded-3xl border p-5 text-center ${index === 0 ? 'border-emerald-300/30 bg-emerald-300/10' : 'border-white/10 bg-black/25'}`}>
                 <div className="mx-auto w-fit"><AvatarFallback label={row.username || row.address} /></div>
                 <p className="mt-4 text-sm text-zinc-500">Rank #{index + 1}</p>
-                <h3 className="mt-1 break-words text-xl font-semibold text-white">{row.username || 'Unnamed'}</h3>
+                <h3 className="mt-1 break-words text-lg font-semibold text-white">{row.username || 'Unnamed'}</h3>
                 <p className="mt-2 font-mono text-xs text-zinc-500">{shortAddress(row.address)}</p>
                 <div className="mt-4 flex justify-center"><ReputationBadge value={row.reputation} /></div>
               </div>
@@ -112,7 +112,7 @@ export default function RepuRingLeaderboard(): JSX.Element {
             </div>
             <div className="hidden rounded-3xl border border-white/10 md:block">
               <table className="w-full text-left text-sm">
-                <thead className="bg-white/[0.04] text-xs uppercase tracking-[0.18em] text-zinc-500">
+                <thead className="bg-white/[0.04] text-xs uppercase text-zinc-500">
                   <tr>
                     <th className="px-4 py-3">Rank</th>
                     <th className="px-4 py-3">Contributor</th>

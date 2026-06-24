@@ -1,9 +1,19 @@
 import React from 'react';
-import { ActiveWalletBanner, ActionGate, Badge, Button, CommunityContextCard, ConfirmationPanel, ContributionCard, ContributionReviews, EmptyState, Input, MetricCard, PageHeader, Panel, ReadinessRule, RepuRingPage, ReviewCard, SectionHeader, StatusPill, TxStatusCard, shortAddress } from './components';
+import { ActiveWalletBanner, ActionGate, Badge, Button, CommunityContextCard, ConfirmationPanel, ContributionCard, ContributionReviews, EmptyState, Input, MetricCard, PageHeader, Panel, PostVisibilityNotice, ReadinessRule, RepuRingPage, ReviewCard, SectionHeader, StatusPill, TxStatusCard, shortAddress } from './components';
 import { cleanHex } from './RepuRingProvider';
 import { useRepuRing } from './useRepuRing';
 
 const tags = ['builder', 'helper', 'creator', 'leader', 'trusted'];
+const reviewVisibilityDelayMs = 700;
+
+type ReviewVisibilityCheck = {
+  contributionId: string;
+  circleId: string;
+  reviewer: string;
+  targetAddress: string;
+  tag: string;
+  message: string;
+};
 
 export default function RepuRingEndorse(): JSX.Element {
   const {
@@ -28,7 +38,9 @@ export default function RepuRingEndorse(): JSX.Element {
   } = useRepuRing();
   const [legacyOpen, setLegacyOpen] = React.useState(false);
   const [confirmOpen, setConfirmOpen] = React.useState(false);
-  const [successMessage, setSuccessMessage] = React.useState('');
+  const [reviewNotice, setReviewNotice] = React.useState('');
+  const [reviewCheckPending, setReviewCheckPending] = React.useState(false);
+  const [submittedReview, setSubmittedReview] = React.useState<ReviewVisibilityCheck | null>(null);
   const isMember = Boolean(currentAddress && circle?.members?.some((address) => cleanHex(address) === cleanHex(currentAddress)));
   const targetIsMember = Boolean(targetAddress && circle?.members?.some((address) => cleanHex(address) === cleanHex(targetAddress)));
   const selectedContribution = contributions.find((item) => item.contributionId === selectedContributionId) || null;
@@ -70,18 +82,48 @@ export default function RepuRingEndorse(): JSX.Element {
 
   async function confirmEndorsement() {
     if (!selectedContribution) return;
-    const result = await submit('endorseContribution', { contributionId: selectedContribution.contributionId, ...endorse });
+    const reviewCheck = {
+      contributionId: selectedContribution.contributionId,
+      circleId: selectedContribution.circleId,
+      reviewer: currentAddress,
+      targetAddress: selectedContribution.authorAddress,
+      tag: endorse.tag.trim(),
+      message: endorse.message.trim(),
+    };
+    const result = await submit('endorseContribution', {
+      contributionId: reviewCheck.contributionId,
+      tag: reviewCheck.tag,
+      message: reviewCheck.message,
+    });
     if (result.ok) {
       setConfirmOpen(false);
-      setSuccessMessage('Endorsement submitted. The review is now visible under this contribution.');
+      setSubmittedReview(reviewCheck);
+      setReviewCheckPending(true);
+      setReviewNotice('Peer review submitted. Checking review visibility under this contribution...');
       await refreshState();
+      await wait(reviewVisibilityDelayMs);
+      await refreshState();
+      setReviewCheckPending(false);
     }
   }
 
   React.useEffect(() => {
     setConfirmOpen(false);
-    setSuccessMessage('');
+    setReviewNotice('');
+    setReviewCheckPending(false);
+    setSubmittedReview(null);
   }, [selectedContributionId, currentAddress]);
+
+  React.useEffect(() => {
+    if (!submittedReview) return;
+    const visibleReview = findVisibleSubmittedReview(submittedReview, endorsements);
+    if (visibleReview) {
+      setReviewCheckPending(false);
+      setReviewNotice('Peer review submitted and visible under this contribution.');
+    } else if (!reviewCheckPending) {
+      setReviewNotice('Peer review submitted, but it is not visible under this contribution yet. Refresh chain state and check transaction status.');
+    }
+  }, [endorsements, submittedReview, reviewCheckPending]);
 
   return (
     <RepuRingPage>
@@ -179,17 +221,13 @@ export default function RepuRingEndorse(): JSX.Element {
             </div>
             <Input label="Review message" value={endorse.message} onChange={(message) => setEndorse({ ...endorse, message })} multiline />
             <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
-              <Button disabled={endorseDisabled} className="w-full sm:w-auto" onClick={() => { if (endorseDisabled) return; setSuccessMessage(''); setConfirmOpen(true); }}>
+              <Button disabled={endorseDisabled} className="w-full sm:w-auto" onClick={() => { if (endorseDisabled) return; setReviewNotice(''); setSubmittedReview(null); setConfirmOpen(true); }}>
                 Submit peer review
               </Button>
               <Badge tone="zinc">EndorseContributionTx</Badge>
             </div>
             <p className="text-sm text-zinc-500">{endorseHelp}</p>
-            {successMessage && (
-              <div className="rounded-2xl border border-emerald-300/20 bg-emerald-300/10 p-4 text-sm font-medium leading-6 text-emerald-100">
-                {successMessage}
-              </div>
-            )}
+            <PostVisibilityNotice message={reviewNotice} />
             {confirmOpen && selectedContribution && (
               <ConfirmationPanel
                 eyebrow="Confirm endorsement"
@@ -344,4 +382,31 @@ function contributionReviewState(
   if (ownWork) return { label: 'Own work', tone: 'warning' };
   if (alreadyEndorsed) return { label: 'Already endorsed', tone: 'neutral' };
   return { label: 'Ready to review', tone: 'success' };
+}
+
+function findVisibleSubmittedReview(
+  review: ReviewVisibilityCheck,
+  endorsements: Array<{
+    contributionId: string;
+    circleId?: string;
+    fromAddress: string;
+    targetAddress: string;
+    tag: string;
+    message: string;
+    slashed: boolean;
+  }>
+) {
+  return endorsements.find((item) =>
+    item.contributionId === review.contributionId &&
+    (!item.circleId || item.circleId === review.circleId) &&
+    cleanHex(item.fromAddress) === cleanHex(review.reviewer) &&
+    cleanHex(item.targetAddress) === cleanHex(review.targetAddress) &&
+    item.tag === review.tag &&
+    item.message === review.message &&
+    !item.slashed
+  ) || null;
+}
+
+function wait(ms: number) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
