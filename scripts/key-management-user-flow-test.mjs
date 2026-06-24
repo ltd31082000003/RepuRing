@@ -177,13 +177,13 @@ async function main() {
 
     const home = await evalValue(cdp, `({
       title: document.querySelector('h1')?.textContent?.trim() || '',
-      hasSidebar: ['RepuRing','Circles','Endorse','Leaderboard','Admin','Keys'].every((text) => document.body.innerText.includes(text)),
+      hasSidebar: ['Overview','My Account','Circles','Community','Post Work','Review Work','Leaderboard','Admin'].every((text) => document.body.innerText.includes(text)),
       bodyText: document.body.innerText.slice(0, 1200),
     })`);
     checks.push(["home route renders", home.title.length > 0 && home.bodyText.includes("RepuRing"), home.title]);
     checks.push(["sidebar nav items visible", home.hasSidebar, String(home.hasSidebar)]);
 
-    for (const [label, hash] of [["Circles", "#circles"], ["Endorse", "#endorse"], ["Leaderboard", "#leaderboard"], ["Admin", "#admin"]]) {
+    for (const [label, hash] of [["Circles", "#circles"], ["Review Work", "#endorse"], ["Leaderboard", "#leaderboard"], ["Admin", "#admin"]]) {
       checks.push([`click sidebar ${label}`, await clickText(cdp, label), ""]);
       await wait(500);
       const hashState = await evalValue(cdp, `({ hash: location.hash, hasTarget: !!document.querySelector(${JSON.stringify(hash)}) })`);
@@ -260,7 +260,7 @@ async function main() {
       return true;
     })()`), ""]);
     await wait(500);
-    const mobileDrawer = await evalValue(cdp, `document.body.innerText.includes('Leaderboard') && document.body.innerText.includes('Keys')`);
+    const mobileDrawer = await evalValue(cdp, `document.body.innerText.includes('Leaderboard') && document.body.innerText.includes('My Account')`);
     checks.push(["mobile drawer nav visible", mobileDrawer, String(mobileDrawer)]);
 
     const screenshot = await cdp.send("Page.captureScreenshot", { format: "png", captureBeyondViewport: false });

@@ -156,7 +156,7 @@ function RepuRingProfileCard(): JSX.Element {
                             </h2>
                             <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
                                 {profile
-                                    ? profile.bio || 'Your contributor identity is active for project circles, proof-of-work posts, peer endorsements, and profile reputation.'
+                                    ? profile.bio || 'Your contributor identity is active for community circles, proof-of-work posts, peer reviews, and profile reputation.'
                                     : 'Create the onchain contributor identity required for circles, contribution proofs, endorsements, reputation, and roles.'}
                             </p>
                         </div>
@@ -187,7 +187,7 @@ function RepuRingProfileCard(): JSX.Element {
                             <Link to="/repuring/circles">Go to Circles</Link>
                         </Button>
                         <Button asChild className="h-11 w-full sm:w-auto">
-                            <Link to="/repuring/contributions">Post Contribution</Link>
+                            <Link to="/repuring/contributions">Post proof-of-work</Link>
                         </Button>
                     </div>
                 ) : (

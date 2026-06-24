@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ActiveWalletBanner, Badge, Button, EmptyState, Input, MemberList, MetricCard, PageHeader, Panel, RepuRingPage, SectionHeader, StatusPill, TxStatusCard, shortAddress } from './components';
+import { ActiveWalletBanner, Badge, Button, CommunityContextCard, EmptyState, Input, MemberList, MetricCard, PageHeader, Panel, RepuRingPage, SectionHeader, StatusPill, TxStatusCard, shortAddress } from './components';
 import { cleanHex } from './RepuRingProvider';
 import { CircleView, useRepuRing } from './useRepuRing';
 
@@ -25,7 +25,10 @@ export default function RepuRingCircles(): JSX.Element {
   } = useRepuRing();
   const [createOpen, setCreateOpen] = React.useState(!circle);
   const [advancedJoinOpen, setAdvancedJoinOpen] = React.useState(false);
+  const [advancedCreateOpen, setAdvancedCreateOpen] = React.useState(false);
   const [joinCircleId, setJoinCircleId] = React.useState('');
+  const [newCircleId, setNewCircleId] = React.useState(slugifyCircleId(circleForm.name));
+  const [createIdEdited, setCreateIdEdited] = React.useState(false);
   const [contextNotice, setContextNotice] = React.useState('');
   const currentContextRef = React.useRef<HTMLElement | null>(null);
   const refreshStateRef = React.useRef(refreshState);
@@ -42,7 +45,7 @@ export default function RepuRingCircles(): JSX.Element {
   const isMember = isCircleMember(activeCircle, currentAddress);
   const selectedStatus = walletStatus(activeCircle, currentAddress, Boolean(profile));
   const selectedStatusTone = statusTone(selectedStatus);
-  const createDisabled = !currentAddress || !profile || !password || !circleId.trim() || !circleForm.name.trim();
+  const createDisabled = !currentAddress || !profile || !password || !newCircleId.trim() || !circleForm.name.trim();
   const manualJoinDisabled = !currentAddress || !profile || !password || !activeCircle?.circleId || isMember;
   const manualJoinHelp = !currentAddress
     ? 'Select a wallet first.'
@@ -55,6 +58,11 @@ export default function RepuRingCircles(): JSX.Element {
           : !password
             ? "Enter this wallet's password to join."
             : 'Ready to join this circle.';
+
+  React.useEffect(() => {
+    if (createIdEdited) return;
+    setNewCircleId(slugifyCircleId(circleForm.name));
+  }, [circleForm.name, createIdEdited]);
 
   async function setCurrentCircleContext(nextCircleId: string, scrollToContext: boolean) {
     setCircleId(nextCircleId);
@@ -92,12 +100,21 @@ export default function RepuRingCircles(): JSX.Element {
     }
   }
 
+  async function createCommunity() {
+    const created = await submit('createCircle', { circleId: newCircleId, ...circleForm });
+    if (!created) return;
+    setCircleId(newCircleId);
+    setContextNotice('Community created and selected. Contributions, reviews, leaderboard, and role actions now use this community.');
+    await refreshStateRef.current();
+    navigate('/repuring/community');
+  }
+
   return (
     <RepuRingPage>
       <PageHeader
-        eyebrow="Project circles"
-        title="Project communities for contribution reputation."
-        copy="Create a new project community, or join an existing one from Discover Circles. Circle creators start new communities here; members join existing circles from Discover Circles."
+        eyebrow="Circles"
+        title="Community circles"
+        copy="Create or join Web3 contributor communities where proof-of-work becomes reputation."
         actions={<Button variant="secondary" onClick={refreshState}>Refresh current context</Button>}
       />
 
@@ -123,17 +140,20 @@ export default function RepuRingCircles(): JSX.Element {
         </Panel>
       )}
 
+      <section ref={currentContextRef} className="scroll-mt-20">
+        <CommunityContextCard
+          circle={activeCircle}
+          circleId={circleId}
+          currentAddress={currentAddress}
+          isMember={isMember}
+          isCreator={Boolean(activeCircle?.creatorAddress && cleanHex(activeCircle.creatorAddress) === cleanHex(currentAddress))}
+          actions={<Button variant="secondary" onClick={refreshState}>Refresh current context</Button>}
+        />
+      </section>
+
       <Panel className="overflow-hidden">
-        <section ref={currentContextRef} className="scroll-mt-20">
-          <SectionHeader
-            eyebrow="Current circle context"
-            title={activeCircle?.name || 'No project circle loaded'}
-            copy="This circle is used by the contribution feed, endorsement review, leaderboard, and role actions."
-            actions={<Button variant="secondary" onClick={refreshState}>Refresh current context</Button>}
-          />
-        </section>
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-          <MetricCard label="Circle ID" value={activeCircle?.circleId || circleId || 'None'} detail="Current project community key." tone="cyan" />
+          <MetricCard label="Community ID" value={activeCircle?.circleId || circleId || 'None'} detail="Readonly onchain community metadata." tone="cyan" />
           <MetricCard label="Description" value={activeCircle?.description ? 'Loaded' : 'None'} detail={activeCircle?.description || 'No current circle description.'} />
           <MetricCard label="Creator" value={shortAddress(activeCircle?.creatorAddress || '') || 'Unknown'} detail={activeCircle?.creatorAddress || 'Create or open a circle to load creator.'} />
           <MetricCard label="Members" value={String(memberCount)} detail="Profiles joined to this circle." tone="emerald" />
@@ -148,7 +168,7 @@ export default function RepuRingCircles(): JSX.Element {
         {contextNotice && <p className="text-sm leading-6 text-emerald-100/80">{contextNotice}</p>}
         {!activeCircle && (
           <EmptyState
-            title="No project circle loaded"
+            title="No community circle loaded"
             copy="Open a discovered circle to use it across contributions, endorsements, leaderboard, and role actions."
             actions={<Button variant="secondary" onClick={() => setCreateOpen(true)}>Create new community</Button>}
           />
@@ -158,15 +178,15 @@ export default function RepuRingCircles(): JSX.Element {
       <Panel>
         <SectionHeader
           eyebrow="Discover circles"
-          title="Discover project communities"
+          title="Discover community circles"
           copy="Open a community to make it the current context, or join from the card when your profile is ready."
           actions={<Button variant="secondary" onClick={refreshState}>Refresh circles</Button>}
         />
         {circles.length === 0 ? (
           <EmptyState
-            title="No project communities found"
-            copy="Create the first project community, then other members can discover and join it."
-            actions={<Button variant="secondary" onClick={() => setCreateOpen(true)}>Create the first project community</Button>}
+            title="No community circles found"
+            copy="Create the first community circle, then other members can discover and join it."
+            actions={<Button variant="secondary" onClick={() => setCreateOpen(true)}>Create the first community</Button>}
           />
         ) : (
           <div className="grid gap-4 lg:grid-cols-2">
@@ -247,26 +267,45 @@ export default function RepuRingCircles(): JSX.Element {
       <Panel>
         <SectionHeader
           eyebrow="Create new community"
-          title="Create a new project community"
-          copy="Start a new project circle. Existing members should join from Discover Circles."
+          title="Create a new community circle"
+          copy="Start a new community. A suggested onchain community ID is generated from the name."
           actions={<Button variant="secondary" onClick={() => setCreateOpen((open) => !open)}>{createOpen ? 'Hide create' : 'Open create'}</Button>}
         />
         {createOpen ? (
           <div className="space-y-4 rounded-3xl border border-white/10 bg-black/20 p-4">
             <Input label="Signing password" type="password" value={password} onChange={setPassword} placeholder="Required for BLS signing" />
-            <Input label="Circle ID" value={circleId} onChange={setCircleId} placeholder="pharos-builders" />
             <Input label="Name" value={circleForm.name} onChange={(name) => setCircleForm({ ...circleForm, name })} placeholder="Pharos Builders" />
             <Input label="Description" value={circleForm.description} onChange={(description) => setCircleForm({ ...circleForm, description })} multiline />
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+              <p className="text-sm font-semibold text-white">Suggested onchain community ID</p>
+              <p className="mt-1 break-all font-mono text-xs text-zinc-400">{newCircleId || 'Generated from community name'}</p>
+              <p className="mt-2 text-xs text-zinc-500">Normal users do not need to memorize this ID. It is shown as readonly technical metadata.</p>
+            </div>
             <div className="flex flex-wrap gap-3">
-              <Button disabled={createDisabled} onClick={() => { void submit('createCircle', { circleId, ...circleForm }); }}>Create community</Button>
+              <Button disabled={createDisabled} onClick={createCommunity}>Create community</Button>
               <Badge tone="zinc">CreateCircleTx</Badge>
             </div>
             <p className="text-sm text-zinc-500">Circle creators start new communities here. Members join existing circles from Discover Circles.</p>
+            <details className="rounded-2xl border border-white/10 bg-black/20 p-4" open={advancedCreateOpen} onToggle={(event) => setAdvancedCreateOpen(event.currentTarget.open)}>
+              <summary className="cursor-pointer text-sm font-semibold text-zinc-200">Advanced: custom community ID</summary>
+              <div className="mt-4 space-y-3">
+                <p className="text-sm leading-6 text-zinc-500">Only use this for demos or debugging. IDs must be unique in the current chain state.</p>
+                <Input
+                  label="Custom community ID"
+                  value={newCircleId}
+                  onChange={(value) => {
+                    setCreateIdEdited(true);
+                    setNewCircleId(slugifyCircleId(value));
+                  }}
+                  placeholder="pharos-builders"
+                />
+              </div>
+            </details>
           </div>
         ) : (
           <div className="flex flex-wrap gap-2">
             <Badge tone="zinc">CreateCircleTx</Badge>
-            <Badge tone="cyan">Circle ID: {circleId || 'not set'}</Badge>
+            <Badge tone="cyan">Suggested ID: {newCircleId || 'not set'}</Badge>
           </div>
         )}
 
@@ -296,7 +335,7 @@ export default function RepuRingCircles(): JSX.Element {
         ) : (
           <EmptyState
             title="No members to show"
-            copy="Open or create a project circle, then members can join and appear here."
+            copy="Open or create a community circle, then members can join and appear here."
             actions={<Button variant="secondary" onClick={refreshState}>Refresh members</Button>}
           />
         )}
@@ -323,4 +362,13 @@ function statusTone(status: WalletCircleStatus): 'success' | 'warning' | 'danger
   if (status === 'Creator' || status === 'Joined') return 'success';
   if (status === 'No wallet selected' || status === 'Profile required') return 'warning';
   return 'neutral';
+}
+
+function slugifyCircleId(value: string): string {
+  const slug = value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return slug || 'community';
 }

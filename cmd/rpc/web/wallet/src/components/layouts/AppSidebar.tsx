@@ -17,14 +17,14 @@ import {
 } from 'lucide-react';
 
 const navItems = [
-    { name: 'RepuRing', path: '/repuring', icon: BadgeCheck },
+    { name: 'Overview', path: '/repuring', icon: BadgeCheck },
+    { name: 'My Account', path: '/key-management', icon: UserCircle },
     { name: 'Circles', path: '/repuring/circles', icon: Users },
     { name: 'Community', path: '/repuring/community', icon: PanelsTopLeft },
-    { name: 'Contributions', path: '/repuring/contributions', icon: ClipboardCheck },
-    { name: 'Endorse', path: '/repuring/endorse', icon: HeartHandshake },
+    { name: 'Post Work', path: '/repuring/contributions', icon: ClipboardCheck },
+    { name: 'Review Work', path: '/repuring/endorse', icon: HeartHandshake },
     { name: 'Leaderboard', path: '/repuring/leaderboard', icon: Trophy },
     { name: 'Admin', path: '/repuring/admin', icon: ShieldCheck },
-    { name: 'Account', path: '/key-management', icon: UserCircle },
 ];
 
 /** Matches canopy-frontend `MainNav` + shell: rounded-xl rows, zinc borders, white/active pill. */

@@ -4,11 +4,9 @@ import { cleanHex } from './RepuRingProvider';
 
 export function RepuRingPage({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[#070b14] text-zinc-100">
+    <div className="min-h-screen overflow-x-hidden bg-[#070b14] bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.12),transparent_34%),linear-gradient(135deg,rgba(8,13,25,0.96),rgba(7,11,20,1))] text-zinc-100">
       <div className="pointer-events-none fixed inset-0 -z-10">
-        <div className="absolute left-[-10%] top-[-12%] h-80 w-80 rounded-full bg-emerald-500/20 blur-3xl" />
-        <div className="absolute right-[-8%] top-[18%] h-96 w-96 rounded-full bg-cyan-500/10 blur-3xl" />
-        <div className="absolute bottom-[-20%] left-[28%] h-96 w-96 rounded-full bg-violet-500/10 blur-3xl" />
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.025)_1px,transparent_1px)] bg-[size:42px_42px]" />
       </div>
       <main className="mx-auto min-w-0 max-w-7xl space-y-6 p-4 sm:p-6 lg:p-8">{children}</main>
     </div>
@@ -202,10 +200,10 @@ export function SocialFiJourney({
   const steps: Array<{ title: string; copy: string; status: JourneyStatus; to: string; tx?: string }> = [
     { title: 'Wallet selected', copy: 'Select a local signing key before submitting Social-Fi transactions.', status: statusFor(0), to: '/key-management' },
     { title: 'Profile created', copy: 'Store your contributor identity in RepuRing plugin state.', status: statusFor(1), to: '/key-management', tx: 'CreateProfileTx' },
-    { title: 'Project circle loaded', copy: 'Create or load the project community used by the remaining flow.', status: statusFor(2), to: '/repuring/circles', tx: 'CreateCircleTx' },
-    { title: 'Member ready', copy: 'Join the current project community before posting work.', status: statusFor(3), to: '/repuring/circles', tx: 'JoinCircleTx' },
-    { title: 'Community workspace', copy: 'Open the joined project community to view members, contributions, reviews, leaderboard, and role actions.', status: statusFor(4), to: '/repuring/community' },
-    { title: 'Proof-of-work posted', copy: 'Publish a contribution proof into the current project community.', status: statusFor(5), to: '/repuring/contributions', tx: 'CreateContributionTx' },
+    { title: 'Community circle loaded', copy: 'Create or load the community used by the remaining flow.', status: statusFor(2), to: '/repuring/circles', tx: 'CreateCircleTx' },
+    { title: 'Member ready', copy: 'Join the current community before posting work.', status: statusFor(3), to: '/repuring/circles', tx: 'JoinCircleTx' },
+    { title: 'Community workspace', copy: 'Open the joined community to view members, contributions, reviews, leaderboard, and role actions.', status: statusFor(4), to: '/repuring/community' },
+    { title: 'Proof-of-work posted', copy: 'Publish a contribution proof into the current community.', status: statusFor(5), to: '/repuring/contributions', tx: 'CreateContributionTx' },
     { title: 'Contribution review ready', copy: 'Select useful work and switch to another member account to endorse it.', status: statusFor(6), to: '/repuring/endorse', tx: 'EndorseContributionTx' },
     { title: 'Reputation visible', copy: 'Peer-endorsed contribution proofs increase profile reputation.', status: statusFor(7), to: '/repuring/leaderboard' },
     { title: 'Role claimed', copy: 'Store a role for this circle based on current profile reputation.', status: statusFor(8), to: '/repuring/admin', tx: 'ClaimRoleTx' },
@@ -292,7 +290,7 @@ export function DemoReadinessCard({
     { label: 'Local RPC', ready: rpcReady, detail: rpcReady ? 'Chain state refreshed.' : 'Start both local RPC services.' },
     { label: 'Signing wallet', ready: Boolean(currentAddress), detail: currentAddress ? shortAddress(currentAddress) : 'Select a local wallet in My Account.' },
     { label: 'Onchain profile', ready: Boolean(profile), detail: profile ? 'Contributor identity active.' : 'Create a profile before joining or posting.' },
-    { label: 'Project circle', ready: Boolean(circle), detail: circle?.name || circleId || 'Create or load a project circle.' },
+    { label: 'Community circle', ready: Boolean(circle), detail: circle?.name || circleId || 'Create or load a community circle.' },
     { label: 'Contribution proof', ready: contributions.length > 0, detail: contributions.length > 0 ? String(contributions.length) + ' proof(s) loaded.' : 'Post proof-of-work as a circle member.' },
     { label: 'Peer endorsement', ready: contributions.length > 0 && memberCount > 1, detail: memberCount > 1 ? 'A second member can review work.' : 'Add a second circle member; self-endorsement is blocked.' },
     { label: 'Admin moderation', ready: creatorReady && endorsements.length > 0, detail: creatorReady ? (endorsements.length > 0 ? 'Slash candidates available.' : 'Create an endorsement before moderation.') : 'Select the circle creator/admin wallet.' },
@@ -500,6 +498,238 @@ export function ActiveWalletBanner({
   );
 }
 
+export function ActionGate({
+  title,
+  copy,
+  actions,
+  tone = 'neutral',
+}: {
+  title: string;
+  copy: string;
+  actions?: React.ReactNode;
+  tone?: 'neutral' | 'warning' | 'danger';
+}) {
+  const toneClass = tone === 'danger'
+    ? 'border-red-300/25 bg-red-500/10 text-red-100'
+    : tone === 'warning'
+      ? 'border-amber-300/25 bg-amber-400/10 text-amber-100'
+      : 'border-white/10 bg-black/20 text-zinc-300';
+  return (
+    <div className={`rounded-2xl border p-4 ${toneClass}`}>
+      <p className="font-semibold text-white">{title}</p>
+      <p className="mt-2 break-words text-sm leading-6 opacity-85">{copy}</p>
+      {actions && <div className="mt-4 flex flex-wrap gap-2">{actions}</div>}
+    </div>
+  );
+}
+
+export function CommunityContextCard({
+  circle,
+  circleId,
+  currentAddress,
+  isMember,
+  isCreator = false,
+  actions,
+}: {
+  circle: { circleId?: string; name?: string; description?: string; creatorAddress?: string; members?: string[] } | null;
+  circleId: string;
+  currentAddress: string;
+  isMember: boolean;
+  isCreator?: boolean;
+  actions?: React.ReactNode;
+}) {
+  return (
+    <Panel className="border-cyan-300/15 bg-cyan-300/[0.045]">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="min-w-0">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-200/80">Current community context</p>
+          <h2 className="mt-2 break-words text-xl font-semibold text-white">{circle?.name || 'No community selected'}</h2>
+          <p className="mt-2 max-w-3xl break-words text-sm leading-6 text-zinc-400">
+            {circle?.description || 'Circle-scoped actions use this selected community. Open or join a community before posting, reviewing, ranking, or claiming a role.'}
+          </p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Badge tone="cyan">Onchain community ID: {circle?.circleId || circleId || 'none'}</Badge>
+            <Badge tone={isMember ? 'emerald' : 'zinc'}>{isMember ? 'Member' : 'Not joined'}</Badge>
+            {isCreator && <Badge>Creator/admin</Badge>}
+            <Badge tone="zinc">{circle?.members?.length || 0} member{(circle?.members?.length || 0) === 1 ? '' : 's'}</Badge>
+          </div>
+          {currentAddress && <p className="mt-3 break-all font-mono text-xs text-zinc-500">Active wallet: {shortAddress(currentAddress)}</p>}
+        </div>
+        {actions && <div className="flex w-full flex-wrap gap-2 lg:w-auto lg:justify-end">{actions}</div>}
+      </div>
+    </Panel>
+  );
+}
+
+export function GeneratedRecordIdBlock({
+  value,
+  onRegenerate,
+  children,
+}: {
+  value: string;
+  onRegenerate: () => void;
+  children?: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-white">Onchain record ID</p>
+          <p className="mt-1 break-all font-mono text-xs text-zinc-400">{value || 'Generated before submit'}</p>
+          <p className="mt-2 text-xs text-zinc-500">This ID is generated for the onchain contribution record.</p>
+        </div>
+        <Button variant="secondary" onClick={onRegenerate}>Regenerate ID</Button>
+      </div>
+      {children && <div className="mt-4">{children}</div>}
+    </div>
+  );
+}
+
+export function PostVisibilityNotice({ message }: { message: string }) {
+  if (!message) return null;
+  const lower = message.toLowerCase();
+  const className = lower.includes('not visible') || lower.includes('failed') || lower.includes('could not')
+    ? 'border-amber-300/30 bg-amber-300/10 text-amber-100'
+    : lower.includes('visible in the feed')
+      ? 'border-emerald-300/20 bg-emerald-300/10 text-emerald-100'
+      : 'border-cyan-300/20 bg-cyan-300/10 text-cyan-100';
+  return <div className={`rounded-2xl border p-4 text-sm font-medium leading-6 ${className}`}>{message}</div>;
+}
+
+export function ConfirmationPanel({
+  eyebrow,
+  title,
+  copy,
+  children,
+  actions,
+  tone = 'warning',
+}: {
+  eyebrow: string;
+  title: string;
+  copy: string;
+  children: React.ReactNode;
+  actions: React.ReactNode;
+  tone?: 'warning' | 'danger';
+}) {
+  const toneClass = tone === 'danger'
+    ? 'border-red-300/30 bg-red-500/10'
+    : 'border-amber-300/30 bg-amber-300/10';
+  return (
+    <div className={`rounded-3xl border p-4 ${toneClass}`}>
+      <SectionHeader eyebrow={eyebrow} title={title} copy={copy} />
+      <div className="mt-4">{children}</div>
+      <div className="mt-4 flex flex-wrap gap-3">{actions}</div>
+    </div>
+  );
+}
+
+export function ContributionCard({
+  contribution,
+  selected = false,
+  actions,
+  reviews,
+}: {
+  contribution: {
+    contributionId: string;
+    authorAddress: string;
+    authorUsername?: string;
+    title: string;
+    description: string;
+    proofUrl?: string;
+    category: string;
+    endorsementCount: number;
+    slashed: boolean;
+  };
+  selected?: boolean;
+  actions?: React.ReactNode;
+  reviews?: React.ReactNode;
+}) {
+  return (
+    <SocialCard selected={selected}>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex min-w-0 gap-3">
+          <AvatarFallback label={contribution.authorUsername || contribution.authorAddress} />
+          <div className="min-w-0">
+            <p className="break-words font-semibold text-white">{contribution.authorUsername || shortAddress(contribution.authorAddress)}</p>
+            <p className="font-mono text-xs text-zinc-500">{shortAddress(contribution.authorAddress)}</p>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <CategoryBadge category={contribution.category} />
+          <StatusPill tone={contribution.slashed ? 'danger' : 'success'}>{contribution.slashed ? 'Slashed' : 'Active'}</StatusPill>
+        </div>
+      </div>
+      <h3 className="mt-5 break-words text-xl font-semibold text-white">{contribution.title}</h3>
+      <p className="mt-3 break-words text-sm leading-6 text-zinc-300">{contribution.description || 'No description provided.'}</p>
+      <div className="mt-5 grid gap-3 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm">
+        <div className="flex min-w-0 flex-wrap justify-between gap-2">
+          <span className="text-zinc-500">Proof</span>
+          {contribution.proofUrl ? (
+            <a className="break-all font-mono text-cyan-200 underline-offset-4 hover:underline" href={contribution.proofUrl} title={contribution.proofUrl} target="_blank" rel="noreferrer">{proofLabel(contribution.proofUrl)}</a>
+          ) : (
+            <span className="text-zinc-500">No proof URL provided</span>
+          )}
+        </div>
+        <div className="flex min-w-0 flex-wrap justify-between gap-2">
+          <span className="text-zinc-500">Endorsements</span>
+          <Badge>{contribution.endorsementCount}</Badge>
+        </div>
+        <div className="flex min-w-0 flex-wrap justify-between gap-2">
+          <span className="shrink-0 text-zinc-500">Onchain record ID</span>
+          <span className="min-w-0 break-all font-mono text-xs text-zinc-300">{contribution.contributionId}</span>
+        </div>
+      </div>
+      {reviews}
+      {actions && <div className="mt-5">{actions}</div>}
+    </SocialCard>
+  );
+}
+
+export function ReviewCard({
+  review,
+  contributionTitle,
+  selected = false,
+  actions,
+}: {
+  review: {
+    endorsementId: string;
+    fromAddress: string;
+    targetAddress: string;
+    contributionId?: string;
+    tag: string;
+    message: string;
+    slashed: boolean;
+    slashReason?: string;
+  };
+  contributionTitle?: string;
+  selected?: boolean;
+  actions?: React.ReactNode;
+}) {
+  return (
+    <SocialCard selected={selected}>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap gap-2">
+          <Badge tone="cyan">{shortAddress(review.fromAddress)}</Badge>
+          <Badge>{review.tag}</Badge>
+        </div>
+        <StatusPill tone={review.slashed ? 'danger' : 'success'}>{review.slashed ? 'Slashed' : 'Active'}</StatusPill>
+      </div>
+      {contributionTitle && <p className="mt-3 break-words text-sm font-semibold text-white">{contributionTitle}</p>}
+      <p className="mt-3 break-words text-sm leading-6 text-zinc-300">{review.message || 'No review message provided.'}</p>
+      {review.slashed && review.slashReason && <p className="mt-3 break-words text-xs leading-5 text-red-200">Slash reason: {review.slashReason}</p>}
+      <div className="mt-4 grid gap-2 text-xs text-zinc-500">
+        {review.contributionId && <div>Contribution <span className="break-all font-mono text-zinc-300">{review.contributionId}</span></div>}
+        <div>Target <span className="font-mono text-zinc-300">{shortAddress(review.targetAddress)}</span></div>
+        <details>
+          <summary className="cursor-pointer text-zinc-400">Technical metadata</summary>
+          <p className="mt-2 break-all font-mono text-zinc-500">{review.endorsementId}</p>
+        </details>
+      </div>
+      {actions && <div className="mt-4">{actions}</div>}
+    </SocialCard>
+  );
+}
+
 export function ContributionReviews({ endorsements, emptyCopy }: { endorsements: Array<{ endorsementId: string; fromAddress: string; tag: string; message: string; slashed: boolean }>; emptyCopy?: string }) {
   return (
     <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-4">
@@ -546,6 +776,17 @@ export function TxStatusCard({ status, lastTx, onRefresh }: { status: string; la
       <Button variant="secondary" className="self-start md:self-auto" onClick={onRefresh}>Refresh chain state</Button>
     </Panel>
   );
+}
+
+function proofLabel(value: string) {
+  try {
+    const url = new URL(value);
+    const path = url.pathname && url.pathname !== '/' ? url.pathname : '';
+    const label = `${url.hostname}${path}`;
+    return label.length > 48 ? `${label.slice(0, 45)}...` : label;
+  } catch {
+    return value.length > 48 ? `${value.slice(0, 45)}...` : value;
+  }
 }
 
 export function roleForReputation(reputation: number) {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { AvatarFallback, Badge, Button, DemoReadinessCard, MetricCard, Panel, RepuRingPage, RoleProgressCard, SectionHeader, SocialFiJourney, StatusPill, roleBadge, roleForReputation, shortAddress } from './components';
+import { AvatarFallback, Badge, Button, DemoReadinessCard, MetricCard, PageHeader, Panel, RepuRingPage, RoleProgressCard, SectionHeader, SocialFiJourney, StatusPill, roleBadge, roleForReputation, shortAddress } from './components';
 import { useRepuRing } from './useRepuRing';
 
 const flow = ['Profile', 'Circle', 'Community', 'Contribution', 'Endorsement', 'Role'];
@@ -10,52 +10,47 @@ export default function RepuRingOverview(): JSX.Element {
 
   return (
     <RepuRingPage>
-      <section className="relative min-w-0 overflow-hidden rounded-3xl border border-white/10 bg-white/[0.045] p-5 sm:p-6 shadow-2xl shadow-black/40 backdrop-blur-xl lg:p-8">
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-400/15 via-transparent to-cyan-400/10" />
-        <div className="relative grid gap-8 xl:grid-cols-[1.2fr_0.8fr] xl:items-center">
-          <div className="space-y-6">
-            <div className="flex flex-wrap gap-2">
-              <Badge>Social-Fi</Badge>
-              <Badge tone="cyan">Contribution network</Badge>
-              <Badge tone="zinc">Canopy RPC 50002/50003</Badge>
-            </div>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-300">RepuRing</p>
-              <h1 className="mt-4 max-w-4xl break-words text-3xl font-semibold tracking-tight text-white sm:text-4xl md:text-6xl">
-                Onchain Social-Fi for Web3 project contributors.
-              </h1>
-              <p className="mt-5 max-w-2xl text-base leading-7 text-zinc-300">
-                Create an onchain contributor identity, join a project circle, post proof-of-work, earn peer endorsements, and claim a role from profile reputation.
-              </p>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
-              {flow.map((step, index) => (
-                <div key={step} className="min-w-0 rounded-2xl border border-white/10 bg-black/25 p-4">
-                  <p className="text-xs font-semibold text-emerald-300">{String(index + 1).padStart(2, '0')}</p>
-                  <p className="mt-2 text-sm font-semibold text-white">{step}</p>
-                </div>
-              ))}
-            </div>
-          </div>
+      <PageHeader
+        eyebrow="RepuRing / Social-Fi on Canopy"
+        title="Onchain Social-Fi for Web3 contributors."
+        copy="Create a contributor identity, join a community circle, post proof-of-work, get peer-reviewed, build reputation, and claim community status on Canopy testnet."
+        actions={(
+          <>
+            <Button to="/repuring/community">Open Community</Button>
+            <Button to="/key-management" variant="secondary">Create Profile</Button>
+            <Button to="/repuring/circles" variant="secondary">Discover Circles</Button>
+          </>
+        )}
+      />
 
-          <Panel className="border-emerald-300/20 bg-black/30">
-            <div className="flex min-w-0 flex-wrap items-center gap-4 sm:flex-nowrap">
-              <AvatarFallback label={profile?.username || currentAddress} src={profile?.avatarUrl} />
-              <div className="min-w-0 flex-1">
-                <p className="text-sm text-zinc-400">Current profile</p>
-                <h2 className="truncate text-2xl font-semibold text-white">{profile?.username || 'Profile not created'}</h2>
-              </div>
-              <div className="shrink-0"><StatusPill tone={profile ? 'success' : 'warning'}>{profile ? 'Active' : 'Needed'}</StatusPill></div>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <MetricCard label="Selected wallet" value={shortAddress(currentAddress) || 'No wallet'} detail={currentAddress || 'Open My Account to select a local signing key.'} />
-              <MetricCard label="Current circle" value={circle?.name || circleId || 'No circle'} detail={circle ? `${circle.members?.length || 0} members` : 'Create or load a project community.'} tone="cyan" />
-              <MetricCard label="Reputation" value={String(profile?.reputation || 0)} detail="Earned from endorsed contribution proofs." tone="emerald" />
-              <MetricCard label="Role" value={roleBadge(derivedRole)} detail={role?.claimedRole ? 'Claimed onchain' : 'Claim role from the Admin page.'} />
-            </div>
-          </Panel>
+      <Panel className="border-emerald-300/20 bg-black/30">
+        <div className="flex min-w-0 flex-wrap items-center gap-4 sm:flex-nowrap">
+          <AvatarFallback label={profile?.username || currentAddress} src={profile?.avatarUrl} />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm text-zinc-400">Current profile</p>
+            <h2 className="truncate text-2xl font-semibold text-white">{profile?.username || 'Profile not created'}</h2>
+          </div>
+          <div className="shrink-0"><StatusPill tone={profile ? 'success' : 'warning'}>{profile ? 'Active' : 'Needed'}</StatusPill></div>
         </div>
-      </section>
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <MetricCard label="Selected wallet" value={shortAddress(currentAddress) || 'No wallet'} detail={currentAddress || 'Open My Account to select a local signing key.'} />
+          <MetricCard label="Current community" value={circle?.name || circleId || 'No community'} detail={circle ? `${circle.members?.length || 0} members` : 'Create or open a community circle.'} tone="cyan" />
+          <MetricCard label="Global reputation" value={String(profile?.reputation || 0)} detail="Earned from endorsed proof-of-work." tone="emerald" />
+          <MetricCard label="Role" value={roleBadge(derivedRole)} detail={role?.claimedRole ? 'Claimed onchain' : 'Claim role from the Admin page.'} />
+        </div>
+      </Panel>
+
+      <Panel>
+        <SectionHeader eyebrow="Core loop" title="Identity to community status" copy="Every MVP screen supports this Social-Fi contribution loop." />
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
+          {flow.map((step, index) => (
+            <div key={step} className="min-w-0 rounded-2xl border border-white/10 bg-black/25 p-4">
+              <p className="text-xs font-semibold text-emerald-300">{String(index + 1).padStart(2, '0')}</p>
+              <p className="mt-2 text-sm font-semibold text-white">{step}</p>
+            </div>
+          ))}
+        </div>
+      </Panel>
 
       <DemoReadinessCard
         currentAddress={currentAddress}
@@ -79,7 +74,7 @@ export default function RepuRingOverview(): JSX.Element {
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
           {[
             ['Profile', 'Onchain contributor identity'],
-            ['Circle', 'Web3 project community'],
+            ['Circle', 'Web3 contributor community'],
             ['Contribution', 'Proof-of-work post'],
             ['Endorsement', 'Peer validation'],
             ['Reputation', 'Earned from endorsed work'],
@@ -112,10 +107,10 @@ export default function RepuRingOverview(): JSX.Element {
         />
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
           <QuickAction title="My Account" copy="Create or edit your RepuRing identity." to="/key-management" />
-          <QuickAction title="Create or Join Circle" copy="Set up a project community." to="/repuring/circles" />
-          <QuickAction title="Community Workspace" copy="Open the current project community." to="/repuring/community" />
-          <QuickAction title="Post Contribution" copy="Publish proof-of-work to the feed." to="/repuring/contributions" />
-          <QuickAction title="Endorse Work" copy="Review and endorse useful proofs." to="/repuring/endorse" />
+          <QuickAction title="Create or Join Circle" copy="Set up a community circle." to="/repuring/circles" />
+          <QuickAction title="Community Workspace" copy="Open the current community." to="/repuring/community" />
+          <QuickAction title="Post Work" copy="Publish proof-of-work to the feed." to="/repuring/contributions" />
+          <QuickAction title="Review Work" copy="Review and endorse useful proofs." to="/repuring/endorse" />
           <QuickAction title="View Leaderboard" copy="See reputation and role rankings." to="/repuring/leaderboard" />
         </div>
       </Panel>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActiveWalletBanner, Badge, Button, DangerPanel, EmptyState, Input, MetricCard, PageHeader, Panel, RepuRingPage, RoleProgressCard, SectionHeader, SocialCard, StatusPill, TxStatusCard, roleBadge, roleForReputation, shortAddress } from './components';
+import { ActiveWalletBanner, Badge, Button, CommunityContextCard, DangerPanel, EmptyState, Input, MetricCard, PageHeader, Panel, RepuRingPage, ReviewCard, RoleProgressCard, SectionHeader, StatusPill, TxStatusCard, roleBadge, roleForReputation, shortAddress } from './components';
 import { cleanHex } from './RepuRingProvider';
 import { useRepuRing } from './useRepuRing';
 
@@ -26,6 +26,7 @@ export default function RepuRingAdmin(): JSX.Element {
   const claimableRole = roleForReputation(profile?.reputation || 0);
   const creatorSelected = Boolean(currentAddress && circle?.creatorAddress && cleanHex(currentAddress) === cleanHex(circle.creatorAddress));
   const isMember = Boolean(currentAddress && circle?.members?.some((address) => cleanHex(address) === cleanHex(currentAddress)));
+  const selectedReview = endorsements.find((item) => item.endorsementId === endorsementId) || null;
 
   // Multi-account demo safety: block ClaimRole/Slash before submit so wrong-account
   // attempts fail clearly in the UI instead of being rejected onchain.
@@ -39,13 +40,17 @@ export default function RepuRingAdmin(): JSX.Element {
         : !password
           ? 'Enter the selected wallet password to sign ClaimRoleTx.'
           : 'Ready to claim a role from current reputation.';
-  const slashDisabled = !creatorSelected || !endorsementId.trim() || !password;
+  const slashDisabled = !creatorSelected || !endorsementId.trim() || !slashReason.trim() || !password || Boolean(selectedReview?.slashed);
   const slashHelp = !currentAddress
     ? 'Select a wallet in My Account.'
     : !creatorSelected
       ? 'Switch to the circle creator/admin wallet to slash an endorsement.'
       : !endorsementId.trim()
-        ? 'Select an endorsement ID from the moderation queue first.'
+        ? 'Select a review card from the moderation queue first.'
+        : selectedReview?.slashed
+          ? 'This review is already slashed.'
+          : !slashReason.trim()
+            ? 'Enter a slash reason before confirming moderation.'
         : !password
           ? 'Enter the creator/admin wallet password to sign SlashEndorsementTx.'
           : 'Ready to slash this endorsement.';
@@ -65,6 +70,15 @@ export default function RepuRingAdmin(): JSX.Element {
         circleName={circle?.name}
         isMember={isMember}
         hasProfile={Boolean(profile)}
+      />
+
+      <CommunityContextCard
+        circle={circle}
+        circleId={circleId}
+        currentAddress={currentAddress}
+        isMember={isMember}
+        isCreator={creatorSelected}
+        actions={<Button to="/repuring/circles" variant="secondary">Change community</Button>}
       />
 
       <section className="grid gap-5 xl:grid-cols-[0.95fr_1.05fr]">
@@ -106,13 +120,25 @@ export default function RepuRingAdmin(): JSX.Element {
             <StatusPill tone={creatorSelected ? 'success' : 'warning'}>{creatorSelected ? 'Creator wallet selected' : 'Creator/admin required'}</StatusPill>
           </div>
           <Input label="Signing key password" type="password" value={password} onChange={setPassword} placeholder="Creator/admin signing key password" />
-          <Input label="Endorsement ID" value={endorsementId} onChange={setEndorsementId} placeholder="Paste endorsement ID to slash" />
+          <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+            <p className="text-sm font-semibold text-white">Selected review</p>
+            <p className="mt-2 break-all font-mono text-xs text-zinc-400">{endorsementId || 'Select a review card from the moderation queue'}</p>
+            {selectedReview && (
+              <p className="mt-2 break-words text-sm leading-6 text-zinc-300">{selectedReview.message || 'No review message provided.'}</p>
+            )}
+          </div>
           <Input label="Slash reason" value={slashReason} onChange={setSlashReason} multiline />
           <div className="flex flex-wrap items-center gap-3">
             <Button variant="danger" disabled={slashDisabled} onClick={() => { void submit('slashEndorsement', { endorsementId, reason: slashReason }); }}>Slash invalid endorsement</Button>
             <Badge tone="red">SlashEndorsementTx</Badge>
           </div>
           <p className="text-sm text-red-200/70">{slashHelp}</p>
+          <details className="rounded-2xl border border-white/10 bg-black/20 p-4">
+            <summary className="cursor-pointer text-sm font-semibold text-zinc-200">Advanced: manual endorsement ID</summary>
+            <div className="mt-4">
+              <Input label="Endorsement ID" value={endorsementId} onChange={setEndorsementId} placeholder="Paste endorsement ID only for debugging" />
+            </div>
+          </details>
         </DangerPanel>
       </section>
 
@@ -131,20 +157,21 @@ export default function RepuRingAdmin(): JSX.Element {
         ) : (
           <div className="grid gap-3 lg:grid-cols-2">
             {endorsements.map((item) => (
-              <SocialCard key={item.endorsementId} selected={endorsementId === item.endorsementId}>
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <Badge>{item.tag}</Badge>
-                  <StatusPill tone={item.slashed ? 'danger' : 'success'}>{item.slashed ? 'Slashed' : 'Active'}</StatusPill>
-                </div>
-                <p className="mt-3 break-words text-sm leading-6 text-zinc-300">{item.message || 'No message provided.'}</p>
-                <div className="mt-4 grid gap-2 text-xs text-zinc-500">
-                  <div>ID <span className="break-all font-mono text-zinc-300">{item.endorsementId}</span></div>
-                  {item.contributionId && <div>Contribution <span className="break-all font-mono text-zinc-300">{item.contributionId}</span></div>}
-                  <div>From <span className="font-mono text-zinc-300">{shortAddress(item.fromAddress)}</span></div>
-                  <div>Target <span className="font-mono text-zinc-300">{shortAddress(item.targetAddress)}</span></div>
-                </div>
-                <Button variant="secondary" className="mt-4 w-full sm:w-auto" onClick={() => setEndorsementId(item.endorsementId)}>Use this endorsement ID</Button>
-              </SocialCard>
+              <ReviewCard
+                key={item.endorsementId}
+                review={item}
+                selected={endorsementId === item.endorsementId}
+                actions={(
+                  <Button
+                    variant={endorsementId === item.endorsementId ? 'primary' : 'secondary'}
+                    className="w-full sm:w-auto"
+                    disabled={item.slashed}
+                    onClick={() => setEndorsementId(item.endorsementId)}
+                  >
+                    {item.slashed ? 'Already slashed' : 'Select for slash'}
+                  </Button>
+                )}
+              />
             ))}
           </div>
         )}

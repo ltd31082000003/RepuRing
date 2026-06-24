@@ -493,7 +493,7 @@ export const CurrentWallet = ({
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">RepuRing Identity</p>
                 <h3 className="mt-1 text-lg font-semibold text-foreground">Social-Fi signing context</h3>
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                  Use this account to create profiles, join project circles, post contributions, and endorse work.
+                  Use this account to create profiles, join community circles, post proof-of-work, and submit peer reviews.
                 </p>
                 <p className="mt-3 break-all rounded-xl border border-white/10 bg-black/20 px-3 py-2 font-mono text-xs text-foreground/80">
                   {selectedAccount?.address || "No selected account address"}

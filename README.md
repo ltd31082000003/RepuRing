@@ -7,21 +7,21 @@ RepuRing is an onchain Social-Fi contribution network where Web3 contributors po
 RepuRing extends the Canopy template with custom plugin transactions for an onchain contribution graph:
 
 - create a social profile,
-- create and join Web3 project community circles,
+- create and join Web3 community circles,
 - post contribution proofs inside a circle,
 - endorse useful contribution proofs,
 - increase reputation from endorsed work,
 - slash invalid endorsements as the circle creator/admin,
 - claim a role from the current reputation score.
 
-It is Social-Fi because project identity, contribution proofs, endorsements, reputation, and roles are signed transactions committed to Canopy plugin state rather than frontend-only metadata.
+It is Social-Fi because contributor identity, community membership, contribution proofs, endorsements, reputation, and roles are signed transactions committed to Canopy plugin state rather than frontend-only metadata.
 
 ## Why It Is Social-Fi
 
 RepuRing turns contribution activity into verifiable social capital:
 
 - **Profile** is an onchain contributor identity.
-- **Circle** is a Web3 project or community hub.
+- **Circle** is a Web3 contributor community hub.
 - **Contribution** is a proof-of-work post linked to that community.
 - **Endorsement** is peer validation from another circle member.
 - **Reputation** is earned social capital from endorsed contribution proofs.
@@ -37,14 +37,14 @@ RepuRing matches the Social-Fi theme through four connected onchain graphs and s
 - a reputation economy driven by peer endorsements,
 - role progression stored onchain through ClaimRoleTx.
 
-The current score is profile-level reputation displayed in selected circle context. Project-scoped scoring and anti-Sybil controls are outside the current implementation.
+The current score is profile-level reputation displayed in selected community context. Circle-scoped scoring and anti-Sybil controls are outside the current implementation.
 
 ## What Is Stored In Plugin State
 
 The TypeScript plugin deterministically stores:
 
 - profiles and the unique username index,
-- project circles and memberships,
+- community circles and memberships,
 - contribution proofs and circle/author indexes,
 - endorsement records and duplicate-prevention indexes,
 - profile reputation updated by endorsements and slashing,
@@ -185,11 +185,11 @@ The RepuRing UI is a route-based Social-Fi dApp:
 | Route | Purpose |
 | --- | --- |
 | `/repuring` | Overview dashboard, product story, RPC status, current profile/reputation/role. |
-| `/repuring/circles` | Create circle, join a project community, and inspect members. |
-| `/repuring/contributions` | Post `CreateContributionTx` proof-of-work and browse the project contribution feed. |
-| `/repuring/endorse` | Select a contribution and submit `EndorseContributionTx`; `EndorseUserTx` remains available for compatibility. |
-| `/repuring/leaderboard` | View contribution reputation rankings and role badges. |
-| `/repuring/admin` | Submit `ClaimRoleTx` and `SlashEndorsementTx`. |
+| `/repuring/circles` | Create, discover, join, and open community circles. |
+| `/repuring/contributions` | Post proof-of-work and browse the selected community feed. |
+| `/repuring/endorse` | Review another member's contribution and submit a peer endorsement; `EndorseUserTx` remains advanced/legacy compatibility. |
+| `/repuring/leaderboard` | View global profile reputation rankings in the selected community context. |
+| `/repuring/admin` | Claim role and slash invalid reviews as the creator/admin. |
 | `/key-management` | My Account: create/select local signing keys, submit `CreateProfileTx`, and submit `UpdateProfileTx`. |
 
 The RepuRing pages sign custom plugin transactions in the browser, submit them to `http://localhost:50002/v1/tx`, and refresh profile, circle, contribution, endorsement, role, and leaderboard state from the RepuRing query routes. They do not use a mocked transaction path for the main flow.
@@ -201,7 +201,7 @@ This is the real browser demo flow used for multi-account (Alice/Bob) testing:
 1. Start the Go node so query/transaction RPC (50002) and admin/keystore RPC (50003) are listening.
 2. Open `http://127.0.0.1:5173/repuring`, then open **My Account**.
 3. Create Alice and Bob local signing wallets and create an onchain profile for each.
-4. Create a project circle as Alice (`/repuring/circles`).
+4. Create a community circle as Alice (`/repuring/circles`).
 5. Switch to Bob and use **Discover circles** to select and join Alice's circle from its card — no need to remember the circle ID.
 6. Post a contribution proof as Bob (`/repuring/contributions`).
 7. Switch to Alice.
@@ -303,11 +303,11 @@ Manual route flow:
 - `/` redirects to `/repuring`.
 - `/repuring` shows the RepuRing overview.
 - `/key-management` opens My Account with local signing keys and RepuRing profile creation.
-- `/repuring/circles` opens circle membership UI.
-- `/repuring/contributions` opens the project contribution board.
-- `/repuring/endorse` opens contribution endorsement UI.
-- `/repuring/leaderboard` opens the leaderboard UI.
-- `/repuring/admin` opens role claim and moderation UI.
+- `/repuring/circles` opens community discovery and creation.
+- `/repuring/contributions` opens Post Work for proof-of-work posting and feed browsing.
+- `/repuring/endorse` opens Review Work for peer endorsement.
+- `/repuring/leaderboard` opens reputation rankings in the selected community context.
+- `/repuring/admin` opens role claim and moderation.
 - `/key-management` remains available for My Account, local signing keys, and RepuRing profile creation.
 
 Live flow checklist:
@@ -323,7 +323,7 @@ Live flow checklist:
 
 - Create or select a local signing wallet and confirm it remains selected across RepuRing routes.
 - Create a profile and verify username, bio, avatar, and initial reputation 0.
-- Create a project circle as Alice.
+- Create a community circle as Alice.
 - Switch to Bob, create Bob's profile, and join the same circle.
 - Post a contribution proof as Bob and confirm it appears in the selected circle feed.
 - Switch to Alice and endorse Bob's contribution with EndorseContributionTx.
@@ -353,7 +353,7 @@ Live flow checklist:
 RepuRing keeps the contest implementation focused and transparent:
 
 - Reputation is currently profile-level and shown in the selected circle leaderboard context.
-- Project-scoped reputation is a future extension, not a current claim.
+- Circle-scoped reputation is a future extension, not a current claim.
 - Contribution timestamps and richer activity chronology are future work.
 - Anti-Sybil controls and weighted endorsements are future work.
 - Circle discovery is now available in the UI (the **Discover circles** section, backed by `/v1/query/repuring/circles`); richer community browsing and search are future work.

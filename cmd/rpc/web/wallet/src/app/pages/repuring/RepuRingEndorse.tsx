@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActiveWalletBanner, AvatarFallback, Badge, Button, CategoryBadge, ContributionReviews, EmptyState, Input, MetricCard, PageHeader, Panel, RepuRingPage, SectionHeader, SocialCard, StatusPill, TxStatusCard, shortAddress } from './components';
+import { ActiveWalletBanner, Badge, Button, CategoryBadge, CommunityContextCard, ConfirmationPanel, ContributionCard, ContributionReviews, EmptyState, Input, MetricCard, PageHeader, Panel, RepuRingPage, ReviewCard, SectionHeader, StatusPill, TxStatusCard, shortAddress } from './components';
 import { cleanHex } from './RepuRingProvider';
 import { useRepuRing } from './useRepuRing';
 
@@ -86,9 +86,9 @@ export default function RepuRingEndorse(): JSX.Element {
   return (
     <RepuRingPage>
       <PageHeader
-        eyebrow="Contribution review"
-        title="Endorse Useful Work"
-        copy="Final review and endorsement transaction for another community member's proof-of-work."
+        eyebrow="Review Work"
+        title="Review and endorse useful work"
+        copy="Inspect another community member's proof-of-work, write a peer review, and submit one onchain endorsement."
         actions={<Button variant="secondary" onClick={refreshState}>Refresh work</Button>}
       />
 
@@ -100,13 +100,21 @@ export default function RepuRingEndorse(): JSX.Element {
         hasProfile={Boolean(profile)}
       />
 
+      <CommunityContextCard
+        circle={circle}
+        circleId={circleId}
+        currentAddress={currentAddress}
+        isMember={isMember}
+        actions={<Button to="/repuring/community" variant="secondary">Change community</Button>}
+      />
+
       <section className="grid gap-5 xl:grid-cols-[1.05fr_0.95fr]">
         <div className="space-y-5">
           <Panel>
             <SectionHeader
               eyebrow="Selected contribution"
               title={selectedContribution?.title || 'Choose work to endorse'}
-              copy="Peer validation through EndorseContributionTx increases the author's profile reputation by 1 after commit."
+              copy="A valid peer endorsement gives +1 global reputation to the contribution author after Canopy state refresh."
               actions={<StatusPill tone={selectedReviewState.tone}>{selectedReviewState.label}</StatusPill>}
             />
             {selectedAuthorIsSelf && (
@@ -117,8 +125,7 @@ export default function RepuRingEndorse(): JSX.Element {
             {alreadyEndorsed && currentReviewerEndorsement && (
               <div className="rounded-2xl border border-emerald-300/20 bg-emerald-300/10 p-4 text-sm leading-6 text-emerald-100">
                 <p className="font-semibold">You already endorsed this work.</p>
-                <p>Your review is visible under this contribution.</p>
-                <p>There is no self-cancel transaction in the current protocol. If this endorsement is wrong, ask the circle creator to moderate it.</p>
+                <p>You already endorsed this work. Your review is visible below. Endorsements cannot be self-cancelled in the MVP protocol.</p>
                 <div className="mt-3 grid gap-2 rounded-2xl border border-white/10 bg-black/20 p-3 text-xs text-zinc-300">
                   <div>Tag <span className="font-semibold text-white">{currentReviewerEndorsement.tag || 'Not tagged'}</span></div>
                   <div>Message <span className="break-words text-white">{currentReviewerEndorsement.message || 'No message'}</span></div>
@@ -128,36 +135,16 @@ export default function RepuRingEndorse(): JSX.Element {
               </div>
             )}
             {selectedContribution ? (
-              <SocialCard selected>
-                <div className="flex flex-wrap items-start justify-between gap-4">
-                  <div className="flex min-w-0 gap-3">
-                    <AvatarFallback label={selectedContribution.authorUsername || selectedContribution.authorAddress} />
-                    <div>
-                      <p className="break-words font-semibold text-white">{selectedContribution.authorUsername || shortAddress(selectedContribution.authorAddress)}</p>
-                      <p className="font-mono text-xs text-zinc-500">{shortAddress(selectedContribution.authorAddress)}</p>
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <CategoryBadge category={selectedContribution.category} />
-                    <Badge>{selectedContribution.endorsementCount} endorsements</Badge>
-                  </div>
-                </div>
-                <p className="mt-4 break-words text-sm leading-6 text-zinc-300">{selectedContribution.description || 'No description provided.'}</p>
-                <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm">
-                  <p className="text-zinc-500">Proof URL</p>
-                  {selectedContribution.proofUrl ? (
-                    <a href={selectedContribution.proofUrl} target="_blank" rel="noreferrer" className="mt-2 block break-all font-mono text-cyan-200 underline-offset-4 hover:underline">{selectedContribution.proofUrl}</a>
-                  ) : (
-                    <p className="mt-2 text-zinc-400">No proof URL provided.</p>
-                  )}
-                </div>
-                <ContributionReviews endorsements={selectedReviews} emptyCopy="No reviews yet. Endorse this contribution from another member account to add the first review/comment." />
-              </SocialCard>
+              <ContributionCard
+                contribution={selectedContribution}
+                selected
+                reviews={<ContributionReviews endorsements={selectedReviews} emptyCopy="No reviews yet. Endorse this contribution from another member account to add the first review/comment." />}
+              />
             ) : (
               <EmptyState
                 title="No contribution selected"
-                copy="Choose a proof below or open the Contribution Feed. Endorsements must come from another circle member, not the contribution author."
-                actions={<Button to="/repuring/contributions" variant="secondary">Browse contribution feed</Button>}
+                copy="Choose a proof below or open the proof-of-work feed. Endorsements must come from another circle member, not the contribution author."
+                actions={<Button to="/repuring/contributions" variant="secondary">Browse proof-of-work feed</Button>}
               />
             )}
           </Panel>
@@ -166,7 +153,7 @@ export default function RepuRingEndorse(): JSX.Element {
             <SectionHeader
               eyebrow="Peer validation"
               title="Write a contribution endorsement"
-              copy="Use another circle member wallet, enter its signing password, then explain why this work helps the project."
+              copy="Use another community member wallet, enter its signing password, then explain why this work helps the community."
               actions={<Badge tone="zinc">EndorseContributionTx</Badge>}
             />
             <Input label="Signing key password" type="password" value={password} onChange={setPassword} placeholder="Required for BLS signing" />
@@ -189,7 +176,7 @@ export default function RepuRingEndorse(): JSX.Element {
             <Input label="Review message" value={endorse.message} onChange={(message) => setEndorse({ ...endorse, message })} multiline />
             <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
               <Button disabled={endorseDisabled} className="w-full sm:w-auto" onClick={() => { if (endorseDisabled) return; setSuccessMessage(''); setConfirmOpen(true); }}>
-                Review and continue
+                Submit peer review
               </Button>
               <Badge tone="zinc">EndorseContributionTx</Badge>
             </div>
@@ -200,12 +187,17 @@ export default function RepuRingEndorse(): JSX.Element {
               </div>
             )}
             {confirmOpen && selectedContribution && (
-              <div className="rounded-3xl border border-amber-300/30 bg-amber-300/10 p-4">
-                <SectionHeader
-                  eyebrow="Confirm endorsement"
-                  title="Review before submitting"
-                  copy="This endorsement is an onchain attestation. It will increase the author's reputation. After confirmation, you cannot self-cancel it in the current protocol. Only the circle creator can moderate it."
-                />
+              <ConfirmationPanel
+                eyebrow="Confirm endorsement"
+                title="Confirm peer review"
+                copy="This endorsement is an onchain attestation. After confirmation, you cannot self-cancel it in the current MVP protocol. Only the circle creator/admin can moderate invalid endorsements."
+                actions={(
+                  <>
+                    <Button onClick={confirmEndorsement}>Confirm endorsement</Button>
+                    <Button variant="secondary" onClick={() => setConfirmOpen(false)}>Cancel</Button>
+                  </>
+                )}
+              >
                 <div className="grid gap-3 text-sm md:grid-cols-2">
                   <ConfirmRow label="Contribution" value={selectedContribution.title || selectedContribution.contributionId} />
                   <ConfirmRow label="Contribution ID" value={selectedContribution.contributionId} mono />
@@ -217,12 +209,9 @@ export default function RepuRingEndorse(): JSX.Element {
                   <div className="md:col-span-2">
                     <ConfirmRow label="Review message" value={endorse.message} />
                   </div>
+                  <ConfirmRow label="Reputation impact" value="+1 global reputation to author" />
                 </div>
-                <div className="mt-4 flex flex-wrap gap-3">
-                  <Button onClick={confirmEndorsement}>Confirm endorsement</Button>
-                  <Button variant="secondary" onClick={() => setConfirmOpen(false)}>Cancel</Button>
-                </div>
-              </div>
+              </ConfirmationPanel>
             )}
           </Panel>
         </div>
@@ -306,19 +295,7 @@ export default function RepuRingEndorse(): JSX.Element {
         ) : (
           <div className="grid gap-3 lg:grid-cols-2">
             {endorsements.map((item) => (
-              <SocialCard key={item.endorsementId}>
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <Badge>{item.tag}</Badge>
-                  <StatusPill tone={item.slashed ? 'danger' : 'success'}>{item.slashed ? 'Slashed' : 'Active'}</StatusPill>
-                </div>
-                <p className="mt-3 break-words text-sm leading-6 text-zinc-300">{item.message || 'No message'}</p>
-                <div className="mt-4 grid gap-2 text-xs text-zinc-500">
-                  {item.contributionId && <div>Contribution <span className="break-all font-mono text-zinc-300">{item.contributionId}</span></div>}
-                  <div>From <span className="font-mono text-zinc-300">{shortAddress(item.fromAddress)}</span></div>
-                  <div>Target <span className="font-mono text-zinc-300">{shortAddress(item.targetAddress)}</span></div>
-                  <div>ID <span className="break-all font-mono text-zinc-300">{item.endorsementId}</span></div>
-                </div>
-              </SocialCard>
+              <ReviewCard key={item.endorsementId} review={item} />
             ))}
           </div>
         )}

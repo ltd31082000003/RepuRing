@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ActiveWalletBanner, AvatarFallback, Badge, Button, CategoryBadge, EmptyState, MemberList, MetricCard, PageHeader, Panel, ReputationBadge, RepuRingPage, RoleProgressCard, SectionHeader, SocialCard, StatusPill, TxStatusCard, roleBadge, roleForReputation, shortAddress } from './components';
+import { ActiveWalletBanner, AvatarFallback, Badge, Button, CommunityContextCard, ContributionCard, EmptyState, MemberList, MetricCard, PageHeader, Panel, ReputationBadge, RepuRingPage, ReviewCard, RoleProgressCard, SectionHeader, SocialCard, StatusPill, TxStatusCard, roleBadge, roleForReputation, shortAddress } from './components';
 import { cleanHex } from './RepuRingProvider';
 import { CircleView, ContributionView, useRepuRing } from './useRepuRing';
 
@@ -70,7 +70,7 @@ export default function RepuRingCommunity(): JSX.Element {
       <Panel>
         <SectionHeader
           eyebrow="My joined communities"
-          title="Joined project communities"
+          title="Joined communities"
           copy="Switch between communities your current wallet has joined."
         />
         {contextNotice && (
@@ -87,13 +87,13 @@ export default function RepuRingCommunity(): JSX.Element {
         ) : !profile ? (
           <EmptyState
             title="Create a profile before joining communities."
-            copy="Profiles identify members across project communities."
+            copy="Profiles identify members across community circles."
             actions={<Button to="/key-management" variant="secondary">Create profile</Button>}
           />
         ) : joinedCommunities.length === 0 ? (
           <EmptyState
             title="You have not joined any communities yet."
-            copy="Discover project communities, then join one to make it available here."
+            copy="Discover community circles, then join one to make it available here."
             actions={<Button to="/repuring/circles" variant="secondary">Discover communities</Button>}
           />
         ) : (
@@ -131,7 +131,7 @@ export default function RepuRingCommunity(): JSX.Element {
     if (!currentAddress) return <Button to="/key-management" variant="secondary">Select wallet</Button>;
     if (!profile) return <Button to="/key-management" variant="secondary">Create profile</Button>;
     if (!isMember) return <Button to="/repuring/circles" variant="secondary">Join community</Button>;
-    return <Button to="/repuring/contributions">Post first contribution</Button>;
+    return <Button to="/repuring/contributions">Post first proof-of-work</Button>;
   }
 
   function contributionReviewAction(item: ContributionView, selected: boolean) {
@@ -199,15 +199,15 @@ export default function RepuRingCommunity(): JSX.Element {
     <RepuRingPage>
       <PageHeader
         eyebrow="Community Workspace"
-        title={community?.name || 'Project community workspace'}
-        copy={community?.description || 'Open or join a project community to view members, contribution proofs, reviews, leaderboard, and role actions.'}
+        title={community?.name || 'Community workspace'}
+        copy={community?.description || 'Open or join a community circle to view members, proof-of-work posts, reviews, leaderboard, and role actions.'}
         actions={(
           <>
             <Button variant="secondary" onClick={refreshState}>Refresh community</Button>
             {!currentAddress && <Button to="/key-management" variant="secondary">Select wallet</Button>}
             {currentAddress && !profile && <Button to="/key-management" variant="secondary">Create profile</Button>}
             {currentAddress && profile && community && !isMember && <Button to="/repuring/circles" variant="secondary">Join community</Button>}
-            {isMember && <Button to="/repuring/contributions" variant="secondary">Post contribution</Button>}
+            {isMember && <Button to="/repuring/contributions" variant="secondary">Post proof-of-work</Button>}
             {isMember && <Button to="/repuring/endorse" variant="secondary">Review work</Button>}
             {isCreator && <Button to="/repuring/admin" variant="secondary">Open moderation</Button>}
             <Button to="/repuring/leaderboard">View leaderboard</Button>
@@ -223,13 +223,22 @@ export default function RepuRingCommunity(): JSX.Element {
         hasProfile={Boolean(profile)}
       />
 
+      <CommunityContextCard
+        circle={community}
+        circleId={circleId}
+        currentAddress={currentAddress}
+        isMember={isMember}
+        isCreator={isCreator}
+        actions={<Button to="/repuring/circles" variant="secondary">Switch community</Button>}
+      />
+
       {!community ? (
         <div className="grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
           {joinedCommunitiesPanel()}
           <Panel>
             <EmptyState
               title={circleId ? 'Selected community not found' : 'No community selected'}
-              copy="Open a joined project community to load its workspace, or discover a new community from Circles."
+              copy="Open a joined community to load its workspace, or discover a new community from Circles."
               actions={<Button to="/repuring/circles" variant="secondary">Discover communities</Button>}
             />
           </Panel>
@@ -244,7 +253,7 @@ export default function RepuRingCommunity(): JSX.Element {
               actions={<StatusPill tone={statusTone(walletStatus)}>{walletStatus}</StatusPill>}
             />
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-              <MetricCard label="Circle ID" value={community.circleId} detail="Current project community key." tone="cyan" />
+              <MetricCard label="Community ID" value={community.circleId} detail="Readonly onchain community metadata." tone="cyan" />
               <MetricCard label="Creator" value={shortAddress(community.creatorAddress) || 'Unknown'} detail={community.creatorAddress || 'Creator address not loaded.'} />
               <MetricCard label="Members" value={String(memberCount)} detail="Joined contributor profiles." tone="emerald" />
               <MetricCard label="Contributions" value={String(contributions.length)} detail="Proof-of-work posts in this community." />
@@ -258,7 +267,7 @@ export default function RepuRingCommunity(): JSX.Element {
                 <SectionHeader
                   eyebrow="Current member"
                   title={profile?.username || shortAddress(currentAddress) || 'Wallet not selected'}
-                  copy="Your current wallet status for this project community."
+                  copy="Your current wallet status for this community."
                   actions={<StatusPill tone={statusTone(walletStatus)}>{walletStatus}</StatusPill>}
                 />
                 <div className="grid gap-3 sm:grid-cols-2">
@@ -300,7 +309,7 @@ export default function RepuRingCommunity(): JSX.Element {
                 {recentContributions.length === 0 ? (
                   <EmptyState
                     title="No contribution proofs yet"
-                    copy="Joined members can post the first proof-of-work for this project community."
+                    copy="Joined members can post the first proof-of-work for this community."
                     actions={contributionEmptyAction()}
                   />
                 ) : (
@@ -309,29 +318,19 @@ export default function RepuRingCommunity(): JSX.Element {
                       const reviewCount = scopedReviews.filter((endorsement) => endorsement.contributionId === item.contributionId).length;
                       const selected = item.contributionId === selectedContributionId;
                       return (
-                        <SocialCard key={item.contributionId} selected={selected}>
-                          <div className="flex flex-wrap items-start justify-between gap-3">
-                            <div className="flex min-w-0 gap-3">
-                              <AvatarFallback label={item.authorUsername || item.authorAddress} />
-                              <div className="min-w-0">
-                                <h3 className="break-words text-lg font-semibold text-white">{item.title || item.contributionId}</h3>
-                                <p className="mt-1 font-mono text-xs text-zinc-500">{item.authorUsername || shortAddress(item.authorAddress)}</p>
+                        <ContributionCard
+                          key={item.contributionId}
+                          contribution={item}
+                          selected={selected}
+                          actions={(
+                            <div className="space-y-3">
+                              <div className="flex flex-wrap gap-2">
+                                <Badge tone="zinc">{reviewCount} review{reviewCount === 1 ? '' : 's'}</Badge>
                               </div>
+                              {contributionReviewAction(item, selected)}
                             </div>
-                            <div className="flex flex-wrap gap-2">
-                              <CategoryBadge category={item.category} />
-                              <StatusPill tone={item.slashed ? 'danger' : 'success'}>{item.slashed ? 'Slashed' : 'Active'}</StatusPill>
-                            </div>
-                          </div>
-                          <p className="mt-3 line-clamp-3 break-words text-sm leading-6 text-zinc-300">{item.description || 'No description provided.'}</p>
-                          <div className="mt-4 flex flex-wrap gap-2">
-                            <Badge tone="zinc">{item.endorsementCount} endorsement{item.endorsementCount === 1 ? '' : 's'}</Badge>
-                            <Badge tone="zinc">{reviewCount} review{reviewCount === 1 ? '' : 's'}</Badge>
-                          </div>
-                          <div className="mt-4">
-                            {contributionReviewAction(item, selected)}
-                          </div>
-                        </SocialCard>
+                          )}
+                        />
                       );
                     })}
                   </div>
@@ -345,20 +344,11 @@ export default function RepuRingCommunity(): JSX.Element {
                 ) : (
                   <div className="grid gap-3">
                     {communityReviews.map((item) => (
-                      <SocialCard key={item.endorsementId}>
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          <div className="flex flex-wrap gap-2">
-                            <Badge tone="cyan">{shortAddress(item.fromAddress)}</Badge>
-                            <Badge>{item.tag}</Badge>
-                          </div>
-                          <StatusPill tone={item.slashed ? 'danger' : 'success'}>{item.slashed ? 'Slashed' : 'Active'}</StatusPill>
-                        </div>
-                        <p className="mt-3 break-words text-sm leading-6 text-zinc-300">{item.message || 'No review message provided.'}</p>
-                        <p className="mt-3 break-all font-mono text-xs text-zinc-500">Contribution {item.contributionId}</p>
-                        <div className="mt-4">
-                          {reviewCardAction(item.contributionId)}
-                        </div>
-                      </SocialCard>
+                      <ReviewCard
+                        key={item.endorsementId}
+                        review={item}
+                        actions={reviewCardAction(item.contributionId)}
+                      />
                     ))}
                   </div>
                 )}

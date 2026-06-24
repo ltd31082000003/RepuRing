@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ActiveWalletBanner, AvatarFallback, Badge, Button, CategoryBadge, ContributionReviews, EmptyState, Input, MetricCard, PageHeader, Panel, RepuRingPage, SectionHeader, SocialCard, StatusPill, TxStatusCard, shortAddress } from './components';
+import { ActiveWalletBanner, Badge, Button, CommunityContextCard, ContributionCard, ContributionReviews, EmptyState, GeneratedRecordIdBlock, Input, MetricCard, PageHeader, Panel, PostVisibilityNotice, RepuRingPage, SectionHeader, TxStatusCard } from './components';
 import { cleanHex } from './RepuRingProvider';
 import { ContributionView, useRepuRing } from './useRepuRing';
 
@@ -42,7 +42,7 @@ export default function RepuRingContributions(): JSX.Element {
       : !profile
         ? 'Create your profile before posting proof-of-work.'
         : !circle
-        ? 'Open or join a project community before posting proof-of-work.'
+        ? 'Open or join a community before posting proof-of-work.'
         : !isMember
           ? 'Join the current community before posting.'
           : !password
@@ -144,9 +144,9 @@ export default function RepuRingContributions(): JSX.Element {
   return (
     <RepuRingPage>
       <PageHeader
-        eyebrow="Contribution feed"
-        title="Project Contribution Feed"
-        copy="A contribution is a proof-of-work post stored for the selected project circle. Peer endorsements increase the author's profile reputation."
+        eyebrow="Post Work"
+        title="Proof-of-work feed"
+        copy="Post proof-of-work inside the selected community. Peer endorsements increase the author's global profile reputation."
         actions={(
           <>
             <Button variant="secondary" onClick={refreshState}>Refresh feed</Button>
@@ -164,17 +164,25 @@ export default function RepuRingContributions(): JSX.Element {
         hasProfile={Boolean(profile)}
       />
 
+      <CommunityContextCard
+        circle={circle}
+        circleId={circleId}
+        currentAddress={currentAddress}
+        isMember={isMember}
+        actions={<Button to="/repuring/circles" variant="secondary">Change community</Button>}
+      />
+
       <section className="grid gap-5 xl:grid-cols-[0.85fr_1.15fr]">
         <div className="space-y-5">
           <Panel>
             <SectionHeader
               eyebrow="Composer"
               title="Post proof-of-work"
-              copy="Publish proof-of-work in the current project community after your wallet has joined it."
+              copy="Publish proof-of-work in the current community after your wallet has joined it."
               actions={composerAction()}
             />
             <div className="grid gap-3 sm:grid-cols-2">
-              <MetricCard label="Community" value={circle?.name || 'No community selected'} detail={circle?.description || 'Open or join a project community from Discover communities.'} tone="cyan" />
+              <MetricCard label="Community" value={circle?.name || 'No community selected'} detail={circle?.description || 'Open or join a community from Discover communities.'} tone="cyan" />
               <MetricCard label="Circle ID" value={circle?.circleId || circleId || 'Not selected'} detail="Current community context for new contribution proofs." />
               <MetricCard label="Members" value={String(circle?.members?.length || 0)} detail="Joined wallets in this community." tone="emerald" />
               <MetricCard label="Posting status" value={postingStatus(currentAddress, Boolean(profile), Boolean(circle), isMember)} detail={postHelp} tone={isMember ? 'emerald' : 'neutral'} />
@@ -184,11 +192,7 @@ export default function RepuRingContributions(): JSX.Element {
                 Current form will post to the loaded community <span className="font-mono">{circle?.circleId}</span>. Reopen the community if the context looks stale.
               </div>
             )}
-            {postNotice && (
-              <div className={`rounded-2xl border p-4 text-sm font-medium leading-6 ${postNoticeClass(postNotice)}`}>
-                {postNotice}
-              </div>
-            )}
+            <PostVisibilityNotice message={postNotice} />
             {composerOpen && (
               <div className="space-y-4 rounded-3xl border border-white/10 bg-black/20 p-4">
                 <Input label="Signing key password" type="password" value={password} onChange={setPassword} placeholder="Required for BLS signing" />
@@ -201,16 +205,7 @@ export default function RepuRingContributions(): JSX.Element {
                     {categories.map((category) => <option key={category}>{category}</option>)}
                   </select>
                 </label>
-                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-white">Generated contribution ID</p>
-                      <p className="mt-1 break-all font-mono text-xs text-zinc-400">{contributionForm.contributionId || 'Generated before submit'}</p>
-                      <p className="mt-2 text-xs text-zinc-500">This ID is generated for the onchain contribution record.</p>
-                    </div>
-                    <Button variant="secondary" onClick={regenerateContributionId}>Regenerate ID</Button>
-                  </div>
-                </div>
+                <GeneratedRecordIdBlock value={contributionForm.contributionId} onRegenerate={regenerateContributionId} />
                 <details className="rounded-2xl border border-white/10 bg-black/20 p-4">
                   <summary className="cursor-pointer text-sm font-semibold text-zinc-200">Advanced: custom contribution ID</summary>
                   <p className="mt-3 text-sm text-zinc-500">Only use this for demos or debugging. IDs must be unique in the current chain state.</p>
@@ -271,45 +266,13 @@ export default function RepuRingContributions(): JSX.Element {
                 const selected = selectedContributionId === item.contributionId;
                 const reviews = endorsements.filter((endorsement) => endorsement.contributionId === item.contributionId && (!endorsement.circleId || endorsement.circleId === item.circleId));
                 return (
-                  <SocialCard key={item.contributionId} selected={selected}>
-                    <div className="flex flex-wrap items-start justify-between gap-4">
-                      <div className="flex min-w-0 gap-3">
-                        <AvatarFallback label={item.authorUsername || item.authorAddress} />
-                        <div className="min-w-0">
-                          <p className="break-words font-semibold text-white">{item.authorUsername || shortAddress(item.authorAddress)}</p>
-                          <p className="font-mono text-xs text-zinc-500">{shortAddress(item.authorAddress)}</p>
-                        </div>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        <CategoryBadge category={item.category} />
-                        <StatusPill tone={item.slashed ? 'danger' : 'success'}>{item.slashed ? 'Slashed' : 'Active'}</StatusPill>
-                      </div>
-                    </div>
-                    <h3 className="mt-5 break-words text-xl font-semibold text-white">{item.title}</h3>
-                    <p className="mt-3 break-words text-sm leading-6 text-zinc-300">{item.description || 'No description provided.'}</p>
-                    <div className="mt-5 grid gap-3 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm">
-                      <div className="flex min-w-0 flex-wrap justify-between gap-2">
-                        <span className="text-zinc-500">Proof</span>
-                        {item.proofUrl ? (
-                          <a className="break-all font-mono text-cyan-200 underline-offset-4 hover:underline" href={item.proofUrl} title={item.proofUrl} target="_blank" rel="noreferrer">{proofLabel(item.proofUrl)}</a>
-                        ) : (
-                          <span className="text-zinc-500">No proof URL provided</span>
-                        )}
-                      </div>
-                      <div className="flex min-w-0 flex-wrap justify-between gap-2">
-                        <span className="text-zinc-500">Endorsements</span>
-                        <Badge>{item.endorsementCount}</Badge>
-                      </div>
-                      <div className="flex min-w-0 flex-wrap justify-between gap-2">
-                        <span className="shrink-0 text-zinc-500">Onchain record ID</span>
-                        <span className="min-w-0 break-all font-mono text-xs text-zinc-300">{item.contributionId}</span>
-                      </div>
-                    </div>
-                    <ContributionReviews endorsements={reviews} />
-                    <div className="mt-5">
-                      {reviewAction(item, selected)}
-                    </div>
-                  </SocialCard>
+                  <ContributionCard
+                    key={item.contributionId}
+                    contribution={item}
+                    selected={selected}
+                    reviews={<ContributionReviews endorsements={reviews} />}
+                    actions={reviewAction(item, selected)}
+                  />
                 );
               })}
             </div>
@@ -328,17 +291,6 @@ function postingStatus(currentAddress: string, hasProfile: boolean, hasCircle: b
   if (!hasCircle) return 'No community';
   if (!isMember) return 'Join first';
   return 'Ready';
-}
-
-function proofLabel(value: string) {
-  try {
-    const url = new URL(value);
-    const path = url.pathname && url.pathname !== '/' ? url.pathname : '';
-    const label = `${url.hostname}${path}`;
-    return label.length > 48 ? `${label.slice(0, 45)}...` : label;
-  } catch {
-    return value.length > 48 ? `${value.slice(0, 45)}...` : value;
-  }
 }
 
 function slugifyContributionTitle(value: string): string {
@@ -367,10 +319,4 @@ function failureNoticeForStatus(status: string): string {
     return 'Current community could not be found. Reopen it from Community or Circles.';
   }
   return 'Contribution could not be submitted. Check transaction status below. If the record ID already exists, regenerate ID and try again.';
-}
-
-function postNoticeClass(message: string): string {
-  if (message.includes('not visible') || message.includes('could not')) return 'border-amber-300/30 bg-amber-300/10 text-amber-100';
-  if (message.includes('visible in the feed')) return 'border-emerald-300/20 bg-emerald-300/10 text-emerald-100';
-  return 'border-cyan-300/20 bg-cyan-300/10 text-cyan-100';
 }

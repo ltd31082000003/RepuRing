@@ -31,15 +31,15 @@ const txMeta: Record<TxKind, { typeUrl: string; message: string }> = {
 };
 
 const submittedStatus: Record<TxKind, string> = {
-  createProfile: 'CreateProfileTx submitted - contributor identity will appear after commit.',
-  updateProfile: 'UpdateProfileTx submitted - bio and avatar will refresh; username and reputation remain unchanged.',
-  createCircle: 'CreateCircleTx submitted - project circle will refresh after commit.',
-  joinCircle: 'JoinCircleTx submitted - membership will appear after commit.',
-  createContribution: 'CreateContributionTx submitted - proof-of-work will appear in the contribution feed.',
-  endorseContribution: 'EndorseContributionTx submitted - author profile reputation and endorsement count will refresh.',
-  endorseUser: 'EndorseUserTx submitted - legacy member endorsement path used.',
-  claimRole: 'ClaimRoleTx submitted - role for this circle will refresh after commit.',
-  slashEndorsement: 'SlashEndorsementTx submitted - endorsement status and target profile reputation will refresh.',
+  createProfile: 'Create profile submitted. Contributor identity will appear after commit. Technical: CreateProfileTx.',
+  updateProfile: 'Update profile submitted. Bio and avatar will refresh; username and reputation remain unchanged. Technical: UpdateProfileTx.',
+  createCircle: 'Create community circle submitted. Community state will refresh after commit. Technical: CreateCircleTx.',
+  joinCircle: 'Join community submitted. Membership will appear after commit. Technical: JoinCircleTx.',
+  createContribution: 'Post proof-of-work submitted. Checking feed visibility after commit. Technical: CreateContributionTx.',
+  endorseContribution: 'Peer review submitted. Author reputation and endorsement count will refresh. Technical: EndorseContributionTx.',
+  endorseUser: 'Legacy member endorsement submitted. Technical: EndorseUserTx.',
+  claimRole: 'Claim role submitted. Community role will refresh after commit. Technical: ClaimRoleTx.',
+  slashEndorsement: 'Slash invalid review submitted. Review status and target reputation will refresh. Technical: SlashEndorsementTx.',
 };
 
 export function RepuRingProvider({ children }: { children: React.ReactNode }): JSX.Element {
@@ -59,7 +59,7 @@ export function RepuRingProvider({ children }: { children: React.ReactNode }): J
     proofUrl: 'https://example.com/pharos-guide',
     category: 'educator',
   });
-  const [endorse, setEndorse] = React.useState({ tag: 'builder', message: 'Useful contribution for this project community.' });
+  const [endorse, setEndorse] = React.useState({ tag: 'builder', message: 'Useful contribution for this community.' });
   const [slashReason, setSlashReason] = React.useState('invalid endorsement');
   const [lastTx, setLastTx] = React.useState('');
   const [profile, setProfile] = React.useState<ProfileView | null>(null);
@@ -236,6 +236,7 @@ function validateSubmit(kind: TxKind, fields: Record<string, unknown>, currentAd
   }
   if (kind === 'endorseContribution' && !String(fields.contributionId || '').trim()) throw new Error('Contribution ID is required.');
   if (kind === 'slashEndorsement' && !String(fields.endorsementId || '').trim()) throw new Error('Endorsement ID is required.');
+  if (kind === 'slashEndorsement' && !String(fields.reason || '').trim()) throw new Error('Slash reason is required.');
 }
 
 function mergeEndorsements(a: EndorsementView[], b: EndorsementView[]) {
