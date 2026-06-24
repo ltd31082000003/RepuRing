@@ -236,8 +236,8 @@ npm run build
 3. Set appropriate session timeouts and security parameters
 4. Ensure SSL/TLS is configured for secure connections
 
-### Docker Deployment
-The wallet can be deployed alongside Canopy nodes:
+### Static Deployment
+The wallet can be deployed alongside native Canopy nodes:
 ```bash
 # Build the application
 npm run build
@@ -390,16 +390,16 @@ The build output will be in the `out/` directory.
 
 ## Deployment
 
-### Docker Build
+### Embedded Build
 
-The wallet is automatically built during the Docker image build process via the Makefile:
+The wallet is built through the Makefile before embedding into the native Go binary:
 
 ```bash
 # From project root
 make build/wallet
 ```
 
-This is automatically called by the Dockerfile.
+The compiled assets are embedded in the Go binary during the native build.
 
 ### Manual Deployment
 
@@ -444,7 +444,7 @@ This ensures that requests to `/wallet/assets/file.js` are forwarded to the Go s
 **Solution**:
 1. Verify `VITE_BASE_PATH` matches your deployment path
 2. Ensure reverse proxy is configured to strip the path prefix
-3. Rebuild the Docker image after changing the base path
+3. Rebuild the wallet after changing the base path
 
 
 **Built with ❤️ for the Canopy ecosystem**

@@ -11,7 +11,7 @@ RepuRing uses Windows + Go native Canopy for local development and demos.
 - Configure the Canopy data directory with plugin set to typescript.
 - Let the native Canopy controller start the TypeScript plugin.
 
-Do not propose Docker, Ubuntu, or WSL as the RepuRing chain runtime. Docker-related files inherited from the upstream Canopy template are not part of the RepuRing run path and should not be used in RepuRing setup instructions.
+Do not propose Docker, Ubuntu, or WSL as the RepuRing chain runtime. Docker files inherited from the upstream Canopy template have been removed from the RepuRing run path and should not be reintroduced in setup instructions.
 
 Use plugin/typescript/AGENTS.md as the technical reference for the plugin interface.
 

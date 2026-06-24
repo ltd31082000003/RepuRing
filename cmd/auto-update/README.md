@@ -100,18 +100,11 @@ The auto-update mechanism can be enabled/disabled through the Canopy configurati
 
 ## Usage
 
-For deployment examples, refer to the `Dockerfile` in the root of the repository. The Dockerfile demonstrates:
-- How to build the auto-update enabled binary
-- Proper environment setup
-- Required permissions
-- Volume mounting for persistence
-- Process management in a containerized environment
+Build the local CLI and auto-update binary, then run the auto-update service with the native Canopy binary path:
 
-Example Dockerfile usage:
 ```bash
-# Build the image
-docker build --build-arg BIN_PATH=./cli -t canopy .
-
-# Run the container
-docker run -it --env-file=.env -p 50000:50000 -p 50001:50001 -p 50002:50002 -p 50003:50003 -p 9001:9001 --name canopy canopy
+make build/auto-update-local
+BIN_PATH=./cli go run ./cmd/auto-update/... start
 ```
+
+RepuRing development and demos use the Windows native Canopy runtime. The chain is started by the repository PowerShell scripts, not by alternate runtimes.

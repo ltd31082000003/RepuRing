@@ -4,7 +4,6 @@ CLI_DIR := ./cmd/main/...
 AUTO_UPDATE_DIR := ./cmd/auto-update/...
 WALLET_DIR := ./cmd/rpc/web/wallet
 EXPLORER_DIR := ./cmd/rpc/web/explorer
-DOCKER_DIR := ./.docker/compose.yaml
 
 # ==================================================================================== #
 # HELPERS
@@ -17,10 +16,8 @@ help:
 	@sed -n 's/^##//p' ${MAKEFILE_LIST} | column -t -s ':' |  sed -e 's/^/ /'
 
 # Targets, this is a list of all available commands which can be executed using the make command.
-.PHONY: build/canopy build/canopy-full build/wallet build/explorer build/auto-update build/auto-update-local run/auto-update run/auto-update-build run/auto-update-test test/all dev/deps docker/up \
-	docker/down docker/build docker/up-fast docker/down docker/logs \
-	build/plugin build/kotlin-plugin build/go-plugin build/all-plugins docker/plugin \
-	docker/run docker/run-kotlin docker/run-go docker/run-typescript docker/run-python docker/run-csharp
+.PHONY: build/canopy build/canopy-full build/wallet build/explorer build/auto-update build/auto-update-local run/auto-update run/auto-update-build run/auto-update-test test/all dev/deps \
+	build/plugin build/kotlin-plugin build/go-plugin build/typescript-plugin build/python-plugin build/csharp-plugin build/all-plugins
 
 # ==================================================================================== #
 # BUILDING
@@ -81,36 +78,6 @@ test/fuzz:
 dev/deps:
 	go mod vendor
 
-# Detect OS to run the docker compose command, this is because Docker for MacOS does not support the
-# modern docker compose command and still uses the legacy docker-compose
-ifeq ($(shell uname -s),Darwin)
-    DOCKER_COMPOSE_CMD = docker-compose
-else
-    DOCKER_COMPOSE_CMD = docker compose
-endif
-
-## docker/build: build the compose containers
-docker/build:
-	$(DOCKER_COMPOSE_CMD) -f $(DOCKER_DIR) build
-
-## docker/up: build and start the compose containers in detached mode
-docker/up:
-	$(DOCKER_COMPOSE_CMD) -f $(DOCKER_DIR) down && \
-	$(DOCKER_COMPOSE_CMD) -f $(DOCKER_DIR) up --build -d
-
-## docker/down: stop the compose containers
-docker/down:
-	$(DOCKER_COMPOSE_CMD) -f $(DOCKER_DIR) down
-
-## docker/up-fast: build and start the compose containers in detached mode without rebuilding
-docker/up-fast:
-	$(DOCKER_COMPOSE_CMD) -f $(DOCKER_DIR) down && \
-	$(DOCKER_COMPOSE_CMD) -f $(DOCKER_DIR) up -d
-
-## docker/logs: show the latest logs of the compose containers
-docker/logs:
-	$(DOCKER_COMPOSE_CMD) -f $(DOCKER_DIR) logs -f --tail=1000
-
 # ==================================================================================== #
 # PLUGINS
 # ==================================================================================== #
@@ -164,31 +131,3 @@ build/csharp-plugin:
 ## build/all-plugins: build all plugins
 build/all-plugins:
 	$(MAKE) build/plugin PLUGIN=all
-
-## docker/plugin: build Docker image with specific plugin (PLUGIN=kotlin|go|typescript|python|csharp)
-docker/plugin:
-	docker build -f plugin/$(PLUGIN)/Dockerfile -t canopy-$(PLUGIN) .
-
-## docker/run: run Docker container with specific plugin (PLUGIN=kotlin|go|typescript|python|csharp)
-docker/run:
-	docker run -v ~/.canopy:/root/.canopy canopy-$(PLUGIN)
-
-## docker/run-kotlin: run Kotlin plugin container
-docker/run-kotlin:
-	docker run -v ~/.canopy:/root/.canopy canopy-kotlin
-
-## docker/run-go: run Go plugin container
-docker/run-go:
-	docker run -v ~/.canopy:/root/.canopy canopy-go
-
-## docker/run-typescript: run TypeScript plugin container
-docker/run-typescript:
-	docker run -v ~/.canopy:/root/.canopy canopy-typescript
-
-## docker/run-python: run Python plugin container
-docker/run-python:
-	docker run -v ~/.canopy:/root/.canopy canopy-python
-
-## docker/run-csharp: run C# plugin container
-docker/run-csharp:
-	docker run -v ~/.canopy:/root/.canopy canopy-csharp

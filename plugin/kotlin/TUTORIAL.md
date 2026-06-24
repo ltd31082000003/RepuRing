@@ -464,9 +464,9 @@ make build
 
 ## Step 8: Running Canopy with the Plugin
 
-There are two ways to run Canopy with the Kotlin plugin: locally or with Docker.
+Run Canopy with the Kotlin plugin locally.
 
-### Option A: Running Locally
+### Running Locally
 
 #### 1. Locate your config.json
 
@@ -501,68 +501,6 @@ canopy start
 > **Warning**: You may see error logs about the plugin failing to start on the first attempt. This is normal - Canopy will retry and the plugin should start successfully within a few seconds, then begin producing blocks.
 
 Canopy will automatically start the Kotlin plugin and connect to it via Unix socket.
-
-### Step 8b: Running with Docker (Alternative)
-
-Instead of running Canopy and the plugin locally, you can use Docker to run everything in a container.
-
-#### 1. Build the Docker image
-
-From the repository root:
-
-```bash
-make docker/plugin PLUGIN=kotlin
-```
-
-This creates a `canopy-kotlin` image containing both Canopy and the Kotlin plugin pre-configured.
-
-#### 2. Run the container
-
-```bash
-make docker/run-kotlin
-```
-
-Or with a custom volume mount for persistent data:
-
-```bash
-docker run -v ~/.canopy:/root/.canopy canopy-kotlin
-```
-
-#### 3. Expose RPC ports (for running tests)
-
-To run tests against the containerized Canopy, expose the RPC ports:
-
-```bash
-docker run -p 50002:50002 -p 50003:50003 -v ~/.canopy:/root/.canopy canopy-kotlin
-```
-
-| Port | Service |
-|------|---------|
-| 50002 | RPC API (transactions, queries) |
-| 50003 | Admin RPC (keystore operations) |
-
-Now you can run tests from your host machine that connect to `localhost:50002` and `localhost:50003`.
-
-#### 4. View logs inside the container
-
-```bash
-# Get the container ID
-docker ps
-
-# View Canopy logs
-docker exec -it <container_id> tail -f /root/.canopy/logs/log
-
-# View plugin logs
-docker exec -it <container_id> tail -f /tmp/plugin/kotlin-plugin.log
-```
-
-#### 5. Interactive shell (for debugging)
-
-To inspect the container or debug issues:
-
-```bash
-docker run -it --entrypoint /bin/bash canopy-kotlin
-```
 
 ## Step 9: Testing
 
@@ -660,51 +598,4 @@ cd ~/canopy
 # Terminal 2: Run the tests
 cd ~/canopy/plugin/kotlin/tutorial
 make test-rpc
-```
-
-### Option B: With Docker
-
-```bash
-# Terminal 1: Start Canopy in Docker with ports exposed
-docker run -p 50002:50002 -p 50003:50003 -v ~/.canopy:/root/.canopy canopy-kotlin
-
-# Terminal 2: Run the tests (they connect to localhost:50002/50003)
-cd ~/canopy/plugin/kotlin/tutorial
-make test-rpc
-```
-
-The test will:
-1. Create two new accounts in the keystore
-2. Use faucet to mint 1000 tokens to account 1
-3. Send 100 tokens from account 1 to account 2
-4. Use reward to mint 50 tokens from account 2 to account 1
-5. Verify all transactions were included in blocks
-
-Expected output:
-```
-=== Kotlin Plugin RPC Test ===
-
-Step 1: Creating two accounts in keystore...
-  Created account 1: ...
-  Created account 2: ...
-  Current height: ...
-
-Step 2: Using faucet to add balance to account 1...
-  Amount: 1000000000, Fee: 10000
-  Faucet transaction sent: ...
-  Waiting for faucet transaction to be confirmed...
-  Faucet transaction confirmed!
-  Balances after faucet - Account 1: 1000000000, Account 2: 0
-
-Step 3: Sending tokens from account 1 to account 2...
-  ...
-  Send transaction confirmed!
-  Balances after send - Account 1: 899990000, Account 2: 100000000
-
-Step 4: Sending reward from account 2 back to account 1...
-  ...
-  Reward transaction confirmed!
-  Final balances - Account 1: 949990000, Account 2: 99990000
-
-=== All transactions confirmed successfully! ===
 ```

@@ -148,14 +148,6 @@ make jar
 make fatjar
 ```
 
-### Docker (if needed)
-
-```dockerfile
-FROM openjdk:17-slim
-COPY build/libs/canopy-plugin-kotlin-1.0.0-all.jar /app/plugin.jar
-CMD ["java", "-jar", "/app/plugin.jar"]
-```
-
 ## Troubleshooting
 
 ### Socket Connection Issues
