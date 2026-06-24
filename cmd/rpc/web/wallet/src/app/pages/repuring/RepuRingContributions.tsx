@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ActiveWalletBanner, Badge, Button, CommunityContextCard, ContributionCard, ContributionReviews, EmptyState, GeneratedRecordIdBlock, Input, MetricCard, PageHeader, Panel, PostVisibilityNotice, RepuRingPage, SectionHeader, TxStatusCard } from './components';
+import { ActiveWalletBanner, ActionGate, Badge, Button, CommunityContextCard, ContributionCard, ContributionReviews, EmptyState, GeneratedRecordIdBlock, Input, MetricCard, PageHeader, Panel, PostVisibilityNotice, RepuRingPage, SectionHeader, TxStatusCard } from './components';
 import { cleanHex } from './RepuRingProvider';
 import { ContributionView, useRepuRing } from './useRepuRing';
 
@@ -33,8 +33,11 @@ export default function RepuRingContributions(): JSX.Element {
   const [recentlySubmittedContributionId, setRecentlySubmittedContributionId] = React.useState('');
   const [postNotice, setPostNotice] = React.useState('');
   const [postCheckPending, setPostCheckPending] = React.useState(false);
+  const [visibleLimit, setVisibleLimit] = React.useState(10);
   const isMember = Boolean(currentAddress && circle?.members?.some((address) => cleanHex(address) === cleanHex(currentAddress)));
-  const visibleContributions = filter === 'all' ? contributions : contributions.filter((item) => item.category === filter);
+  const filteredContributions = filter === 'all' ? contributions : contributions.filter((item) => item.category === filter);
+  const visibleContributions = filteredContributions.slice(0, visibleLimit);
+  const hasMoreContributions = visibleContributions.length < filteredContributions.length;
   const circleMismatch = Boolean(circle && circleId && circle.circleId !== circleId);
   const postDisabled = !currentAddress || !profile || !circle || !isMember || !password || !contributionForm.title.trim();
   const postHelp = !currentAddress
@@ -70,6 +73,10 @@ export default function RepuRingContributions(): JSX.Element {
     setPostNotice('Contribution submitted, but it is not visible in the feed yet. Refresh again or check transaction status.');
   }, [contributions, postCheckPending, recentlySubmittedContributionId]);
 
+  React.useEffect(() => {
+    setVisibleLimit(10);
+  }, [filter, circleId]);
+
   function regenerateContributionId() {
     const nextCircleId = circle?.circleId || circleId || 'circle';
     setContributionForm({
@@ -90,8 +97,8 @@ export default function RepuRingContributions(): JSX.Element {
     const contributionId = contributionForm.contributionId.trim() || generateContributionId(targetCircleId, contributionForm.title);
     setPostNotice('');
     setPostCheckPending(false);
-    const ok = await submit('createContribution', { circleId: targetCircleId, ...contributionForm, contributionId });
-    if (ok) {
+    const result = await submit('createContribution', { circleId: targetCircleId, ...contributionForm, contributionId });
+    if (result.ok) {
       setRecentlySubmittedContributionId(contributionId);
       setPostCheckPending(true);
       setPostNotice('Contribution submitted. Checking the feed for the new post...');
@@ -101,7 +108,7 @@ export default function RepuRingContributions(): JSX.Element {
       setContributionForm({ ...contributionForm, contributionId: '' });
       return;
     }
-    setPostNotice(failureNoticeForStatus(status));
+    setPostNotice(failureNoticeForStatus(result.error || ''));
   }
 
   function composerAction() {
@@ -125,8 +132,23 @@ export default function RepuRingContributions(): JSX.Element {
     if (!currentAddress) return <Button to="/key-management" variant="secondary">Select wallet</Button>;
     if (!profile) return <Button to="/key-management" variant="secondary">Create profile</Button>;
     if (!isMember) return <Button to="/repuring/circles" variant="secondary">Join to review</Button>;
-    if (ownWork) return <p className="text-sm font-medium text-zinc-400">Own work - another member can review</p>;
-    if (item.slashed) return <p className="text-sm font-medium text-zinc-400">Review disabled</p>;
+    if (ownWork) {
+      return (
+        <ActionGate
+          title="Own work"
+          copy="Another community member must review this proof-of-work."
+        />
+      );
+    }
+    if (item.slashed) {
+      return (
+        <ActionGate
+          tone="danger"
+          title="Review disabled"
+          copy="This contribution has been slashed and cannot receive new endorsements."
+        />
+      );
+    }
     return (
       <Button
         variant={selected ? 'primary' : 'secondary'}
@@ -248,6 +270,18 @@ export default function RepuRingContributions(): JSX.Element {
             title="Contribution feed"
             copy="Each card reflects contribution state returned by RPC: author, proof, category, endorsement count, and active/slashed status."
           />
+          {contributions.length > 0 && (
+            <div className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-zinc-300 sm:flex-row sm:items-center sm:justify-between">
+              <span>
+                Showing <span className="font-semibold text-white">{visibleContributions.length}</span> of{' '}
+                <span className="font-semibold text-white">{filteredContributions.length}</span> contribution{filteredContributions.length === 1 ? '' : 's'}
+                {filter !== 'all' && <span className="text-zinc-500"> filtered from {contributions.length}</span>}
+              </span>
+              {hasMoreContributions && (
+                <Button variant="secondary" onClick={() => setVisibleLimit((limit) => limit + 10)}>Show more</Button>
+              )}
+            </div>
+          )}
           {contributions.length === 0 ? (
             <EmptyState
               title="No contributions yet"

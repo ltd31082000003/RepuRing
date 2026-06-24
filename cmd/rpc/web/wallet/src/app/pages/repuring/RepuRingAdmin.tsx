@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActiveWalletBanner, Badge, Button, CommunityContextCard, DangerPanel, EmptyState, Input, MetricCard, PageHeader, Panel, RepuRingPage, ReviewCard, RoleProgressCard, SectionHeader, StatusPill, TxStatusCard, roleBadge, roleForReputation, shortAddress } from './components';
+import { ActiveWalletBanner, ActionGate, Badge, Button, CommunityContextCard, ConfirmationPanel, DangerPanel, EmptyState, Input, MetricCard, PageHeader, Panel, RepuRingPage, ReviewCard, RoleProgressCard, SectionHeader, StatusPill, TxStatusCard, roleBadge, roleForReputation, shortAddress } from './components';
 import { cleanHex } from './RepuRingProvider';
 import { useRepuRing } from './useRepuRing';
 
@@ -17,20 +17,25 @@ export default function RepuRingAdmin(): JSX.Element {
     profile,
     role,
     circle,
+    contributions,
     endorsements,
     status,
     lastTx,
     refreshState,
     submit,
   } = useRepuRing();
+  const [claimAdvancedOpen, setClaimAdvancedOpen] = React.useState(false);
+  const [slashConfirmOpen, setSlashConfirmOpen] = React.useState(false);
   const claimableRole = roleForReputation(profile?.reputation || 0);
   const creatorSelected = Boolean(currentAddress && circle?.creatorAddress && cleanHex(currentAddress) === cleanHex(circle.creatorAddress));
   const isMember = Boolean(currentAddress && circle?.members?.some((address) => cleanHex(address) === cleanHex(currentAddress)));
   const selectedReview = endorsements.find((item) => item.endorsementId === endorsementId) || null;
+  const linkedContribution = selectedReview?.contributionId ? contributions.find((item) => item.contributionId === selectedReview.contributionId) || null : null;
+  const activeCircleId = circle?.circleId || circleId;
 
   // Multi-account demo safety: block ClaimRole/Slash before submit so wrong-account
   // attempts fail clearly in the UI instead of being rejected onchain.
-  const claimDisabled = !currentAddress || !profile || !isMember || !password || !circleId.trim();
+  const claimDisabled = !currentAddress || !profile || !isMember || !password || !activeCircleId.trim();
   const claimHelp = !currentAddress
     ? 'Select a wallet in My Account.'
     : !profile
@@ -53,7 +58,23 @@ export default function RepuRingAdmin(): JSX.Element {
             ? 'Enter a slash reason before confirming moderation.'
         : !password
           ? 'Enter the creator/admin wallet password to sign SlashEndorsementTx.'
-          : 'Ready to slash this endorsement.';
+          : 'Ready to review slash impact.';
+
+  async function claimRole() {
+    await submit('claimRole', { circleId: activeCircleId });
+  }
+
+  async function confirmSlash() {
+    const result = await submit('slashEndorsement', { endorsementId, reason: slashReason });
+    if (result.ok) {
+      setSlashConfirmOpen(false);
+      await refreshState();
+    }
+  }
+
+  React.useEffect(() => {
+    setSlashConfirmOpen(false);
+  }, [endorsementId, slashReason, currentAddress]);
 
   return (
     <RepuRingPage>
@@ -95,13 +116,24 @@ export default function RepuRingAdmin(): JSX.Element {
             <MetricCard label="Claimed status" value={role?.claimedRole ? roleBadge(role.role) : 'Not claimed'} detail={role?.claimedRole ? 'Stored onchain for this circle.' : 'Submit ClaimRoleTx to store role.'} />
           </div>
           <div className="space-y-4 rounded-3xl border border-white/10 bg-black/20 p-4">
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+              <p className="text-sm font-semibold text-white">Current community</p>
+              <p className="mt-1 break-words text-sm text-zinc-300">{circle?.name || 'No community loaded'}</p>
+              <p className="mt-2 break-all font-mono text-xs text-zinc-500">Onchain community ID: {activeCircleId || 'none'}</p>
+            </div>
             <Input label="Signing key password" type="password" value={password} onChange={setPassword} placeholder="Required for BLS signing" />
-            <Input label="Circle ID" value={circleId} onChange={setCircleId} />
             <div className="flex flex-wrap items-center gap-3">
-              <Button disabled={claimDisabled} onClick={() => { void submit('claimRole', { circleId }); }}>Claim role</Button>
+              <Button disabled={claimDisabled} onClick={claimRole}>Claim role</Button>
+              <Button to="/repuring/circles" variant="secondary">Change community</Button>
               <Badge tone="zinc">ClaimRoleTx</Badge>
             </div>
             <p className="text-sm text-zinc-500">{claimHelp}</p>
+            <details className="rounded-2xl border border-white/10 bg-black/20 p-4" open={claimAdvancedOpen} onToggle={(event) => setClaimAdvancedOpen(event.currentTarget.open)}>
+              <summary className="cursor-pointer text-sm font-semibold text-zinc-200">Advanced/debug: manual community ID</summary>
+              <div className="mt-4">
+                <Input label="Circle ID" value={circleId} onChange={setCircleId} placeholder="Manual fallback only" />
+              </div>
+            </details>
           </div>
         </Panel>
 
@@ -129,10 +161,43 @@ export default function RepuRingAdmin(): JSX.Element {
           </div>
           <Input label="Slash reason" value={slashReason} onChange={setSlashReason} multiline />
           <div className="flex flex-wrap items-center gap-3">
-            <Button variant="danger" disabled={slashDisabled} onClick={() => { void submit('slashEndorsement', { endorsementId, reason: slashReason }); }}>Slash invalid endorsement</Button>
+            <Button variant="danger" disabled={slashDisabled} onClick={() => setSlashConfirmOpen(true)}>Review slash impact</Button>
             <Badge tone="red">SlashEndorsementTx</Badge>
           </div>
           <p className="text-sm text-red-200/70">{slashHelp}</p>
+          {!creatorSelected && (
+            <ActionGate
+              tone="danger"
+              title="Creator/admin wallet required"
+              copy="Switch to the circle creator wallet before moderating endorsements."
+              actions={<Button to="/key-management" variant="secondary">Switch wallet</Button>}
+            />
+          )}
+          {slashConfirmOpen && selectedReview && (
+            <ConfirmationPanel
+              eyebrow="Confirm slash"
+              title="Review slash impact"
+              copy="This action writes permanent moderation state for the selected endorsement."
+              tone="danger"
+              actions={(
+                <>
+                  <Button variant="danger" disabled={slashDisabled} onClick={confirmSlash}>Confirm slash</Button>
+                  <Button variant="secondary" onClick={() => setSlashConfirmOpen(false)}>Cancel</Button>
+                </>
+              )}
+            >
+              <div className="grid gap-3 text-sm md:grid-cols-2">
+                <DetailRow label="Review / endorsement ID" value={selectedReview.endorsementId} mono />
+                <DetailRow label="Reviewer" value={shortAddress(selectedReview.fromAddress) || selectedReview.fromAddress} mono />
+                <DetailRow label="Target contributor" value={shortAddress(selectedReview.targetAddress) || selectedReview.targetAddress} mono />
+                <DetailRow label="Linked contribution" value={linkedContribution?.title || selectedReview.contributionId || 'No linked contribution'} />
+                {selectedReview.contributionId && <DetailRow label="Contribution ID" value={selectedReview.contributionId} mono />}
+                <DetailRow label="Slash reason" value={slashReason} />
+                <DetailRow label="Reputation impact" value="Target reputation -2, floor 0" />
+                <DetailRow label="Contribution impact" value={selectedReview.contributionId ? 'Linked contribution endorsement count -1' : 'No linked contribution count impact'} />
+              </div>
+            </ConfirmationPanel>
+          )}
           <details className="rounded-2xl border border-white/10 bg-black/20 p-4">
             <summary className="cursor-pointer text-sm font-semibold text-zinc-200">Advanced: manual endorsement ID</summary>
             <div className="mt-4">
@@ -179,5 +244,14 @@ export default function RepuRingAdmin(): JSX.Element {
 
       <TxStatusCard status={status} lastTx={lastTx} onRefresh={refreshState} />
     </RepuRingPage>
+  );
+}
+
+function DetailRow({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
+      <p className="text-xs font-semibold uppercase text-zinc-500">{label}</p>
+      <p className={`mt-1 break-words text-sm text-zinc-100 ${mono ? 'font-mono' : ''}`}>{value || 'Not provided'}</p>
+    </div>
   );
 }

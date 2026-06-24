@@ -502,11 +502,13 @@ export function ActionGate({
   title,
   copy,
   actions,
+  children,
   tone = 'neutral',
 }: {
   title: string;
   copy: string;
   actions?: React.ReactNode;
+  children?: React.ReactNode;
   tone?: 'neutral' | 'warning' | 'danger';
 }) {
   const toneClass = tone === 'danger'
@@ -518,6 +520,7 @@ export function ActionGate({
     <div className={`rounded-2xl border p-4 ${toneClass}`}>
       <p className="font-semibold text-white">{title}</p>
       <p className="mt-2 break-words text-sm leading-6 opacity-85">{copy}</p>
+      {children}
       {actions && <div className="mt-4 flex flex-wrap gap-2">{actions}</div>}
     </div>
   );
@@ -558,6 +561,39 @@ export function CommunityContextCard({
         {actions && <div className="flex w-full flex-wrap gap-2 lg:w-auto lg:justify-end">{actions}</div>}
       </div>
     </Panel>
+  );
+}
+
+export function CommunityCard({
+  circle,
+  selected = false,
+  status,
+  actions,
+  children,
+}: {
+  circle: { circleId: string; name?: string; description?: string; creatorAddress?: string; members?: string[] };
+  selected?: boolean;
+  status?: React.ReactNode;
+  actions?: React.ReactNode;
+  children?: React.ReactNode;
+}) {
+  return (
+    <SocialCard selected={selected}>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="break-words text-lg font-semibold text-white">{circle.name || circle.circleId}</h3>
+          <p className="mt-1 break-all font-mono text-xs text-zinc-500">{circle.circleId}</p>
+        </div>
+        {status}
+      </div>
+      <p className="mt-3 break-words text-sm leading-6 text-zinc-400">{circle.description || 'No description provided.'}</p>
+      <div className="mt-4 grid gap-2 text-xs text-zinc-500 sm:grid-cols-2">
+        <div>Members <span className="font-semibold text-zinc-200">{circle.members?.length || 0}</span></div>
+        <div>Creator <span className="font-mono text-zinc-300">{shortAddress(circle.creatorAddress || '')}</span></div>
+      </div>
+      {children}
+      {actions && <div className="mt-4 flex flex-wrap items-center gap-2">{actions}</div>}
+    </SocialCard>
   );
 }
 
@@ -628,6 +664,8 @@ export function ContributionCard({
   selected = false,
   actions,
   reviews,
+  compact = false,
+  statusBadge,
 }: {
   contribution: {
     contributionId: string;
@@ -643,6 +681,8 @@ export function ContributionCard({
   selected?: boolean;
   actions?: React.ReactNode;
   reviews?: React.ReactNode;
+  compact?: boolean;
+  statusBadge?: React.ReactNode;
 }) {
   return (
     <SocialCard selected={selected}>
@@ -656,12 +696,13 @@ export function ContributionCard({
         </div>
         <div className="flex flex-wrap gap-2">
           <CategoryBadge category={contribution.category} />
+          {statusBadge}
           <StatusPill tone={contribution.slashed ? 'danger' : 'success'}>{contribution.slashed ? 'Slashed' : 'Active'}</StatusPill>
         </div>
       </div>
-      <h3 className="mt-5 break-words text-xl font-semibold text-white">{contribution.title}</h3>
-      <p className="mt-3 break-words text-sm leading-6 text-zinc-300">{contribution.description || 'No description provided.'}</p>
-      <div className="mt-5 grid gap-3 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm">
+      <h3 className={`${compact ? 'mt-4 text-lg' : 'mt-5 text-xl'} break-words font-semibold text-white`}>{contribution.title}</h3>
+      <p className={`${compact ? 'line-clamp-2' : ''} mt-3 break-words text-sm leading-6 text-zinc-300`}>{contribution.description || 'No description provided.'}</p>
+      <div className={`${compact ? 'mt-4' : 'mt-5'} grid gap-3 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm`}>
         <div className="flex min-w-0 flex-wrap justify-between gap-2">
           <span className="text-zinc-500">Proof</span>
           {contribution.proofUrl ? (

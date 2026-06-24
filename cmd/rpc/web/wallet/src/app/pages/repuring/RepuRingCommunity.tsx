@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ActiveWalletBanner, AvatarFallback, Badge, Button, CommunityContextCard, ContributionCard, EmptyState, MemberList, MetricCard, PageHeader, Panel, ReputationBadge, RepuRingPage, ReviewCard, RoleProgressCard, SectionHeader, SocialCard, StatusPill, TxStatusCard, roleBadge, roleForReputation, shortAddress } from './components';
+import { ActionGate, ActiveWalletBanner, AvatarFallback, Badge, Button, CommunityCard, CommunityContextCard, ContributionCard, EmptyState, MemberList, MetricCard, PageHeader, Panel, ReputationBadge, RepuRingPage, ReviewCard, RoleProgressCard, SectionHeader, StatusPill, TxStatusCard, roleBadge, roleForReputation, shortAddress } from './components';
 import { cleanHex } from './RepuRingProvider';
 import { CircleView, ContributionView, useRepuRing } from './useRepuRing';
 
@@ -102,23 +102,21 @@ export default function RepuRingCommunity(): JSX.Element {
               const current = item.circleId === circleId;
               const creator = Boolean(currentAddress && cleanHex(item.creatorAddress) === cleanHex(currentAddress));
               return (
-                <div key={item.circleId} className="rounded-2xl border border-white/10 bg-black/25 p-4">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <h3 className="break-words font-semibold text-white">{item.name || item.circleId}</h3>
-                      <p className="mt-1 break-all font-mono text-xs text-zinc-500">{item.circleId}</p>
-                    </div>
-                    <Badge tone={current ? 'emerald' : creator ? 'cyan' : 'zinc'}>{current ? 'Current' : creator ? 'Creator' : 'Joined'}</Badge>
-                  </div>
-                  <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-                    <Badge tone="zinc">{item.members?.length || 0} member{(item.members?.length || 0) === 1 ? '' : 's'}</Badge>
+                <CommunityCard
+                  key={item.circleId}
+                  circle={item}
+                  selected={current}
+                  status={<Badge tone={current ? 'emerald' : creator ? 'cyan' : 'zinc'}>{current ? 'Current' : creator ? 'Creator' : 'Joined'}</Badge>}
+                  actions={(
+                    <>
                     {current ? (
                       <Button disabled variant="secondary">Current</Button>
                     ) : (
                       <Button variant="secondary" onClick={() => openJoinedCommunity(item.circleId)}>Open community</Button>
                     )}
-                  </div>
-                </div>
+                    </>
+                  )}
+                />
               );
             })}
           </div>
@@ -139,8 +137,8 @@ export default function RepuRingCommunity(): JSX.Element {
     if (!currentAddress) return <Button to="/key-management" variant="secondary">Select wallet</Button>;
     if (!profile) return <Button to="/key-management" variant="secondary">Create profile</Button>;
     if (!isMember) return <Button to="/repuring/circles" variant="secondary">Join to review</Button>;
-    if (ownWork) return <p className="text-sm font-medium text-zinc-400">Own work - switch wallet to review</p>;
-    if (item.slashed) return <p className="text-sm font-medium text-zinc-400">Review disabled</p>;
+    if (ownWork) return <ActionGate title="Own work" copy="Switch to another community member wallet to review this contribution." actions={<Button to="/key-management" variant="secondary">Switch wallet</Button>} />;
+    if (item.slashed) return <ActionGate tone="danger" title="Review disabled" copy="This contribution has been slashed and cannot receive new endorsements." />;
     return <Button variant={selected ? 'primary' : 'secondary'} onClick={() => reviewContribution(item.contributionId)}>Review this work</Button>;
   }
 
@@ -150,8 +148,8 @@ export default function RepuRingCommunity(): JSX.Element {
     if (!currentAddress) return <Button to="/key-management" variant="secondary">Select wallet</Button>;
     if (!profile) return <Button to="/key-management" variant="secondary">Create profile</Button>;
     if (!isMember) return <Button to="/repuring/circles" variant="secondary">Join to review</Button>;
-    if (ownWork) return <p className="text-sm font-medium text-zinc-400">Own work - switch wallet to review</p>;
-    if (linkedContribution?.slashed) return <p className="text-sm font-medium text-zinc-400">Review disabled</p>;
+    if (ownWork) return <ActionGate title="Own work" copy="Switch to another community member wallet to review this contribution." actions={<Button to="/key-management" variant="secondary">Switch wallet</Button>} />;
+    if (linkedContribution?.slashed) return <ActionGate tone="danger" title="Review disabled" copy="This contribution has been slashed and cannot receive new endorsements." />;
     return (
       <Button variant={contributionId === selectedContributionId ? 'primary' : 'secondary'} onClick={() => reviewContribution(contributionId)}>
         Review this work
@@ -162,26 +160,17 @@ export default function RepuRingCommunity(): JSX.Element {
   function roleActions() {
     if (!currentAddress) {
       return (
-        <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-          <p className="text-sm leading-6 text-zinc-300">Select a wallet before joining or claiming a role.</p>
-          <div className="mt-4"><Button to="/key-management" variant="secondary">Select wallet</Button></div>
-        </div>
+        <ActionGate title="Wallet required" copy="Select a wallet before joining or claiming a role." actions={<Button to="/key-management" variant="secondary">Select wallet</Button>} />
       );
     }
     if (!profile) {
       return (
-        <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-          <p className="text-sm leading-6 text-zinc-300">Create a profile before joining or claiming a role.</p>
-          <div className="mt-4"><Button to="/key-management" variant="secondary">Create profile</Button></div>
-        </div>
+        <ActionGate tone="warning" title="Profile required" copy="Create a profile before joining or claiming a role." actions={<Button to="/key-management" variant="secondary">Create profile</Button>} />
       );
     }
     if (!isMember) {
       return (
-        <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-          <p className="text-sm leading-6 text-zinc-300">Join this community before claiming a role.</p>
-          <div className="mt-4"><Button to="/repuring/circles" variant="secondary">Join this community</Button></div>
-        </div>
+        <ActionGate tone="warning" title="Community membership required" copy="Join this community before claiming a role." actions={<Button to="/repuring/circles" variant="secondary">Join this community</Button>} />
       );
     }
     return (
@@ -357,8 +346,8 @@ export default function RepuRingCommunity(): JSX.Element {
               <Panel>
                 <SectionHeader
                   eyebrow="Leaderboard"
-                  title="Top community reputation"
-                  copy="Top contributors by reputation in the current circle context."
+                  title="Top contributors preview"
+                  copy="Preview of the top contributors by reputation in the current circle context."
                   actions={<Button to="/repuring/leaderboard" variant="secondary">View leaderboard</Button>}
                 />
                 {topRows.length === 0 ? (

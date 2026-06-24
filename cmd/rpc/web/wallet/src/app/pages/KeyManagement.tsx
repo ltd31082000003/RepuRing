@@ -126,8 +126,8 @@ function RepuRingProfileCard(): JSX.Element {
     };
 
     const submitUpdateProfile = async () => {
-        const ok = await submit('updateProfile', editProfileForm);
-        if (ok) setEditModalOpen(false);
+        const result = await submit('updateProfile', editProfileForm);
+        if (result.ok) setEditModalOpen(false);
     };
 
     const initial = profile?.username?.slice(0, 1).toUpperCase() || currentAddress.slice(0, 1).toUpperCase() || 'R';

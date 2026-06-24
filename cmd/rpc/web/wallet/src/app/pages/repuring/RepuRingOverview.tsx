@@ -1,5 +1,5 @@
 import React from 'react';
-import { AvatarFallback, Badge, Button, DemoReadinessCard, MetricCard, PageHeader, Panel, RepuRingPage, RoleProgressCard, SectionHeader, SocialFiJourney, StatusPill, roleBadge, roleForReputation, shortAddress } from './components';
+import { AvatarFallback, Badge, Button, DemoReadinessCard, MetricCard, PageHeader, Panel, RepuRingPage, RoleProgressCard, SectionHeader, SocialFiJourney, StatusPill, TxStatusCard, roleBadge, roleForReputation, shortAddress } from './components';
 import { useRepuRing } from './useRepuRing';
 
 const flow = ['Profile', 'Circle', 'Community', 'Contribution', 'Endorsement', 'Role'];
@@ -115,6 +115,7 @@ export default function RepuRingOverview(): JSX.Element {
         </div>
       </Panel>
 
+      <TxStatusCard status={status} lastTx={lastTx} onRefresh={refreshState} />
     </RepuRingPage>
   );
 }

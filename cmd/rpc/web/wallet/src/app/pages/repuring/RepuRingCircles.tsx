@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ActiveWalletBanner, Badge, Button, CommunityContextCard, EmptyState, Input, MemberList, MetricCard, PageHeader, Panel, RepuRingPage, SectionHeader, StatusPill, TxStatusCard, shortAddress } from './components';
+import { ActiveWalletBanner, Badge, Button, CommunityCard, CommunityContextCard, EmptyState, Input, MemberList, MetricCard, PageHeader, Panel, RepuRingPage, SectionHeader, StatusPill, TxStatusCard, shortAddress } from './components';
 import { cleanHex } from './RepuRingProvider';
 import { CircleView, useRepuRing } from './useRepuRing';
 
@@ -93,7 +93,7 @@ export default function RepuRingCircles(): JSX.Element {
     setCircleId(targetCircleId);
     setContextNotice('This circle is now the current context. The feed, endorsements, leaderboard, and roles use this circle.');
     const joined = await submit('joinCircle', { circleId: targetCircleId });
-    if (joined) {
+    if (joined.ok) {
       setJoinCircleId('');
       await refreshStateRef.current();
       navigate('/repuring/community');
@@ -102,7 +102,7 @@ export default function RepuRingCircles(): JSX.Element {
 
   async function createCommunity() {
     const created = await submit('createCircle', { circleId: newCircleId, ...circleForm });
-    if (!created) return;
+    if (!created.ok) return;
     setCircleId(newCircleId);
     setContextNotice('Community created and selected. Contributions, reviews, leaderboard, and role actions now use this community.');
     await refreshStateRef.current();
@@ -215,20 +215,13 @@ export default function RepuRingCircles(): JSX.Element {
                       ? "Enter this wallet's password to join."
                       : 'Ready to join this community.';
               return (
-                <div key={item.circleId} className={['rounded-3xl border p-4 shadow-xl shadow-black/20', itemSelected ? 'border-emerald-300/40 bg-emerald-300/10' : 'border-white/10 bg-white/[0.04]'].join(' ')}>
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <h3 className="break-words text-lg font-semibold text-white">{item.name || item.circleId}</h3>
-                      <p className="mt-1 break-all font-mono text-xs text-zinc-500">{item.circleId}</p>
-                    </div>
-                    <StatusPill tone={statusTone(itemStatus)}>{itemStatus}</StatusPill>
-                  </div>
-                  <p className="mt-3 break-words text-sm leading-6 text-zinc-400">{item.description || 'No description provided.'}</p>
-                  <div className="mt-4 grid gap-2 text-xs text-zinc-500 sm:grid-cols-2">
-                    <div>Members <span className="font-semibold text-zinc-200">{item.members?.length || 0}</span></div>
-                    <div>Creator <span className="font-mono text-zinc-300">{shortAddress(item.creatorAddress)}</span></div>
-                  </div>
-                  <div className="mt-4 flex flex-wrap items-center gap-2">
+                <CommunityCard
+                  key={item.circleId}
+                  circle={item}
+                  selected={itemSelected}
+                  status={<StatusPill tone={statusTone(itemStatus)}>{itemStatus}</StatusPill>}
+                  actions={(
+                    <>
                     {itemIsMember || !currentAddress ? (
                       <Button variant={itemSelected ? 'primary' : 'secondary'} onClick={() => itemIsMember ? openCommunity(item.circleId) : previewCommunity(item.circleId)}>
                         {primaryAction}
@@ -246,7 +239,9 @@ export default function RepuRingCircles(): JSX.Element {
                       </>
                     )}
                     <Badge tone="zinc">JoinCircleTx</Badge>
-                  </div>
+                    </>
+                  )}
+                >
                   {joinExpanded && !itemIsMember && (
                     <div className="mt-4 rounded-2xl border border-white/10 bg-black/25 p-4">
                       <Input label="Wallet password" type="password" value={password} onChange={setPassword} placeholder="Required for this wallet signature" />
@@ -257,7 +252,7 @@ export default function RepuRingCircles(): JSX.Element {
                     </div>
                   )}
                   <p className="mt-2 text-xs text-zinc-500">{cardJoinHelp}</p>
-                </div>
+                </CommunityCard>
               );
             })}
           </div>

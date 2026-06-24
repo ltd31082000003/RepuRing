@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActiveWalletBanner, Badge, Button, CategoryBadge, CommunityContextCard, ConfirmationPanel, ContributionCard, ContributionReviews, EmptyState, Input, MetricCard, PageHeader, Panel, RepuRingPage, ReviewCard, SectionHeader, StatusPill, TxStatusCard, shortAddress } from './components';
+import { ActiveWalletBanner, ActionGate, Badge, Button, CommunityContextCard, ConfirmationPanel, ContributionCard, ContributionReviews, EmptyState, Input, MetricCard, PageHeader, Panel, RepuRingPage, ReviewCard, SectionHeader, StatusPill, TxStatusCard, shortAddress } from './components';
 import { cleanHex } from './RepuRingProvider';
 import { useRepuRing } from './useRepuRing';
 
@@ -70,8 +70,8 @@ export default function RepuRingEndorse(): JSX.Element {
 
   async function confirmEndorsement() {
     if (!selectedContribution) return;
-    const ok = await submit('endorseContribution', { contributionId: selectedContribution.contributionId, ...endorse });
-    if (ok) {
+    const result = await submit('endorseContribution', { contributionId: selectedContribution.contributionId, ...endorse });
+    if (result.ok) {
       setConfirmOpen(false);
       setSuccessMessage('Endorsement submitted. The review is now visible under this contribution.');
       await refreshState();
@@ -118,21 +118,25 @@ export default function RepuRingEndorse(): JSX.Element {
               actions={<StatusPill tone={selectedReviewState.tone}>{selectedReviewState.label}</StatusPill>}
             />
             {selectedAuthorIsSelf && (
-              <div className="rounded-2xl border border-amber-300/30 bg-amber-300/10 p-4 text-sm font-medium leading-6 text-amber-100">
-                Switch to another circle member account to endorse this proof. The contribution author cannot self-endorse.
-              </div>
+              <ActionGate
+                tone="warning"
+                title="You cannot review your own work"
+                copy="Switch to another community member wallet to endorse this contribution."
+                actions={<Button to="/key-management" variant="secondary">Switch wallet</Button>}
+              />
             )}
             {alreadyEndorsed && currentReviewerEndorsement && (
-              <div className="rounded-2xl border border-emerald-300/20 bg-emerald-300/10 p-4 text-sm leading-6 text-emerald-100">
-                <p className="font-semibold">You already endorsed this work.</p>
-                <p>You already endorsed this work. Your review is visible below. Endorsements cannot be self-cancelled in the MVP protocol.</p>
+              <ActionGate
+                title="You already endorsed this work"
+                copy="Your review is visible below. Endorsements cannot be self-cancelled in the MVP protocol."
+              >
                 <div className="mt-3 grid gap-2 rounded-2xl border border-white/10 bg-black/20 p-3 text-xs text-zinc-300">
                   <div>Tag <span className="font-semibold text-white">{currentReviewerEndorsement.tag || 'Not tagged'}</span></div>
                   <div>Message <span className="break-words text-white">{currentReviewerEndorsement.message || 'No message'}</span></div>
                   <div>Endorsement ID <span className="break-all font-mono text-white">{currentReviewerEndorsement.endorsementId}</span></div>
                   <div>Status <StatusPill tone={currentReviewerEndorsement.slashed ? 'danger' : 'success'}>{currentReviewerEndorsement.slashed ? 'Slashed' : 'Active'}</StatusPill></div>
                 </div>
-              </div>
+              </ActionGate>
             )}
             {selectedContribution ? (
               <ContributionCard
@@ -258,24 +262,24 @@ export default function RepuRingEndorse(): JSX.Element {
                     !endorsement.slashed
                   ));
                   const itemState = contributionReviewState(item, itemOwnWork, itemAlreadyEndorsed);
+                  const selected = item.contributionId === selectedContributionId;
                   return (
-                    <button
+                    <ContributionCard
                       key={item.contributionId}
-                      type="button"
-                      onClick={() => setSelectedContributionId(item.contributionId)}
-                      aria-pressed={item.contributionId === selectedContributionId}
-                      className={`min-w-0 rounded-2xl border p-4 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/60 ${item.contributionId === selectedContributionId ? 'border-emerald-300/40 bg-emerald-300/10' : 'border-white/10 bg-black/25 hover:bg-white/[0.08]'}`}
-                    >
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <span className="min-w-0 break-words font-semibold text-white">{item.title}</span>
-                        <div className="flex flex-wrap gap-2">
-                          <CategoryBadge category={item.category} />
-                          <StatusPill tone={itemState.tone}>{itemState.label}</StatusPill>
-                        </div>
-                      </div>
-                      <p className="mt-2 line-clamp-2 break-words text-sm text-zinc-400">{item.description}</p>
-                      <p className="mt-3 text-xs text-zinc-500">Author <span className="font-mono text-zinc-300">{item.authorUsername || shortAddress(item.authorAddress)}</span></p>
-                    </button>
+                      contribution={item}
+                      selected={selected}
+                      compact
+                      statusBadge={<StatusPill tone={itemState.tone}>{itemState.label}</StatusPill>}
+                      actions={(
+                        <Button
+                          variant={selected ? 'primary' : 'secondary'}
+                          className="w-full sm:w-auto"
+                          onClick={() => setSelectedContributionId(item.contributionId)}
+                        >
+                          {selected ? 'Selected' : 'Select for review'}
+                        </Button>
+                      )}
+                    />
                   );
                 })}
               </div>

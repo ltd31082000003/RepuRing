@@ -167,10 +167,11 @@ export function RepuRingProvider({ children }: { children: React.ReactNode }): J
       setLastTx(typeof response === 'string' ? response : JSON.stringify(response));
       setStatus(submittedStatus[kind]);
       await refreshAfterCommit(refreshState);
-      return true;
+      return { ok: true };
     } catch (e) {
-      setStatus(`${kind} failed: ${e instanceof Error ? e.message : String(e)}`);
-      return false;
+      const error = e instanceof Error ? e.message : String(e);
+      setStatus(`${kind} failed: ${error}`);
+      return { ok: false, error };
     }
   }
 

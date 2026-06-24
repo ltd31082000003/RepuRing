@@ -28,6 +28,7 @@ export type ContributionView = {
 };
 export type EndorsementView = { endorsementId: string; circleId: string; fromAddress: string; targetAddress: string; contributionId: string; tag: string; message: string; slashed: boolean; slashReason: string };
 export type LeaderboardRow = { address: string; username: string; reputation: number; role: string };
+export type SubmitResult = { ok: boolean; error?: string };
 
 export type RepuRingContextValue = {
   selectedAccount: { address?: string } | null | undefined;
@@ -62,7 +63,7 @@ export type RepuRingContextValue = {
   endorsements: EndorsementView[];
   leaderboard: LeaderboardRow[];
   refreshState: () => Promise<void>;
-  submit: (kind: TxKind, fields: Record<string, unknown>) => Promise<boolean>;
+  submit: (kind: TxKind, fields: Record<string, unknown>) => Promise<SubmitResult>;
 };
 
 export const RepuRingContext = React.createContext<RepuRingContextValue | null>(null);
