@@ -14,38 +14,108 @@ Core loop:
 Identity → Circle → Proof-of-Work → Peer Endorsement → Reputation → Role / Status
 ```
 
-## 1. Global Layout Pattern
+## 1. UI Design System Notes
+
+These wireframes must follow the shared UI design system.
+
+### Typography hierarchy
+
+| Text type | Size | Weight | Wireframe meaning |
+| --- | --- | --- | --- |
+| Page title | Desktop: 32-40px; Mobile: 28-32px | 700/800 | Main title in Page Header |
+| Section title | 20-24px | 700 | Panel or major section title |
+| Card title | 16-18px | 600/700 | Contribution title, community name, review title |
+| Body text | 14-16px | 400/500 | Descriptions and helper copy |
+| Small metadata | 12-13px | 400/500 | Wallet address, Circle ID, onchain record ID, tx badge |
+| Button text | 14px | 600 | Button labels |
+
+Technical metadata must stay visually secondary. Circle ID, Contribution ID, Endorsement ID, wallet address, tx hash, and tx name must not be larger or more prominent than contribution/community/review titles.
+
+### Layout order
+
+Default screen order:
+
+```text
+Page Header
+→ Current Context / Active Wallet Banner
+→ Primary page action
+→ Supporting panels
+→ Technical status
+```
+
+Technical status should sit near the end of the page or in a secondary area, not above the primary product action.
+
+### Spacing
+
+| Layout token | Value |
+| --- | --- |
+| Page vertical gap | 24-32px |
+| Panel padding | Desktop: 20-24px; Mobile: 16px |
+| Card gap | 12-16px |
+| Grid gap | 16-20px |
+| Button group gap | 8-12px |
+
+### Responsive
+
+Mobile:
+
+- 1 column
+- buttons full width when inside form/action blocks
+- metadata wraps or break-all
+- avoid horizontal scroll
+
+Desktop:
+
+- use 2-column layouts where useful
+- primary action left/top
+- supporting info right/bottom
+
+### Shared components used by wireframes
+
+- `PageHeader`
+- `ActiveWalletBanner`
+- `CommunityContextCard`
+- `MetricCard`
+- `StatusPill`
+- `Badge`
+- `SocialCard`
+- `ContributionCard`
+- `ReviewCard`
+- `RoleProgressCard`
+- `EmptyState`
+- `TxStatusCard`
+- `ActionGate`
+- `ConfirmationPanel`
+- `PostVisibilityNotice`
+- `GeneratedRecordIdBlock`
+
+## 2. Global Layout Pattern
 
 Each RepuRing screen should follow this structure where possible:
 
 ```text
 [Top navigation]
 
-[Page header]
+[PageHeader]
 - eyebrow
-- title
+- page title
 - short product explanation
 - primary page actions
 
-[Readonly current community context]
+[CommunityContextCard / ActiveWalletBanner]
 - community name
 - Circle ID as readonly metadata
 - member count
 - current wallet status
-- change community action where needed
+- next action when needed
 
-[Context banner]
-- selected wallet/profile
-- selected community circle
-- membership/admin status
-
-[Main content]
+[Primary page action]
 - page-specific form/feed/table/cards
 
-[Supporting content]
+[Supporting panels]
 - reputation/role/help/secondary data
 
-[Testnet status]
+[TxStatusCard]
 - RPC state
 - last transaction
 - refresh action
@@ -59,7 +129,87 @@ Technical IDs appear as metadata, not primary inputs.
 
 Technical status appears after product context and main action areas.
 
-## 2. `/repuring` — Overview Wireframe
+## 3. Page Responsibility Map
+
+### Community Workspace
+
+Role:
+
+```text
+Dashboard / overview / navigation hub
+```
+
+Allowed:
+
+- recent contributions
+- recent reviews
+- leaderboard preview
+- role preview
+- admin shortcut
+- joined communities switcher
+
+Not allowed as full workflows:
+
+- full contribution management
+- full review flow
+- full moderation flow
+- full leaderboard table
+
+Buttons must route to specialist pages:
+
+- Post proof-of-work → `/repuring/contributions`
+- Review work → `/repuring/endorse`
+- View leaderboard → `/repuring/leaderboard`
+- Open moderation → `/repuring/admin`
+
+### Post Work
+
+Role:
+
+```text
+Full proof-of-work feed + posting surface
+```
+
+Main page for:
+
+- posting proof-of-work
+- filtering contributions
+- showing full contribution list
+- showing post visibility state
+- review CTA
+
+### Review Work
+
+Role:
+
+```text
+Full endorsement workflow
+```
+
+Main page for:
+
+- selecting a contribution
+- checking own/already/slashed state
+- writing a review
+- confirming endorsement
+- showing already-endorsed state
+
+### Admin
+
+Role:
+
+```text
+Full moderation workflow
+```
+
+Main page for:
+
+- selecting a review card
+- confirming slash impact
+- entering slash reason
+- showing moderation queue
+
+## 4. `/repuring` — Overview Wireframe
 
 ### Intent
 
@@ -69,25 +219,26 @@ Orient the user and show the next step in the Social-Fi journey.
 
 ```text
 ┌──────────────────────────────────────────────────────────────┐
-│ HERO                                                         │
+│ PageHeader                                                   │
 │ Eyebrow: RepuRing / Social-Fi on Canopy                     │
-│ Title: Onchain Social-Fi for Web3 contributors              │
-│ Copy: Create identity, join circles, post proof, get         │
+│ Page title: Onchain Social-Fi for Web3 contributors          │
+│ Body: Create identity, join circles, post proof, get         │
 │       reviewed, build reputation, claim role.                │
 │ Badges: Social-Fi / Contribution Network / Canopy Testnet    │
 │ CTAs: [Open Community] [Create Profile] [Discover Circles]   │
 └──────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────┐ ┌─────────────────────┐
+│ SocialCard          │ │ CommunityContextCard│
 │ CURRENT PROFILE     │ │ CURRENT COMMUNITY   │
-│ Avatar              │ │ Circle name         │
-│ Username/address    │ │ Member count        │
+│ Avatar              │ │ Card title: name    │
+│ Card title: user    │ │ Small metadata: ID  │
 │ Status badge        │ │ Member/admin status │
 └─────────────────────┘ └─────────────────────┘
 
 ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────┐
+│ MetricCard │ │ MetricCard │ │ MetricCard │ │ MetricCard │
 │ Wallet     │ │ Reputation │ │ Role       │ │ Reviews    │
-│ selected?  │ │ global rep │ │ current    │ │ count      │
 └────────────┘ └────────────┘ └────────────┘ └────────────┘
 
 ┌──────────────────────────────────────────────────────────────┐
@@ -102,13 +253,13 @@ Orient the user and show the next step in the Social-Fi journey.
 └──────────────────────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────────────────────┐
-│ CANOPY TESTNET READINESS                                     │
-│ Query/Tx RPC status / Admin RPC status / Last transaction    │
+│ TxStatusCard                                                 │
+│ Canopy testnet readiness / RPC status / Last transaction     │
 │ [Refresh]                                                    │
 └──────────────────────────────────────────────────────────────┘
 ```
 
-## 3. `/key-management` — My Account Wireframe
+## 5. `/key-management` — My Account Wireframe
 
 ### Intent
 
@@ -118,15 +269,15 @@ Create/select wallet and create/update contributor profile.
 
 ```text
 ┌──────────────────────────────────────────────────────────────┐
-│ PAGE HEADER                                                  │
-│ Title: My Account                                            │
-│ Copy: Select a local signing wallet and manage your          │
+│ PageHeader                                                   │
+│ Page title: My Account                                      │
+│ Body: Select a local signing wallet and manage your          │
 │       RepuRing contributor profile.                          │
 └──────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────┐ ┌─────────────────────────────────────┐
-│ LOCAL WALLETS       │ │ SELECTED WALLET                     │
-│ - Wallet list       │ │ Address                             │
+│ LOCAL WALLETS       │ │ ActiveWalletBanner                  │
+│ - Wallet list       │ │ Address as small metadata           │
 │ - Create key        │ │ Status: selected / not selected     │
 │ - Select key        │ │ Password input for signing          │
 └─────────────────────┘ └─────────────────────────────────────┘
@@ -138,7 +289,7 @@ Create/select wallet and create/update contributor profile.
 └──────────────────────────────────────────────────────────────┘
 ```
 
-## 4. `/repuring/circles` — Discover Circles Wireframe
+## 6. `/repuring/circles` — Discover Circles Wireframe
 
 ### Intent
 
@@ -148,89 +299,99 @@ Create, discover, join, and open community circles.
 
 ```text
 ┌──────────────────────────────────────────────────────────────┐
-│ PAGE HEADER                                                  │
-│ Title: Community Circles                                     │
-│ Copy: Create or join Web3 contributor communities where      │
+│ PageHeader                                                   │
+│ Page title: Community Circles                               │
+│ Body: Create or join Web3 contributor communities where      │
 │       proof-of-work becomes reputation.                      │
 │ CTAs: [Create circle] [Refresh circles]                      │
 └──────────────────────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────────────────────┐
-│ CURRENT CONTEXT                                              │
+│ ActiveWalletBanner / CommunityContextCard                    │
 │ Wallet/profile status / selected circle / membership status  │
 └──────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────┐ ┌─────────────────────────────────────┐
 │ CREATE CIRCLE       │ │ DISCOVER CIRCLES                    │
-│ Name                │ │ Circle Card                         │
-│ Suggested ID        │ │ - name / description                │
-│ Description         │ │ - ID as metadata                    │
-│ [Create community]  │ │ - creator / member count            │
-│ Advanced: manual ID │ │ - status badge                      │
+│ Name                │ │ SocialCard / Community card         │
+│ Suggested ID        │ │ - card title: community name        │
+│ Description         │ │ - body: description                 │
+│ [Create community]  │ │ - small metadata: Circle ID         │
+│ Advanced: manual ID │ │ - creator / member count            │
+│                     │ │ - status badge                      │
 │                     │ │ - [Join] / [Open community]         │
 └─────────────────────┘ └─────────────────────────────────────┘
 ```
 
-## 5. `/repuring/community` — Community Workspace Wireframe
+## 7. `/repuring/community` — Community Workspace Wireframe
 
 ### Intent
 
-Main product workspace for a selected community.
+Dashboard / overview / navigation hub for a selected community.
 
 ### Wireframe
 
 ```text
 ┌──────────────────────────────────────────────────────────────┐
-│ COMMUNITY HEADER                                             │
-│ Title: <circle name>                                         │
-│ Copy: <circle description>                                   │
+│ PageHeader                                                   │
+│ Page title: <circle name>                                   │
+│ Body: <circle description>                                  │
 │ Status: Creator / Joined / Not joined / No profile           │
 │ CTAs: [Refresh] [Post Work] [Review Work] [Leaderboard]      │
 │      [Admin], if creator                                     │
 └──────────────────────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────────────────────┐
-│ READONLY COMMUNITY CONTEXT                                   │
+│ CommunityContextCard                                         │
 │ Community name / Circle ID / member count / current status   │
 │ [Change community]                                           │
 └──────────────────────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────────────────────┐
-│ ACTIVE WALLET BANNER                                         │
+│ ActiveWalletBanner                                           │
 │ Avatar / username / address / member status / next action    │
 └──────────────────────────────────────────────────────────────┘
 
 ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────┐
+│ MetricCard │ │ MetricCard │ │ MetricCard │ │ MetricCard │ │ MetricCard │
 │ Members    │ │ Proofs     │ │ Reviews    │ │ Your Rep   │ │ Your Role  │
 └────────────┘ └────────────┘ └────────────┘ └────────────┘ └────────────┘
 
 ┌─────────────────────┐ ┌─────────────────────────────────────┐
-│ LEFT COLUMN         │ │ RIGHT COLUMN                        │
-│ Joined communities  │ │ Recent proof-of-work cards           │
-│ Member list         │ │ Recent peer review cards             │
-│ Role progress       │ │ Leaderboard preview                  │
+│ Supporting panels   │ │ Preview panels                      │
+│ Joined communities  │ │ Recent ContributionCard list         │
+│ Member list         │ │ Recent ReviewCard list               │
+│ RoleProgressCard    │ │ Leaderboard preview                  │
 └─────────────────────┘ └─────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────┐
+│ TxStatusCard                                                 │
+└──────────────────────────────────────────────────────────────┘
 ```
 
-## 6. `/repuring/contributions` — Proof Feed Wireframe
+### Responsibility reminder
+
+Community Workspace shows previews and routes users to specialist pages. It should not contain the full contribution form, full endorsement confirmation, full moderation queue, or full leaderboard table.
+
+## 8. `/repuring/contributions` — Proof Feed Wireframe
 
 ### Intent
 
-Post and browse proof-of-work in selected circle.
+Full proof-of-work feed + posting surface.
 
 ### Wireframe
 
 ```text
 ┌──────────────────────────────────────────────────────────────┐
-│ PAGE HEADER                                                  │
-│ Title: Proof-of-Work Feed                                    │
-│ Copy: Post useful work so peers can review it and help       │
+│ PageHeader                                                   │
+│ Page title: Proof-of-Work Feed                              │
+│ Body: Post useful work so peers can review it and help       │
 │       you build reputation.                                  │
 │ CTA: [Refresh feed]                                          │
 └──────────────────────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────────────────────┐
-│ READONLY COMMUNITY CONTEXT                                   │
+│ CommunityContextCard                                         │
 │ Community name / Circle ID / member count / wallet status    │
 │ [Change community]                                           │
 └──────────────────────────────────────────────────────────────┘
@@ -241,18 +402,19 @@ Post and browse proof-of-work in selected circle.
 │ Description         │ │ Showing X of Y contributions        │
 │ Proof URL           │ │ [Show more]                         │
 │ Category            │ │                                     │
-│                     │ │ Card:                               │
-│ [Generated ID]      │ │ - category badge                    │
-│ Onchain record ID   │ │ - title / author                    │
-│ <generated id>      │ │ - description / proof URL           │
-│ [Regenerate ID]     │ │ - endorsement count                 │
-│ Advanced custom ID  │ │ - status badge                      │
-│                     │ │ - onchain record ID metadata        │
+│                     │ │ ContributionCard:                   │
+│ GeneratedRecordId   │ │ - card title: contribution title    │
+│ Block               │ │ - category badge                    │
+│ - Onchain record ID │ │ - body: description                 │
+│ - <generated id>    │ │ - proof URL                         │
+│ - [Regenerate ID]   │ │ - endorsement count                 │
+│ - Advanced custom ID│ │ - status badge                      │
+│                     │ │ - small metadata: record ID         │
 │ [Post proof]        │ │ - [Review this work]                │
 └─────────────────────┘ └─────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────────────────────┐
-│ POST VISIBILITY NOTICE                                       │
+│ PostVisibilityNotice                                         │
 │ Possible states:                                             │
 │ - Contribution submitted. Checking feed...                   │
 │ - Contribution posted and visible in feed.                   │
@@ -263,49 +425,32 @@ Post and browse proof-of-work in selected circle.
 ┌──────────────────────────────────────────────────────────────┐
 │ EXISTING REVIEWS / COMMENTS FOR SELECTED CONTRIBUTION        │
 └──────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────┐
+│ TxStatusCard                                                 │
+└──────────────────────────────────────────────────────────────┘
 ```
 
-### Generated Record ID block
-
-```text
-[Generated Record ID]
-- Label: Onchain record ID
-- Value: <generated contribution id>
-- Helper: This ID is generated for the onchain contribution record.
-- Action: [Regenerate ID]
-- Advanced: custom contribution ID
-```
-
-### Feed Count block
-
-```text
-[Feed Count]
-Showing X of Y contributions
-[Show more]
-```
-
-Filter empty state must be different from a truly empty feed.
-
-## 7. `/repuring/endorse` — Review Work Wireframe
+## 9. `/repuring/endorse` — Review Work Wireframe
 
 ### Intent
 
-Review another member's contribution and create a reputation-impacting endorsement.
+Full endorsement workflow.
 
 ### Wireframe
 
 ```text
 ┌──────────────────────────────────────────────────────────────┐
-│ PAGE HEADER                                                  │
-│ Title: Review Work                                           │
-│ Copy: Review useful proof-of-work from other members.        │
+│ PageHeader                                                   │
+│ Page title: Review Work                                     │
+│ Body: Review useful proof-of-work from other members.        │
 │      Valid peer reviews increase the author's reputation.    │
 └──────────────────────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────────────────────┐
-│ READONLY COMMUNITY CONTEXT                                   │
+│ CommunityContextCard                                         │
 │ Community name                                               │
-│ Circle ID                                                    │
+│ Circle ID as small metadata                                  │
 │ Member count                                                 │
 │ Current wallet status                                        │
 │ [Change community]                                           │
@@ -313,13 +458,13 @@ Review another member's contribution and create a reputation-impacting endorseme
 
 ┌─────────────────────┐ ┌─────────────────────────────────────┐
 │ CONTRIBUTION PICKER │ │ SELECTED CONTRIBUTION               │
-│ List/cards          │ │ Title                               │
+│ ContributionCard    │ │ Card title: contribution title      │
 │ - author            │ │ Author                              │
-│ - title             │ │ Description                         │
+│ - title             │ │ Body: description                   │
 │ - category          │ │ Proof URL                           │
 │ - status badge:     │ │ Endorsement count                   │
 │   Slashed / Own     │ │ Status                              │
-│   work / Already    │ │ Onchain record ID                   │
+│   work / Already    │ │ Small metadata: Onchain record ID   │
 │   endorsed / Ready  │ │                                     │
 │ [Select]            │ │                                     │
 └─────────────────────┘ └─────────────────────────────────────┘
@@ -341,9 +486,10 @@ Review another member's contribution and create a reputation-impacting endorseme
 └──────────────────────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────────────────────┐
-│ CONFIRM PEER REVIEW                                          │
+│ ConfirmationPanel                                            │
+│ Section title: Confirm Peer Review                           │
 │ Contribution title                                           │
-│ Onchain record ID                                            │
+│ Small metadata: Onchain record ID                            │
 │ Author                                                       │
 │ Community                                                    │
 │ Tag                                                          │
@@ -356,21 +502,11 @@ Review another member's contribution and create a reputation-impacting endorseme
 
 ┌──────────────────────────────────────────────────────────────┐
 │ EXISTING REVIEWS                                             │
-│ Review cards, active/slashed status, messages                │
+│ ReviewCard list, active/slashed status, messages             │
 └──────────────────────────────────────────────────────────────┘
 ```
 
-### Already Endorsed Notice
-
-```text
-[Already Endorsed Notice]
-You already endorsed this work.
-Your review is visible below.
-Endorsements cannot be self-cancelled in MVP.
-If this review is invalid, creator/admin can moderate it.
-```
-
-## 8. `/repuring/leaderboard` — Leaderboard Wireframe
+## 10. `/repuring/leaderboard` — Leaderboard Wireframe
 
 ### Intent
 
@@ -380,14 +516,14 @@ Show visible social capital and role/status rankings.
 
 ```text
 ┌──────────────────────────────────────────────────────────────┐
-│ PAGE HEADER                                                  │
-│ Title: Reputation Leaderboard                                │
-│ Copy: See contributors ranked by reputation in the selected  │
+│ PageHeader                                                   │
+│ Page title: Reputation Leaderboard                          │
+│ Body: See contributors ranked by reputation in the selected  │
 │       community context.                                     │
 └──────────────────────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────────────────────┐
-│ READONLY COMMUNITY CONTEXT + GLOBAL REPUTATION NOTICE        │
+│ CommunityContextCard + global reputation notice              │
 │ MVP uses global profile reputation shown in this community.  │
 └──────────────────────────────────────────────────────────────┘
 
@@ -397,7 +533,7 @@ Show visible social capital and role/status rankings.
 └──────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────┐ ┌─────────────────────────────────────┐
-│ YOUR STATUS         │ │ ROLE THRESHOLDS                     │
+│ YOUR STATUS         │ │ RoleProgressCard / thresholds        │
 │ Rank                │ │ Newbie: 0..4                        │
 │ Reputation          │ │ Trusted: 5..14                      │
 │ Current role        │ │ Core Member: 15..29                 │
@@ -405,24 +541,24 @@ Show visible social capital and role/status rankings.
 └─────────────────────┘ └─────────────────────────────────────┘
 ```
 
-## 9. `/repuring/admin` — Admin Wireframe
+## 11. `/repuring/admin` — Admin Wireframe
 
 ### Intent
 
-Allow role claiming and admin moderation of invalid reviews.
+Full moderation workflow.
 
 ### Wireframe
 
 ```text
 ┌──────────────────────────────────────────────────────────────┐
-│ PAGE HEADER                                                  │
-│ Title: Admin & Role                                          │
-│ Copy: Claim your community role and moderate invalid reviews │
+│ PageHeader                                                   │
+│ Page title: Admin & Role                                    │
+│ Body: Claim your community role and moderate invalid reviews │
 │       if you are the circle creator/admin.                   │
 └──────────────────────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────────────────────┐
-│ READONLY COMMUNITY CONTEXT                                   │
+│ CommunityContextCard                                         │
 │ Community name / Circle ID / member count / wallet status    │
 └──────────────────────────────────────────────────────────────┘
 
@@ -433,7 +569,7 @@ Allow role claiming and admin moderation of invalid reviews.
 └──────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────┐ ┌─────────────────────────────────────┐
-│ CLAIM ROLE          │ │ ROLE PROGRESS                       │
+│ CLAIM ROLE          │ │ RoleProgressCard                    │
 │ Current reputation  │ │ Threshold cards                     │
 │ Derived role        │ │ Next role needed points             │
 │ [Claim role]        │ │                                     │
@@ -441,7 +577,7 @@ Allow role claiming and admin moderation of invalid reviews.
 
 ┌──────────────────────────────────────────────────────────────┐
 │ MODERATION QUEUE                                             │
-│ Review cards                                                 │
+│ ReviewCard list                                              │
 │ - linked contribution                                        │
 │ - reviewer                                                   │
 │ - target                                                     │
@@ -454,14 +590,18 @@ Allow role claiming and admin moderation of invalid reviews.
 └──────────────────────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────────────────────┐
-│ SLASH CONFIRMATION / REASON                                  │
+│ ConfirmationPanel                                            │
 │ Reason textarea                                              │
 │ Impact warning: target reputation -2, floor 0                │
 │ [Confirm slash]                                              │
 └──────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────┐
+│ TxStatusCard                                                 │
+└──────────────────────────────────────────────────────────────┘
 ```
 
-## 10. Mobile Layout Notes
+## 12. Mobile Layout Notes
 
 On smaller screens:
 
@@ -470,8 +610,11 @@ On smaller screens:
 - show readonly community context before forms
 - show active wallet/community context before forms
 - show primary CTA near the top and again near relevant form
+- buttons inside forms/action blocks should be full width
 - contribution/review cards should be full width
+- metadata should wrap or use break-all
 - tables should become stacked cards if needed
+- avoid horizontal scroll
 
 Mobile priority order:
 
@@ -483,25 +626,29 @@ Context
 → Testnet status
 ```
 
-## 11. Component Priority
+## 13. Component Priority
 
 If implementation time is limited, prioritize components in this order:
 
-1. Active Wallet Banner
-2. Readonly Community Context Card
-3. Proof-of-Work Card
-4. Post Visibility Notice
-5. Peer Review Card
-6. Already Endorsed Notice
-7. Confirm Peer Review Panel
-8. Journey Checklist
-9. Reputation / Role Progress Card
-10. Transaction Status Card
-11. Leaderboard Table
-12. Admin Moderation Queue
-13. Joined Communities Switcher
+1. PageHeader
+2. ActiveWalletBanner
+3. CommunityContextCard
+4. ContributionCard
+5. PostVisibilityNotice
+6. GeneratedRecordIdBlock
+7. ReviewCard
+8. Already Endorsed Notice
+9. ConfirmationPanel
+10. Journey Checklist
+11. RoleProgressCard
+12. MetricCard
+13. StatusPill / Badge
+14. EmptyState
+15. TxStatusCard
+16. Admin Moderation Queue
+17. Joined Communities Switcher
 
-## 12. Wireframe Acceptance Checklist
+## 14. Wireframe Acceptance Checklist
 
 The screen structure is acceptable when:
 
@@ -509,6 +656,8 @@ The screen structure is acceptable when:
 - current wallet/profile state is visible where needed
 - current community context is visible on circle-scoped pages
 - technical IDs are metadata, not primary inputs
+- page title, section title, card title, body text, metadata, and button text follow the typography hierarchy
+- technical IDs/addresses/tx hashes are never visually stronger than content titles
 - the primary CTA changes based on user state
 - empty states guide users to the next step
 - proof-of-work cards and review cards feel social
@@ -516,4 +665,5 @@ The screen structure is acceptable when:
 - Review Work has Already endorsed and confirmation states
 - Review Work never shows fake Cancel endorsement
 - admin moderation is card-driven
+- Community Workspace remains a dashboard/navigation hub, not a duplicate full workflow page
 - technical/testnet state is visible but visually secondary
