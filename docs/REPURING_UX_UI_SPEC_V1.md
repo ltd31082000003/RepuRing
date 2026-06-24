@@ -119,7 +119,227 @@ Rules:
 - Endorsement ID should appear only as moderation/technical metadata.
 - Manual ID input belongs in advanced/debug sections only.
 
-## 3. Global Navigation
+## 3. UI Design System
+
+This section defines the reusable UI rules for RepuRing MVP. Devs should build or preserve shared components instead of rewriting UI patterns separately on each page.
+
+### 3.1 Typography
+
+| Text type | Size | Weight | Usage |
+| --- | --- | --- | --- |
+| Page title | Desktop: 32-40px; Mobile: 28-32px | 700/800 | Main page header title |
+| Section title | 20-24px | 700 | Large panels and major sections |
+| Card title | 16-18px | 600/700 | Contribution title, community name, review title |
+| Body text | 14-16px | 400/500 | Descriptions and main helper text |
+| Small metadata | 12-13px | 400/500 | Wallet address, onchain record ID, Circle ID, tx badge |
+| Button text | 14px | 600 | Primary and secondary buttons |
+
+Important hierarchy rule:
+
+> Technical IDs, addresses, and tx hashes must not be visually larger or more prominent than the main content.
+
+Contribution, community, and review titles must stand out more than Circle ID, Contribution ID, Endorsement ID, wallet address, tx name, or tx hash.
+
+### 3.2 Layout System
+
+Default page layout order:
+
+```text
+Page Header
+→ Current Context / Active Wallet Banner
+→ Primary page action
+→ Supporting panels
+→ Technical status
+```
+
+Spacing:
+
+| Layout token | Value |
+| --- | --- |
+| Page vertical gap | 24-32px |
+| Panel padding | Desktop: 20-24px; Mobile: 16px |
+| Card gap | 12-16px |
+| Grid gap | 16-20px |
+| Button group gap | 8-12px |
+
+Responsive behavior:
+
+Mobile:
+
+- 1 column layout
+- buttons full width when inside form/action blocks
+- metadata wraps or uses break-all
+- avoid horizontal scroll
+
+Desktop:
+
+- 2 column layout where useful
+- primary action left/top
+- supporting info right/bottom
+
+### 3.3 Shared Component Reuse
+
+Devs should build or preserve these shared components:
+
+- `PageHeader`
+- `ActiveWalletBanner`
+- `CommunityContextCard`
+- `MetricCard`
+- `StatusPill`
+- `Badge`
+- `SocialCard`
+- `ContributionCard`
+- `ReviewCard`
+- `RoleProgressCard`
+- `EmptyState`
+- `TxStatusCard`
+- `ActionGate`
+- `ConfirmationPanel`
+- `PostVisibilityNotice`
+- `GeneratedRecordIdBlock`
+
+Component responsibilities:
+
+#### PageHeader
+
+Used at the top of each page. It owns the page eyebrow, title, short explanation, and page-level action group.
+
+#### ActiveWalletBanner
+
+Used when user identity or signing state matters. It shows selected wallet, profile status, membership status, and the next required action.
+
+#### CommunityContextCard
+
+Used on every circle-scoped page. It shows readonly current community context and must not introduce manual Circle ID input in normal flow.
+
+#### ContributionCard
+
+Used to display proof-of-work in Community preview, Post Work feed, and Review Work selector.
+
+The card structure should stay consistent, but actions may differ by page:
+
+- Community preview: `View` / `Review this work`
+- Post Work feed: `View proof` / `Review this work`
+- Review Work selector: `Select` with status badge
+
+#### ReviewCard
+
+Used to display endorsements in Community recent reviews, Contribution detail/reviews, and Admin moderation queue.
+
+The card structure should stay consistent, but admin mode adds slash actions:
+
+- Normal version: read-only
+- Admin version: `Slash invalid review`
+
+#### RoleProgressCard
+
+Used wherever reputation and role progression are explained. It must use global reputation wording for MVP.
+
+#### TxStatusCard
+
+Always secondary. It should sit near the end of the page or in a secondary area.
+
+TxStatusCard must not be visually placed above product context or primary product action.
+
+#### ActionGate
+
+Used to block actions based on missing requirements, such as no wallet, no profile, not member, own contribution, already endorsed, or RPC unavailable.
+
+#### ConfirmationPanel
+
+Used before irreversible or important protocol actions, especially peer endorsement and slash moderation.
+
+#### PostVisibilityNotice
+
+Used after `CreateContributionTx` to show submitted/checking/visible/not-visible-yet/failed states.
+
+#### GeneratedRecordIdBlock
+
+Used in Post Work to show generated Contribution ID as readonly technical metadata, with regenerate and advanced/custom override options.
+
+### 3.4 Page Responsibility Rules
+
+Pages must not duplicate full workflows from other specialist pages.
+
+#### Community Workspace
+
+Role:
+
+```text
+Dashboard / overview / navigation hub
+```
+
+Allowed:
+
+- recent contributions
+- recent reviews
+- leaderboard preview
+- role preview
+- admin shortcut
+- joined communities switcher
+
+Should not do:
+
+- full contribution management
+- full review flow
+- full moderation flow
+- full leaderboard table
+
+Buttons must route to specialist pages:
+
+- Post proof-of-work → `/repuring/contributions`
+- Review work → `/repuring/endorse`
+- View leaderboard → `/repuring/leaderboard`
+- Open moderation → `/repuring/admin`
+
+#### Post Work
+
+Role:
+
+```text
+Full proof-of-work feed + posting surface
+```
+
+This is the main page for:
+
+- posting proof-of-work
+- filtering contributions
+- showing full contribution list
+- showing post visibility state
+- review CTA
+
+#### Review Work
+
+Role:
+
+```text
+Full endorsement workflow
+```
+
+This is the main page for:
+
+- selecting a contribution
+- checking own/already/slashed state
+- writing a review
+- confirming endorsement
+- showing already-endorsed state
+
+#### Admin
+
+Role:
+
+```text
+Full moderation workflow
+```
+
+This is the main page for:
+
+- selecting a review card
+- confirming slash impact
+- entering slash reason
+- showing moderation queue
+
+## 4. Global Navigation
 
 Recommended top-level navigation:
 
@@ -149,7 +369,7 @@ Route mapping:
 
 The navigation should visually mark the active route.
 
-## 4. Global Layout Requirements
+## 5. Global Layout Requirements
 
 Each RepuRing page should include:
 
@@ -170,9 +390,9 @@ Page Header
 → Technical Status / Last Transaction
 ```
 
-## 5. Shared UI Components
+## 6. Shared UI Components
 
-### 5.1 Page Header
+### 6.1 Page Header
 
 Purpose:
 
@@ -180,7 +400,7 @@ Purpose:
 - explain what the page does
 - show page-level actions
 
-### 5.2 Active Wallet Banner
+### 6.2 Active Wallet Banner
 
 Purpose:
 
@@ -197,7 +417,7 @@ States:
 | Member | You are active in this community. | Continue |
 | Creator/admin | You are the creator/admin of this community. | Open moderation |
 
-### 5.3 Community Context Card
+### 6.3 Community Context Card
 
 Purpose:
 
@@ -206,7 +426,7 @@ Purpose:
 - show whether user is member/admin
 - expose Circle ID as readonly metadata only
 
-### 5.4 Proof-of-Work Card
+### 6.4 Proof-of-Work Card
 
 Required fields:
 
@@ -227,7 +447,7 @@ Disabled states:
 - Not member → `Join to review`
 - Slashed → `Review disabled`
 
-### 5.5 Peer Review Card
+### 6.5 Peer Review Card
 
 Required fields:
 
@@ -249,7 +469,7 @@ Non-admin behavior:
 - show read-only review status
 - do not show reviewer self-cancel
 
-### 5.6 Reputation / Role Progress Card
+### 6.6 Reputation / Role Progress Card
 
 Required fields:
 
@@ -265,7 +485,7 @@ Important wording:
 Global reputation is used to claim a role in the selected community.
 ```
 
-### 5.7 Transaction Status Card
+### 6.7 Transaction Status Card
 
 Content:
 
@@ -276,9 +496,9 @@ Content:
 
 Do not show raw technical errors as the only explanation. Pair them with user-friendly text.
 
-## 6. Page-by-Page UX
+## 7. Page-by-Page UX
 
-## 6.1 `/repuring` — Overview
+## 7.1 `/repuring` — Overview
 
 ### Page goal
 
@@ -308,7 +528,7 @@ Suggested description:
 Create a contributor identity, join a community circle, post proof-of-work, get peer-reviewed, build reputation, and claim community status on Canopy testnet.
 ```
 
-## 6.2 `/key-management` — My Account / Profile
+## 7.2 `/key-management` — My Account / Profile
 
 ### Page goal
 
@@ -329,7 +549,7 @@ Let the user create/select local signing keys and create/update their RepuRing p
 - Username should be treated as permanent in MVP if protocol does not support changing it.
 - Bio/avatar can be editable.
 
-## 6.3 `/repuring/circles` — Discover Circles
+## 7.3 `/repuring/circles` — Discover Circles
 
 ### Page goal
 
@@ -366,11 +586,17 @@ The user can edit the ID only in advanced/debug mode.
 | Joined | Open community |
 | Creator | Open admin / Open community |
 
-## 6.4 `/repuring/community` — Community Workspace
+## 7.4 `/repuring/community` — Community Workspace
 
 ### Page goal
 
 This is the main product workspace for a selected circle.
+
+### Role
+
+```text
+Dashboard / overview / navigation hub
+```
 
 ### Required sections
 
@@ -384,6 +610,29 @@ This is the main product workspace for a selected circle.
 8. Reputation / Role Progress
 9. Admin Moderation Shortcut
 10. Joined Communities Switcher
+
+### Allowed content
+
+- recent contributions
+- recent reviews
+- leaderboard preview
+- role preview
+- admin shortcut
+- joined communities switcher
+
+### Not allowed as full workflows
+
+- full contribution management
+- full review flow
+- full moderation flow
+- full leaderboard table
+
+### Required routing buttons
+
+- Post proof-of-work → `/repuring/contributions`
+- Review work → `/repuring/endorse`
+- View leaderboard → `/repuring/leaderboard`
+- Open moderation → `/repuring/admin`
 
 ### Community switching
 
@@ -402,11 +651,25 @@ Show confirmation:
 Community switched. Contributions, reviews, leaderboard, and role actions now use this community.
 ```
 
-## 6.5 `/repuring/contributions` — Proof Feed / Post Work
+## 7.5 `/repuring/contributions` — Proof Feed / Post Work
 
 ### Page goal
 
 Let members post proof-of-work and browse existing contributions.
+
+### Role
+
+```text
+Full proof-of-work feed + posting surface
+```
+
+This is the main page for:
+
+- posting proof-of-work
+- filtering contributions
+- showing full contribution list
+- showing post visibility state
+- review CTA
 
 ### Required sections
 
@@ -483,11 +746,25 @@ Secondary technical badge:
 CreateContributionTx
 ```
 
-## 6.6 `/repuring/endorse` — Review Work
+## 7.6 `/repuring/endorse` — Review Work
 
 ### Page goal
 
 Let members review and endorse useful work from other members.
+
+### Role
+
+```text
+Full endorsement workflow
+```
+
+This is the main page for:
+
+- selecting a contribution
+- checking own/already/slashed state
+- writing a review
+- confirming endorsement
+- showing already-endorsed state
 
 ### Required sections
 
@@ -589,7 +866,7 @@ EndorseContributionTx
 | Already reviewed | You already endorsed this contribution. | View review |
 | Slashed contribution | Review is disabled for slashed work. | None |
 
-## 6.7 `/repuring/leaderboard` — Reputation Rankings
+## 7.7 `/repuring/leaderboard` — Reputation Rankings
 
 ### Page goal
 
@@ -609,11 +886,24 @@ Show social capital and role/status visibility.
 MVP leaderboard uses global profile reputation displayed in the selected community context. Circle-specific reputation is planned for a later version.
 ```
 
-## 6.8 `/repuring/admin` — Admin / Moderation
+## 7.8 `/repuring/admin` — Admin / Moderation
 
 ### Page goal
 
 Let circle creator/admin protect the reputation economy by slashing invalid reviews.
+
+### Role
+
+```text
+Full moderation workflow
+```
+
+This is the main page for:
+
+- selecting a review card
+- confirming slash impact
+- entering slash reason
+- showing moderation queue
 
 ### Required sections
 
@@ -655,9 +945,9 @@ Before submit:
 This will mark the review as slashed and reduce the target contributor's reputation by 2, floored at 0.
 ```
 
-## 7. Loading, Error, and Refresh Behavior
+## 8. Loading, Error, and Refresh Behavior
 
-### 7.1 Loading state
+### 8.1 Loading state
 
 Use skeleton cards or simple placeholders. Avoid blank screens.
 
@@ -667,7 +957,7 @@ Example:
 Loading Canopy state...
 ```
 
-### 7.2 RPC unavailable
+### 8.2 RPC unavailable
 
 Show:
 
@@ -675,7 +965,7 @@ Show:
 Canopy RPC is not reachable. Start the local/testnet RPC services and refresh.
 ```
 
-### 7.3 Transaction pending
+### 8.3 Transaction pending
 
 Show:
 
@@ -683,7 +973,7 @@ Show:
 Transaction submitted. Waiting for Canopy state refresh...
 ```
 
-### 7.4 Transaction failed
+### 8.4 Transaction failed
 
 Show product-level explanation first, raw error second.
 
@@ -694,7 +984,7 @@ Could not post proof-of-work. Make sure you are a member of the selected communi
 Technical detail: <error>
 ```
 
-## 8. Visual Design Direction
+## 9. Visual Design Direction
 
 The current dark Social-Fi style can be preserved.
 
@@ -716,7 +1006,7 @@ Visual hierarchy:
 
 Avoid letting technical RPC and transaction details dominate the page.
 
-## 9. Copy Style
+## 10. Copy Style
 
 Tone:
 
@@ -750,7 +1040,7 @@ Avoid overusing:
 
 These can appear in technical notes only.
 
-## 10. UX Acceptance Checklist
+## 11. UX Acceptance Checklist
 
 Before considering the UX implementation done, verify:
 
@@ -769,3 +1059,7 @@ Before considering the UX implementation done, verify:
 - Non-admin can understand why moderation is disabled.
 - Canopy testnet/RPC status is visible but not the product focus.
 - Product language is used before protocol language.
+- Page title, section title, card title, body text, metadata, and button text follow the typography hierarchy.
+- Technical IDs, addresses, and tx hashes never overpower content titles.
+- Shared components are reused instead of each page recreating similar UI.
+- Community Workspace acts as a dashboard/navigation hub, not the full workflow page for every feature.
