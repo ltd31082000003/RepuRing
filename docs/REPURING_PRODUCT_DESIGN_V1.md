@@ -55,6 +55,8 @@ Circle includes:
 - creator/admin address
 - member list
 
+Circle ID is a technical onchain identifier. Normal users should not need to memorize it. Circle ID can be visible as readonly metadata and editable only in advanced/debug creation flows.
+
 ### 2.3 Proof-of-Work Feed
 
 A contribution is a proof-of-work post inside a circle. It is the main content type in RepuRing.
@@ -70,6 +72,12 @@ Contribution includes:
 - category
 - endorsement count
 - slashed status
+
+Contribution ID is a technical onchain record ID, not a normal user-authored content field.
+
+Normal UI must auto-generate contribution IDs when a member posts proof-of-work. Manual contribution ID entry may exist only in advanced/debug UI.
+
+After posting, the product must verify that the submitted contribution appears in the selected community feed after Canopy state refresh. A transaction being submitted is not enough for product-level success.
 
 Supported contribution categories for MVP:
 
@@ -96,6 +104,12 @@ Endorsement includes:
 - slashed status
 - slash reason
 
+Endorsement is an onchain peer review / attestation, not a like/unlike toggle.
+
+A reviewer can endorse a contribution once. In MVP, reviewers cannot self-cancel or withdraw their own endorsements. If the current wallet already endorsed a selected contribution, the UI must show an Already endorsed state, display the existing review, and disable duplicate submission.
+
+Invalid or abusive endorsements are corrected through creator/admin moderation using `SlashEndorsementTx`.
+
 Supported MVP endorsement tags:
 
 - builder
@@ -120,6 +134,8 @@ Important MVP wording:
 
 Reputation is currently profile-level. It is displayed in a selected circle context, but it is not yet project-scoped.
 
+Do not describe MVP reputation as circle-scoped or project-scoped. Community pages may display global reputation inside the selected community context, but the reputation value itself is profile-level until future protocol work adds circle-specific reputation.
+
 ### 2.6 Role and Status
 
 A role is a circle-based status claimed from current global reputation.
@@ -138,6 +154,8 @@ Role claim rule:
 ### 2.7 Moderation and Trust
 
 The circle creator/admin can slash invalid endorsements to protect the reputation economy.
+
+`SlashEndorsementTx` is the MVP correction path for invalid reviews. Slashing is creator/admin-only and is not the same as reviewer self-cancel.
 
 MVP moderation rules:
 
@@ -159,6 +177,8 @@ The MVP must do these things well:
 6. Show leaderboard and role progression.
 7. Claim a role inside the selected circle.
 8. Slash invalid endorsements as the circle creator/admin.
+9. Verify contribution visibility after posting.
+10. Show already-endorsed state instead of fake cancellation controls.
 
 ## 4. Explicit Non-Goals for MVP
 
@@ -178,6 +198,9 @@ These are intentionally out of scope for MVP:
 - anti-Sybil scoring
 - weighted endorsements
 - mainnet financial rewards
+- reviewer self-cancel / withdraw endorsement
+- endorsement edit history
+- endorsement dispute flow
 
 These can be considered later only after the Canopy testnet MVP loop is stable.
 
@@ -228,8 +251,10 @@ Reviewer goals:
 - browse contribution feed
 - inspect proof URLs
 - leave review messages
-- endorse high-value work
+- endorse high-value work once
 - help the community identify useful contributors
+
+Reviewers cannot self-cancel or withdraw endorsements in MVP. Invalid endorsements are handled by creator/admin moderation.
 
 ### 6.3 Circle Creator / Admin
 
@@ -260,8 +285,11 @@ The UI should use product language first and protocol language second.
 | ClaimRoleTx | Claim role |
 | SlashEndorsementTx | Slash invalid review |
 | Circle | Community circle |
+| Circle ID | Onchain community ID / readonly metadata |
 | Contribution | Proof-of-work post |
+| Contribution ID | Onchain record ID / readonly metadata |
 | Endorsement | Peer review / endorsement |
+| Endorsement ID | Onchain review ID / moderation metadata |
 | Reputation | Social capital / reputation |
 | Role | Community status |
 
@@ -349,6 +377,8 @@ Rules:
 - user must have profile
 - contribution ID should be auto-generated in normal UI
 - manual contribution ID should be hidden behind advanced/dev mode
+- after submit, the UI must verify the contribution appears in the selected community feed
+- transaction submitted is not product success until feed visibility is confirmed or a recoverable not-visible-yet notice is shown
 
 ### 8.6 `/repuring/endorse` — Review Work
 
@@ -363,6 +393,8 @@ Rules:
 - no self-endorsement
 - only circle members can review
 - duplicate endorsement should be prevented
+- already-endorsed state must show the existing review and disable duplicate submission
+- do not show Cancel endorsement / Withdraw endorsement in MVP
 - review message should be shown under contribution as a Social-Fi comment/review
 
 ### 8.7 `/repuring/leaderboard` — Reputation Rankings
@@ -387,6 +419,8 @@ Rules:
 - admin should slash from review cards, not by manually typing endorsement IDs
 - slash reason is required
 - non-admin users should see a read-only explanation
+- manual endorsement ID input is advanced/debug only
+- reviewer self-cancel is not an MVP feature
 
 ## 9. Transaction Mapping
 
@@ -401,6 +435,15 @@ Rules:
 | Legacy endorse member | endorseUser |
 | Claim role | claimRole |
 | Slash invalid review | slashEndorsement |
+
+Unsupported in MVP:
+
+| User expectation | MVP status |
+| --- | --- |
+| Cancel endorsement | Unsupported unless a future withdraw transaction exists |
+| Withdraw endorsement | Unsupported unless a future withdraw transaction exists |
+| Edit endorsement history | Future lifecycle feature |
+| Dispute endorsement | Future lifecycle feature |
 
 ## 10. Query Mapping
 
@@ -427,11 +470,15 @@ Rules:
 4. Keep transaction names visible only as secondary technical proof.
 5. Community Workspace is the center of the app.
 6. Contribution is the primary content type.
-7. Endorsement should feel like peer review/comment with reputation impact.
-8. Admin moderation should be card-based, not ID-based.
-9. Reputation must be described honestly as global profile reputation in MVP.
-10. Token/NFT/DAO ideas must remain outside MVP.
-11. Canopy testnet/dev readiness can be shown, but it should not overpower the product journey.
+7. Technical IDs are metadata and not normal user inputs.
+8. Contribution posting must verify visible feed state.
+9. Endorsement should feel like peer review/comment with reputation impact.
+10. Endorsement is an onchain attestation, not a like/unlike toggle.
+11. Already-endorsed state must block duplicate submission and must not show fake cancellation.
+12. Admin moderation should be card-based, not ID-based.
+13. Reputation must be described honestly as global profile reputation in MVP.
+14. Token/NFT/DAO ideas must remain outside MVP.
+15. Canopy testnet/dev readiness can be shown, but it should not overpower the product journey.
 
 ## 12. Canonical Demo Story
 
@@ -442,11 +489,14 @@ Alice and Bob demonstrate the full Social-Fi loop on Canopy testnet:
 3. Alice creates the `Pharos Builders` circle.
 4. Bob discovers and joins the circle.
 5. Bob posts proof-of-work: `Wrote Pharos testnet guide`.
-6. Alice reviews and endorses Bob's contribution.
-7. Bob's reputation increases.
-8. Bob claims his community role.
-9. Alice, as circle creator/admin, can slash an invalid endorsement.
-10. Bob's reputation and contribution endorsement count update from Canopy state.
+6. UI confirms Bob's contribution is visible in the selected community feed.
+7. Alice reviews and endorses Bob's contribution once.
+8. Alice sees Already endorsed if selecting the same contribution again.
+9. Bob cannot self-review.
+10. Bob's reputation increases.
+11. Bob claims his community role.
+12. Alice, as circle creator/admin, can slash an invalid endorsement.
+13. Bob's reputation and contribution endorsement count update from Canopy state.
 
 Demo story in one sentence:
 
@@ -459,6 +509,8 @@ Demo story in one sentence:
 - clean up product language
 - make Community Workspace the main surface
 - auto-generate contribution IDs
+- verify posted contribution feed visibility
+- show already-endorsed state
 - card-based slash flow
 - clearer onboarding and empty states
 - preserve current protocol
@@ -477,6 +529,16 @@ Demo story in one sentence:
 - show global and circle reputation separately
 - rank users by circle-specific reputation
 - derive role from circle reputation
+
+### Future Endorsement Lifecycle
+
+Only after the MVP loop is stable and protocol work is explicitly approved:
+
+- reviewer endorsement withdrawal / self-cancel transaction
+- endorsement edit history
+- dispute flow
+- endorsement cooldowns
+- anti-farming checks
 
 ### V4 — Anti-Farming and Trust Quality
 
