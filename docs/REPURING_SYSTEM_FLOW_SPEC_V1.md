@@ -18,7 +18,9 @@ Profile
 SelectedCircle
 CircleMembership
 Contributions
+ContributionPostFlow
 Endorsements
+CurrentReviewerEndorsement
 Leaderboard
 Role
 CanopyRpcStatus
@@ -80,6 +82,8 @@ Rules:
 - A selected circle ID can exist even if the circle has not loaded yet.
 - If the selected circle is not found, the user should be guided to discover or create a circle.
 - Switching selected circle should refresh contributions, endorsements, leaderboard, role, and membership state.
+- SelectedCircle is the single context source for contribution feed, review work, leaderboard, role, and admin pages.
+- Normal UI must not maintain independent manual circle IDs on those pages.
 
 ### 2.4 CircleMembership
 
@@ -114,14 +118,75 @@ ACTIVE
 SLASHED
 ```
 
+UI-derived post states:
+
+```text
+DRAFT
+READY_TO_SUBMIT
+SUBMITTED_CHECKING_FEED
+VISIBLE_IN_FEED
+SUBMITTED_NOT_VISIBLE_YET
+FAILED
+```
+
 Rules:
 
 - Only active contributions can be reviewed.
 - Contribution author cannot review their own contribution.
 - Contribution feed should be scoped to selected circle.
 - In MVP, contribution ID should be auto-generated in normal UI.
+- `CreateContributionTx` success is not considered product-visible until the submitted contribution ID appears in `contributions-in-circle` for the selected circle.
+- If the contribution is not visible after refresh, show a recoverable notice.
+- Provider/default form state must not include a fixed contribution ID such as `pharos-guide`.
+- Contribution ID is generated per post in normal UI.
 
-### 2.6 Endorsements
+### 2.6 ContributionPostFlow
+
+ContributionPostFlow tracks the product-level result of posting proof-of-work.
+
+State machine:
+
+```text
+DRAFT
+→ READY_TO_SUBMIT
+→ SUBMITTED_CHECKING_FEED
+→ VISIBLE_IN_FEED
+```
+
+Recoverable branch:
+
+```text
+SUBMITTED_CHECKING_FEED
+→ SUBMITTED_NOT_VISIBLE_YET
+→ user refreshes
+→ VISIBLE_IN_FEED or SUBMITTED_NOT_VISIBLE_YET
+```
+
+Failure branch:
+
+```text
+READY_TO_SUBMIT
+→ FAILED
+→ user corrects input/signing/RPC issue
+→ READY_TO_SUBMIT
+```
+
+Required stored values:
+
+- submitted contribution ID
+- selected circle ID at submission time
+- transaction response / last tx
+- visibility check status
+- friendly error if failed
+
+Rules:
+
+- Keep composer open on failure.
+- Show visible state near composer/feed after submit.
+- Do not call the post flow complete until the submitted ID appears in selected circle feed.
+- If selected circle changes before visibility check finishes, the UI should either finish the check against the original submission circle or clearly mark the check as stale.
+
+### 2.7 Endorsements
 
 Endorsements are peer reviews with reputation impact.
 
@@ -132,6 +197,27 @@ ACTIVE
 SLASHED
 ```
 
+UI-derived review states:
+
+```text
+NOT_SELECTED
+READY_TO_REVIEW
+OWN_CONTRIBUTION
+SLASHED_CONTRIBUTION
+ALREADY_REVIEWED_BY_CURRENT_WALLET
+CONFIRMING_REVIEW
+SUBMITTED_REVIEW
+ACTIVE
+SLASHED
+```
+
+CurrentReviewerEndorsement is detected by matching:
+
+- selected contribution ID
+- selected/current circle ID
+- current wallet address equals `endorsement.fromAddress`
+- endorsement is not slashed
+
 Rules:
 
 - A contribution endorsement adds +1 reputation to the contribution author.
@@ -139,8 +225,32 @@ Rules:
 - Self-endorsement is not allowed.
 - Slashed endorsement reduces target contributor reputation by 2, floored at 0.
 - If endorsement is linked to a contribution, slashing decrements endorsement count by 1, floored at 0.
+- Duplicate endorsement is rejected by protocol and must also be blocked by UI before submit.
+- If already reviewed, show the existing review, disable Review and continue, and do not show Cancel endorsement.
+- Reviewer self-cancel is unsupported in MVP.
+- Creator/admin `SlashEndorsementTx` is the only MVP correction path.
 
-### 2.7 Leaderboard
+### 2.8 CurrentReviewerEndorsement
+
+CurrentReviewerEndorsement is the UI's view of whether the selected wallet has already endorsed the selected contribution.
+
+Possible states:
+
+```text
+NONE
+ACTIVE_REVIEW_FOUND
+SLASHED_REVIEW_FOUND
+UNKNOWN_QUERY_PENDING
+```
+
+Rules:
+
+- `ACTIVE_REVIEW_FOUND` blocks duplicate review submission.
+- `ACTIVE_REVIEW_FOUND` shows Already endorsed notice and the existing review.
+- `SLASHED_REVIEW_FOUND` should show history if available, but must not imply the user can self-cancel.
+- If query is pending, disable final submission until duplicate status is known or show clear loading state.
+
+### 2.9 Leaderboard
 
 Leaderboard shows contributors ranked in selected community context.
 
@@ -152,7 +262,7 @@ Leaderboard uses global profile reputation displayed within selected circle cont
 
 Do not claim circle-specific reputation until the protocol supports it.
 
-### 2.8 Role
+### 2.10 Role
 
 Role is a circle-based status claimed from current global reputation.
 
@@ -172,7 +282,7 @@ Rules:
 - Role is stored for selected circle.
 - Role is derived from current global reputation.
 
-### 2.9 CanopyRpcStatus
+### 2.11 CanopyRpcStatus
 
 Canopy RPC status describes whether local/testnet services are reachable.
 
@@ -210,221 +320,9 @@ START
 → ADMIN_MODERATION_AVAILABLE, if creator/admin
 ```
 
-### 3.1 NEED_WALLET
-
-Condition:
-
-```text
-selected wallet is missing
-```
-
-User message:
-
-```text
-Select a local signing wallet to start using RepuRing.
-```
-
-Primary action:
-
-```text
-Select wallet
-```
-
-### 3.2 NEED_PROFILE
-
-Condition:
-
-```text
-wallet selected AND profile missing
-```
-
-User message:
-
-```text
-Create your contributor profile before joining communities or posting work.
-```
-
-Primary action:
-
-```text
-Create profile
-```
-
-### 3.3 NEED_CIRCLE
-
-Condition:
-
-```text
-profile exists AND no circle selected or selected circle not found
-```
-
-User message:
-
-```text
-Create or join a community circle to start the Social-Fi loop.
-```
-
-Primary action:
-
-```text
-Discover circles
-```
-
-### 3.4 NEED_MEMBERSHIP
-
-Condition:
-
-```text
-profile exists AND circle loaded AND current wallet is not member
-```
-
-User message:
-
-```text
-Join this community before posting proof-of-work or reviewing contributions.
-```
-
-Primary action:
-
-```text
-Join community
-```
-
-### 3.5 READY_TO_POST
-
-Condition:
-
-```text
-profile exists AND circle loaded AND member AND no contribution posted by current user or circle feed is empty
-```
-
-User message:
-
-```text
-Post proof-of-work to start building reputation.
-```
-
-Primary action:
-
-```text
-Post proof-of-work
-```
-
-### 3.6 READY_TO_REVIEW
-
-Condition:
-
-```text
-profile exists AND circle loaded AND member AND contribution exists from another member
-```
-
-User message:
-
-```text
-Review useful work from another member to help validate community contributions.
-```
-
-Primary action:
-
-```text
-Review work
-```
-
-### 3.7 HAS_REPUTATION
-
-Condition:
-
-```text
-profile.reputation > 0
-```
-
-User message:
-
-```text
-Your peer-reviewed work is building reputation.
-```
-
-Primary action:
-
-```text
-View leaderboard
-```
-
-### 3.8 READY_TO_CLAIM_ROLE
-
-Condition:
-
-```text
-profile exists AND circle loaded AND member
-```
-
-User message:
-
-```text
-Claim your community role from your current reputation.
-```
-
-Primary action:
-
-```text
-Claim role
-```
-
-### 3.9 ROLE_CLAIMED
-
-Condition:
-
-```text
-role exists for selected circle and current address
-```
-
-User message:
-
-```text
-Your role is claimed for this community.
-```
-
-Primary action:
-
-```text
-Continue contributing
-```
-
-### 3.10 ADMIN_MODERATION_AVAILABLE
-
-Condition:
-
-```text
-current address equals selected circle creator/admin address
-```
-
-User message:
-
-```text
-You can moderate invalid reviews in this community.
-```
-
-Primary action:
-
-```text
-Open moderation
-```
-
 ## 4. Transaction Preconditions
 
 ## 4.1 Create Profile
-
-User action:
-
-```text
-Create profile
-```
-
-Transaction:
-
-```text
-createProfile
-```
 
 Required state:
 
@@ -434,49 +332,18 @@ Required state:
 - username not already taken
 - valid signing password
 
-Fields:
-
-- senderAddress from selected wallet
-- username
-- bio
-- avatarUrl
-
 Success result:
 
 - profile stored
 - reputation initialized at 0
 
-Failure handling:
-
-- show clear message for missing username
-- show clear message for duplicate profile or username
-- show clear message for signing failure
-
 ## 4.2 Update Profile
-
-User action:
-
-```text
-Update profile
-```
-
-Transaction:
-
-```text
-updateProfile
-```
 
 Required state:
 
 - wallet selected
 - profile exists
 - valid signing password
-
-Fields:
-
-- senderAddress
-- bio
-- avatarUrl
 
 Success result:
 
@@ -486,18 +353,6 @@ Success result:
 
 ## 4.3 Create Community Circle
 
-User action:
-
-```text
-Create community circle
-```
-
-Transaction:
-
-```text
-createCircle
-```
-
 Required state:
 
 - wallet selected
@@ -506,13 +361,6 @@ Required state:
 - circle name not empty
 - circle ID not already used
 - valid signing password
-
-Fields:
-
-- senderAddress
-- circleId
-- name
-- description
 
 Success result:
 
@@ -528,18 +376,6 @@ UX expectation:
 
 ## 4.4 Join Community
 
-User action:
-
-```text
-Join community
-```
-
-Transaction:
-
-```text
-joinCircle
-```
-
 Required state:
 
 - wallet selected
@@ -548,11 +384,6 @@ Required state:
 - sender is not already member
 - valid signing password
 
-Fields:
-
-- senderAddress
-- circleId
-
 Success result:
 
 - member index stored
@@ -560,12 +391,6 @@ Success result:
 - community workspace becomes available
 
 ## 4.5 Post Proof-of-Work
-
-User action:
-
-```text
-Post proof-of-work
-```
 
 Transaction:
 
@@ -579,7 +404,7 @@ Required state:
 - profile exists
 - circle exists
 - sender is member
-- contribution ID not empty
+- generated contribution ID exists
 - contribution title not empty
 - contribution category allowed
 - contribution ID not already used
@@ -595,26 +420,27 @@ Fields:
 - proofUrl
 - category
 
-Success result:
+Success result at protocol level:
 
 - contribution stored
 - contribution indexed by circle
 - contribution indexed by author
 - endorsement count initialized at 0
 
+Success result at product level:
+
+- submitted contribution ID appears in `contributions-in-circle` for selected circle
+- UI shows `Contribution posted and visible in the feed.`
+
 UX expectation:
 
 - normal UI auto-generates contribution ID
+- provider/default form state must not ship with fixed contribution IDs such as `pharos-guide`
 - proof URL should be treated as evidence link
 - contribution appears in selected circle feed after refresh
+- if not visible after refresh, show recoverable notice instead of silent failure
 
 ## 4.6 Review / Endorse Work
-
-User action:
-
-```text
-Review / endorse work
-```
 
 Transaction:
 
@@ -641,7 +467,7 @@ Fields:
 - tag
 - message
 
-Success result:
+Success result at protocol level:
 
 - endorsement stored
 - endorsement indexed by circle
@@ -650,18 +476,20 @@ Success result:
 - author reputation +1
 - contribution endorsement count +1
 
+Success result at product level:
+
+- review appears under contribution
+- author reputation refreshes
+- contribution endorsement count refreshes
+- current reviewer state becomes Already endorsed
+
 UX expectation:
 
 - review message appears as a peer review/comment under the contribution
 - author reputation refreshes after Canopy state update
+- confirmation warns that endorsement cannot be self-cancelled in MVP
 
 ## 4.7 Legacy Member Endorsement
-
-User action:
-
-```text
-Legacy endorse member
-```
 
 Transaction:
 
@@ -669,35 +497,13 @@ Transaction:
 endorseUser
 ```
 
-Required state:
-
-- wallet selected
-- profile exists
-- target profile exists
-- sender and target are both circle members
-- sender is not target
-- pair endorsement not already present in circle
-- tag allowed
-- valid signing password
-
 MVP UX recommendation:
 
 - keep this path secondary or advanced
 - primary review flow should be contribution-based endorsement
+- label it clearly as legacy direct user endorsement
 
 ## 4.8 Claim Role
-
-User action:
-
-```text
-Claim role
-```
-
-Transaction:
-
-```text
-claimRole
-```
 
 Required state:
 
@@ -706,28 +512,12 @@ Required state:
 - sender is member of selected circle
 - valid signing password
 
-Fields:
-
-- senderAddress
-- circleId
-
 Success result:
 
 - role stored for circle + sender
 - role derived from current global reputation
 
-UX expectation:
-
-- role card updates after refresh
-- show next role threshold even after claim
-
 ## 4.9 Slash Invalid Review
-
-User action:
-
-```text
-Slash invalid review
-```
 
 Transaction:
 
@@ -745,12 +535,6 @@ Required state:
 - slash reason not empty
 - valid signing password
 
-Fields:
-
-- senderAddress
-- endorsementId
-- reason
-
 Success result:
 
 - endorsement marked slashed
@@ -763,6 +547,7 @@ UX expectation:
 - admin selects endorsement from review card
 - manual endorsement ID entry is not primary UX
 - show impact confirmation before submit
+- reviewer withdrawal is not part of MVP
 
 ## 5. Query and Refresh Flow
 
@@ -793,6 +578,7 @@ Clear:
 - stale slash reason if needed
 - profile form draft if tied to old wallet
 - selected contribution if it is now own work and cannot be reviewed
+- current reviewer endorsement state
 
 Refresh:
 
@@ -817,6 +603,7 @@ Refresh:
 - contributions in circle
 - endorsements in circle
 - leaderboard
+- current reviewer endorsement state
 
 Show context notice:
 
@@ -840,6 +627,29 @@ Recommended UX:
 - do not assume state changed instantly
 - show `submitted` first
 - refresh at least twice if local Canopy state has commit delay
+
+### After CreateContributionTx
+
+1. Store submitted contribution ID.
+2. Refresh `contributions-in-circle` for selected circle.
+3. Verify submitted ID appears.
+4. Show visible success if found.
+5. Show submitted-not-visible-yet notice if not found after refresh.
+
+### After EndorseContributionTx
+
+1. Refresh contribution endorsements.
+2. Verify review appears under the contribution.
+3. Refresh author reputation.
+4. Refresh contribution endorsement count.
+5. Show Already endorsed state for the current reviewer.
+
+### After SlashEndorsementTx
+
+1. Verify endorsement slashed status.
+2. Verify slash reason.
+3. Verify target reputation decrement.
+4. Verify linked contribution endorsement count decrement if applicable.
 
 ## 5.5 Query failure
 
@@ -868,17 +678,11 @@ Open /repuring
 → Join a community circle
 → Open Community Workspace
 → Post proof-of-work
+→ UI verifies contribution appears in feed
 → Wait for peer review
 → Gain reputation
 → Claim role
 ```
-
-Success condition:
-
-- user has profile
-- user is member of a circle
-- user has at least one contribution
-- user can see reputation/role progress
 
 ## 6.2 Circle Creator Flow
 
@@ -890,16 +694,10 @@ Open /repuring
 → Open Community Workspace
 → Invite/demo another member to join
 → Review member contribution
+→ Already endorsed state blocks duplicate review
 → Monitor leaderboard
 → Slash invalid review if needed
 ```
-
-Success condition:
-
-- creator is first member
-- creator can see admin controls
-- creator can review others but not own work
-- creator can slash valid endorsement IDs from review cards
 
 ## 6.3 Peer Reviewer Flow
 
@@ -908,16 +706,12 @@ Join a community
 → Browse proof-of-work feed
 → Select another member's contribution
 → Inspect proof URL
+→ Confirm peer review with finality warning
 → Write review message
 → Submit peer endorsement
 → See author reputation update after refresh
+→ See Already endorsed if selecting the same contribution again
 ```
-
-Success condition:
-
-- reviewer cannot endorse own work
-- duplicate endorsement is blocked
-- author reputation increases after valid review
 
 ## 6.4 Role Claim Flow
 
@@ -930,17 +724,12 @@ Have profile
 → Role stored and displayed in selected circle context
 ```
 
-Success condition:
-
-- role matches current reputation threshold
-- role remains scoped to selected circle
-
 ## 6.5 Moderation Flow
 
 ```text
 Creator/admin opens Admin page
 → Sees review queue
-→ Selects invalid review
+→ Selects invalid review card
 → Enters slash reason
 → Confirms reputation impact
 → Submits slash transaction
@@ -948,12 +737,6 @@ Creator/admin opens Admin page
 → Target reputation decreases
 → Contribution endorsement count updates if linked
 ```
-
-Success condition:
-
-- non-admin cannot slash
-- already slashed review cannot be slashed again
-- reason is required
 
 ## 7. Edge Cases
 
@@ -973,12 +756,6 @@ Allow:
 - read public circle/contribution data if available
 
 ## 7.2 User selected stale circle ID
-
-Condition:
-
-```text
-circleId exists in UI but query returns not found
-```
 
 Behavior:
 
@@ -1006,6 +783,8 @@ Behavior:
 Behavior:
 
 - if known in UI, disable submit and show already reviewed
+- show existing review
+- do not show Cancel endorsement
 - if returned from contract, show friendly error and refresh endorsements
 
 ## 7.6 Slashed endorsement
@@ -1034,18 +813,30 @@ Behavior:
 - allow refresh
 - technical ports may be displayed in testnet readiness panel
 
+## 7.9 Submitted contribution not visible yet
+
+Behavior:
+
+- show `Contribution submitted but not visible yet. Refresh again or check transaction status.`
+- keep submitted ID visible as onchain record ID
+- provide Refresh feed action
+- do not mark flow complete until visible or user leaves knowingly
+
 ## 8. State Integrity Rules
 
 1. Never show user as member unless membership is loaded or creator/admin relation confirms it.
 2. Never allow self-review submission.
-3. Never allow normal users to slash reviews.
-4. Never present global reputation as circle-specific reputation.
-5. Never claim token/financial reward exists in MVP.
-6. Never require users to memorize IDs in normal UX.
-7. Never make manual endorsement ID entry the primary admin flow.
-8. Always show selected community context before circle-scoped actions.
-9. Always refresh after transaction submit.
-10. Always preserve Canopy testnet/local environment wording.
+3. Never allow duplicate endorsement submission when already-endorsed state is known.
+4. Never show fake Cancel endorsement / Withdraw endorsement in MVP.
+5. Never allow normal users to slash reviews.
+6. Never present global reputation as circle-specific reputation.
+7. Never claim token/financial reward exists in MVP.
+8. Never require users to memorize IDs in normal UX.
+9. Never make manual endorsement ID entry the primary admin flow.
+10. Always show selected community context before circle-scoped actions.
+11. Always refresh after transaction submit.
+12. Always verify posted contribution feed visibility.
+13. Always preserve Canopy testnet/local environment wording.
 
 ## 9. System Flow Acceptance Checklist
 
@@ -1053,12 +844,16 @@ The system flow is correct when:
 
 - New user can move from no wallet to profile to community to contribution.
 - Two-account demo can run with Alice and Bob.
-- Bob can post work and Alice can review it.
+- Bob can post work without manually typing contribution ID.
+- UI confirms Bob's post is visible in selected community feed.
+- Alice can review Bob's contribution once.
+- Alice sees Already endorsed if selecting Bob's same contribution again.
+- UI does not show Cancel endorsement.
+- Bob cannot review Bob's own work.
 - Bob's reputation increases after Alice's review.
 - Bob can claim role from reputation.
 - Alice can slash invalid review as creator/admin.
 - Non-admin cannot slash.
-- Bob cannot review Bob's own work.
 - Duplicate review is prevented.
 - Selected circle controls feed, reviews, leaderboard, and role context.
 - RPC errors are recoverable with refresh.
