@@ -1142,14 +1142,22 @@ export function ContributionReviews({ endorsements, emptyCopy }: { endorsements:
 }
 
 export function TxStatusCard({ status, lastTx, onRefresh }: { status: string; lastTx: string; onRefresh: () => Promise<void> }) {
+  const pending = status.toLowerCase().includes('confirming') || lastTx.toLowerCase().includes('waiting for onchain confirmation');
   return (
     <Panel className="grid gap-4 md:grid-cols-[1fr_auto] md:items-center">
-      <div className="min-w-0" aria-live="polite">
-        <p className="text-xs uppercase text-zinc-500">Action status</p>
-        <p className="mt-2 break-words text-sm text-zinc-300">{status}</p>
-        <p className="mt-2 text-xs text-zinc-500">{lastTx || 'No action submitted yet'}</p>
+      <div className="flex min-w-0 gap-3" aria-live="polite">
+        {pending ? (
+          <span className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-emerald-300/20 bg-emerald-300/10">
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-emerald-200/25 border-t-emerald-200" />
+          </span>
+        ) : null}
+        <div className="min-w-0">
+          <p className="text-xs uppercase text-zinc-500">Action status</p>
+          <p className="mt-2 break-words text-sm text-zinc-300">{status}</p>
+          <p className="mt-2 text-xs text-zinc-500">{lastTx || 'No action submitted yet'}</p>
+        </div>
       </div>
-      <Button variant="secondary" className="self-start md:self-auto" onClick={onRefresh}>Refresh status</Button>
+      <Button variant="secondary" className="self-start md:self-auto" disabled={pending} onClick={onRefresh}>{pending ? 'Waiting...' : 'Refresh status'}</Button>
     </Panel>
   );
 }

@@ -18,8 +18,9 @@ const NETWORK_ID = 1;
 const CHAIN_ID = 1;
 const FEE = 0;
 const SUBMIT_RETRY_DELAYS_MS = [0, 350, 900];
-const REFRESH_AFTER_COMMIT_DELAYS_MS = [900, 1800, 3200, 5200, 8000];
 const OPTIMISTIC_ACTION_TTL_MS = 20000;
+const TX_CONFIRM_TIMEOUT_MS = 30000;
+const TX_CONFIRM_POLL_MS = 1200;
 
 const txMeta: Record<TxKind, { typeUrl: string; message: string }> = {
   createProfile: { typeUrl: 'type.googleapis.com/types.MessageCreateProfile', message: 'MessageCreateProfile' },
@@ -36,6 +37,7 @@ const txMeta: Record<TxKind, { typeUrl: string; message: string }> = {
 
 type Signer = { address: string; publicKey: string; privateKey: string };
 type OptimisticAction = { kind: TxKind; fields: Record<string, unknown>; senderAddress: string; expiresAt: number };
+type TxConfirmation = { kind: TxKind; fields: Record<string, unknown>; senderAddress: string; circleId: string; baseline?: number };
 type RepuRingSnapshot = {
   profile: ProfileView | null;
   role: RoleView | null;
@@ -48,52 +50,52 @@ type RepuRingSnapshot = {
 const actionCopy: Record<TxKind, { progress: string; success: string; failureStep: string }> = {
   createProfile: {
     progress: 'Creating your profile...',
-    success: 'Profile submitted. Your contributor identity will appear after the next refresh.',
+    success: 'Profile confirmed onchain.',
     failureStep: 'profile creation',
   },
   updateProfile: {
     progress: 'Saving profile changes...',
-    success: 'Profile update submitted. Your bio and avatar will refresh shortly.',
+    success: 'Profile update confirmed onchain.',
     failureStep: 'profile update',
   },
   createCircle: {
     progress: 'Creating community...',
-    success: 'Community submitted. It will appear after the next refresh.',
+    success: 'Community confirmed onchain.',
     failureStep: 'community creation',
   },
   joinCircle: {
     progress: 'Joining community...',
-    success: 'Join request submitted. Membership will appear after the next refresh.',
+    success: 'Community membership confirmed onchain.',
     failureStep: 'community join',
   },
   leaveCircle: {
     progress: 'Leaving community...',
-    success: 'Leave request submitted. Membership will update after the next refresh.',
+    success: 'Community leave confirmed onchain.',
     failureStep: 'community leave',
   },
   createContribution: {
     progress: 'Posting proof-of-work...',
-    success: 'Proof-of-work submitted. Checking the feed after refresh.',
+    success: 'Proof-of-work confirmed onchain.',
     failureStep: 'proof-of-work post',
   },
   endorseContribution: {
     progress: 'Submitting peer review...',
-    success: 'Peer review submitted. Reputation and review counts will refresh shortly.',
+    success: 'Peer review confirmed onchain.',
     failureStep: 'peer review',
   },
   endorseUser: {
     progress: 'Submitting member endorsement...',
-    success: 'Member endorsement submitted.',
+    success: 'Member endorsement confirmed onchain.',
     failureStep: 'member endorsement',
   },
   claimRole: {
     progress: 'Claiming role...',
-    success: 'Role claim submitted. Your role will refresh shortly.',
+    success: 'Role claim confirmed onchain.',
     failureStep: 'role claim',
   },
   slashEndorsement: {
     progress: 'Submitting moderation action...',
-    success: 'Moderation submitted. Review status and reputation will refresh shortly.',
+    success: 'Moderation confirmed onchain.',
     failureStep: 'moderation',
   },
 };
@@ -336,11 +338,17 @@ export function RepuRingProvider({ children }: { children: React.ReactNode }): J
       validateSubmit(kind, fields, currentAddress, password);
       setStatus(actionCopy[kind].progress);
       const signer = await getSigner(currentAddress, password);
+      const confirmation = buildTxConfirmation(kind, fields, signer.address, circleId, contributions);
       const response = await submitWithRetry(kind, fields, signer);
-      setLastTx('Last action accepted by the local RepuRing network.');
+      setLastTx('Last action accepted by the local RepuRing network. Waiting for onchain confirmation...');
+      setStatus(`Confirming ${actionCopy[kind].failureStep} onchain...`);
+      const confirmed = await waitForTxConfirmation(confirmation);
+      if (!confirmed) {
+        throw new Error('The transaction was accepted, but the committed RepuRing state did not update before the confirmation timeout. Keep the node running, then refresh and try again if the action is still missing.');
+      }
+      await refreshStateRef.current();
       setStatus(actionCopy[kind].success);
-      applyOptimisticAction(kind, fields, signer.address);
-      void refreshAfterCommit(() => refreshStateRef.current());
+      setLastTx('Last action confirmed onchain.');
       return { ok: true, hash: response };
     } catch (e) {
       const error = formatSubmitFailure(kind, e);
@@ -391,8 +399,26 @@ export function RepuRingProvider({ children }: { children: React.ReactNode }): J
         submit,
       }}
     >
+      {submittingKind ? <PendingTransactionOverlay label={actionCopy[submittingKind].failureStep} status={status} /> : null}
       {children}
     </RepuRingContext.Provider>
+  );
+}
+
+function PendingTransactionOverlay({ label, status }: { label: string; status: string }) {
+  return (
+    <div className="fixed bottom-5 right-5 z-[80] max-w-[min(420px,calc(100vw-2rem))] rounded-2xl border border-emerald-300/25 bg-[#03120f]/95 p-4 shadow-[0_24px_80px_rgba(0,0,0,0.42)] backdrop-blur" role="status" aria-live="polite">
+      <div className="flex items-center gap-3">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-emerald-300/25 bg-emerald-300/10">
+          <span className="h-5 w-5 animate-spin rounded-full border-2 border-emerald-200/25 border-t-emerald-200" />
+        </span>
+        <div className="min-w-0">
+          <p className="text-[11px] font-black uppercase tracking-[0.22em] text-emerald-200">Waiting for chain</p>
+          <p className="mt-1 text-sm font-black text-white">{label}</p>
+          <p className="mt-1 break-words text-xs font-semibold leading-5 text-[#9db9af]">{status}</p>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -540,6 +566,85 @@ function applyOptimisticSnapshot(
     case 'endorseUser':
       return snapshot;
   }
+}
+
+function buildTxConfirmation(kind: TxKind, fields: Record<string, unknown>, senderAddress: string, activeCircleId: string, currentContributions: ContributionView[]): TxConfirmation {
+  const contributionId = String(fields.contributionId || '').trim();
+  const contribution = contributionId ? currentContributions.find((item) => item.contributionId === contributionId) : null;
+  return {
+    kind,
+    fields,
+    senderAddress: cleanHex(senderAddress),
+    circleId: String(fields.circleId || contribution?.circleId || activeCircleId || '').trim(),
+    baseline: contribution?.endorsementCount,
+  };
+}
+
+async function waitForTxConfirmation(confirmation: TxConfirmation) {
+  const startedAt = Date.now();
+  while (Date.now() - startedAt < TX_CONFIRM_TIMEOUT_MS) {
+    if (await isTxConfirmed(confirmation)) return true;
+    await sleep(TX_CONFIRM_POLL_MS);
+  }
+  return false;
+}
+
+async function isTxConfirmed({ kind, fields, senderAddress, circleId, baseline }: TxConfirmation) {
+  const sender = cleanHex(senderAddress);
+  switch (kind) {
+    case 'createProfile': {
+      const profile = await queryMaybe<ProfileView>('/v1/query/repuring/profile', { address: sender });
+      return Boolean(profile && cleanHex(profile.address) === sender && profile.username === String(fields.username || '').trim());
+    }
+    case 'updateProfile': {
+      const profile = await queryMaybe<ProfileView>('/v1/query/repuring/profile', { address: sender });
+      return Boolean(profile && profile.bio === String(fields.bio || '') && profile.avatarUrl === String(fields.avatarUrl || ''));
+    }
+    case 'createCircle': {
+      const targetCircleId = String(fields.circleId || '').trim();
+      const circle = await queryMaybe<CircleView>('/v1/query/repuring/circle', { circleId: targetCircleId });
+      return Boolean(circle && circle.circleId === targetCircleId && cleanHex(circle.creatorAddress) === sender && hasMember(circle, sender));
+    }
+    case 'joinCircle': {
+      const circle = await queryMaybe<CircleView>('/v1/query/repuring/circle', { circleId });
+      return Boolean(circle && hasMember(circle, sender));
+    }
+    case 'leaveCircle': {
+      const circle = await queryMaybe<CircleView>('/v1/query/repuring/circle', { circleId });
+      return Boolean(circle && !hasMember(circle, sender));
+    }
+    case 'createContribution': {
+      const contributionId = String(fields.contributionId || '').trim();
+      const contribution = await queryMaybe<ContributionView>('/v1/query/repuring/contribution', { contributionId });
+      return Boolean(contribution && contribution.contributionId === contributionId && cleanHex(contribution.authorAddress) === sender);
+    }
+    case 'endorseUser': {
+      const target = cleanHex(String(fields.targetAddress || ''));
+      const endorsements = await queryMaybe<EndorsementView[]>('/v1/query/repuring/endorsements-for-user', { address: target });
+      return Boolean(endorsements?.some((item) => item.circleId === circleId && cleanHex(item.fromAddress) === sender && cleanHex(item.targetAddress) === target && !item.contributionId));
+    }
+    case 'endorseContribution': {
+      const contributionId = String(fields.contributionId || '').trim();
+      const contribution = await queryMaybe<ContributionView>('/v1/query/repuring/contribution', { contributionId });
+      if (contribution && typeof baseline === 'number' && contribution.endorsementCount > baseline) return true;
+      const endorsements = circleId ? await queryMaybe<EndorsementView[]>('/v1/query/repuring/endorsements-in-circle', { circleId }) : [];
+      return Boolean(endorsements?.some((item) => item.contributionId === contributionId && cleanHex(item.fromAddress) === sender));
+    }
+    case 'slashEndorsement': {
+      const endorsementId = String(fields.endorsementId || '').trim();
+      const endorsements = circleId ? await queryMaybe<EndorsementView[]>('/v1/query/repuring/endorsements-in-circle', { circleId }) : [];
+      return Boolean(endorsements?.some((item) => item.endorsementId === endorsementId && item.slashed));
+    }
+    case 'claimRole': {
+      const role = await queryMaybe<RoleView>('/v1/query/repuring/role', { address: sender, circleId });
+      return Boolean(role?.claimedRole);
+    }
+  }
+}
+
+function hasMember(circle: CircleView, address: string) {
+  const target = cleanHex(address);
+  return Boolean(target && circle.members?.some((member) => cleanHex(member) === target));
 }
 
 function formatSubmitFailure(kind: TxKind, error: unknown) {
@@ -767,9 +872,3 @@ function hexToBytes(hex: string) {
 }
 function bytesToHex(bytes: Uint8Array) { return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join(''); }
 function sleep(ms: number) { return new Promise((resolve) => setTimeout(resolve, ms)); }
-async function refreshAfterCommit(refresh: () => Promise<void>) {
-  for (const delay of REFRESH_AFTER_COMMIT_DELAYS_MS) {
-    await sleep(delay);
-    await refresh();
-  }
-}
