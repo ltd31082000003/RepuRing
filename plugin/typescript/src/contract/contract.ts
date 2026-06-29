@@ -329,16 +329,21 @@ export class ContractAsync {
         if (!profile[0]) return { error: ErrRepuRing('sender must create a profile first') };
         const circleData = circle[0] as any | null;
         if (!circleData) return { error: ErrRepuRing('circle does not exist') };
-        if (member[1]) return { error: ErrRepuRing('sender is already a circle member') };
+        const existingMembers = circleData.members || [];
+        const isListedMember = existingMembers.some((memberAddress: Uint8Array) => bytesEqual(memberAddress, sender));
+        if (member[1] && isListedMember) {
+            return { error: ErrRepuRing('sender is already a circle member') };
+        }
 
-        const members = [...(circleData.members || []), sender].sort(compareBytes);
+        const members = (isListedMember ? existingMembers : [...existingMembers, sender]).sort(compareBytes);
         const updatedCircle = types.Circle.encode(
             types.Circle.create({ ...circleData, members })
         ).finish();
+        const staleDeletes = member[1] && !isListedMember ? [KeyForRole(circleId, sender)] : [];
         return write(contract, [
             { key: KeyForCircle(circleId), value: updatedCircle },
             { key: KeyForMember(circleId, sender), value: oneByte() }
-        ]);
+        ], staleDeletes);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

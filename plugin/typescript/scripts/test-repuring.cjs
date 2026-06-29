@@ -182,8 +182,9 @@ assertIncludes(createCircle, [
 const joinCircle = deliverBlock('DeliverMessageJoinCircle');
 assertIncludes(joinCircle, [
   "if (!profile[0]) return { error: ErrRepuRing('sender must create a profile first') }",
-  "if (member[1]) return { error: ErrRepuRing('sender is already a circle member') }",
-  '...(circleData.members || [])',
+  'const isListedMember = existingMembers.some',
+  'if (member[1] && isListedMember)',
+  'const staleDeletes = member[1] && !isListedMember ? [KeyForRole(circleId, sender)] : []',
 ], 'JoinCircleTx');
 
 const leaveCircle = deliverBlock('DeliverMessageLeaveCircle');
