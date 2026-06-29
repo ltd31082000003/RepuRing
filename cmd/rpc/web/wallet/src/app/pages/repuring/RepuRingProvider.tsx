@@ -1,6 +1,7 @@
 import React from 'react';
 import { bls12_381 } from '@noble/curves/bls12-381.js';
 import { useSelectedAccount } from '@/app/providers/SelectedAccountProvider';
+import { waitForTransactionCommit } from '@/core/txConfirmation';
 import {
   CircleView,
   ContributionView,
@@ -342,6 +343,10 @@ export function RepuRingProvider({ children }: { children: React.ReactNode }): J
       const response = await submitWithRetry(kind, fields, signer);
       setLastTx('Last action accepted by the local RepuRing network. Waiting for onchain confirmation...');
       setStatus(`Confirming ${actionCopy[kind].failureStep} onchain...`);
+      const committed = await waitForTransactionCommit({ rpcBase: QUERY_RPC, txHash: response, timeoutMs: TX_CONFIRM_TIMEOUT_MS, pollMs: TX_CONFIRM_POLL_MS });
+      if (committed.status !== 'confirmed') {
+        throw new Error('The transaction was accepted, but it was not committed before the confirmation timeout. Keep the node running, then refresh and try again if the action is still missing.');
+      }
       const confirmed = await waitForTxConfirmation(confirmation);
       if (!confirmed) {
         throw new Error('The transaction was accepted, but the committed RepuRing state did not update before the confirmation timeout. Keep the node running, then refresh and try again if the action is still missing.');

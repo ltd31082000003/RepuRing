@@ -26,6 +26,7 @@ import { ToastTemplateOptions } from "@/toast/types";
 import { useActionDs } from "./useActionDs";
 import { usePopulateController } from "./usePopulateController";
 import { resolveRpcHost } from "@/core/rpcHost";
+import { extractTxHash, isTransactionSubmitPath, waitForTransactionCommit } from "@/core/txConfirmation";
 import type { ActionFinishResult } from "@/app/providers/ActionModalProvider";
 
 type Stage = "form" | "confirm" | "executing" | "result";
@@ -105,6 +106,7 @@ export default function ActionRunner({
   const [txRes, setTxRes] = React.useState<any>(null);
   const [rawTxRes, setRawTxRes] = React.useState<string>("");
   const [inlineError, setInlineError] = React.useState<InlineServiceError | null>(null);
+  const [executingMessage, setExecutingMessage] = React.useState("Please wait while your transaction is being processed");
   const [txPassword, setTxPassword] = React.useState<string>("");
   const [pendingExecutionAfterUnlock, setPendingExecutionAfterUnlock] = React.useState(false);
   const [localDs, setLocalDs] = React.useState<Record<string, any>>({});
@@ -406,6 +408,11 @@ export default function ActionRunner({
     return resolveRpcHost(chain, action?.submit?.base ?? "rpc");
   }, [action?.submit?.base, chain]);
 
+  const queryHost = React.useMemo(() => {
+    if (!chain) return "";
+    return resolveRpcHost(chain, "rpc");
+  }, [chain]);
+
   const doExecute = React.useCallback(async () => {
     if (!isReady) return;
     if (requiresAuth && !txPassword) {
@@ -420,6 +427,7 @@ export default function ActionRunner({
     );
     if (before) toast.neutral(before);
     setStage("executing");
+    setExecutingMessage("Broadcasting transaction to the local node...");
     setInlineError(null);
     const submitPath =
       typeof action!.submit?.path === "string"
@@ -479,13 +487,56 @@ export default function ActionRunner({
       (typeof res === "string" ||
         res == null ||
         (typeof res === "object" && !hasExplicitError));
+
+    if (isSuccess && isTransactionSubmitPath(requestPath)) {
+      const txHash = extractTxHash(res);
+      if (txHash) {
+        setExecutingMessage("Transaction accepted. Waiting for block confirmation...");
+        const confirmation = await waitForTransactionCommit({ rpcBase: queryHost, txHash });
+        if (confirmation.status !== "confirmed") {
+          responseOk = false;
+          responseStatus = 408;
+          responseStatusText = "Confirmation Timeout";
+          res = {
+            error: {
+              message: `Transaction ${txHash} was accepted, but it was not committed before the confirmation timeout.`,
+            },
+            txHash,
+            lastTx: confirmation.status === "timeout" ? confirmation.lastTx : null,
+          };
+          rawResponse = JSON.stringify(res);
+        } else {
+          res = typeof res === "string"
+            ? res
+            : { ...(res || {}), txHash, confirmed: true, committedTx: confirmation.tx };
+          rawResponse = typeof res === "string" ? rawResponse : JSON.stringify(res);
+        }
+      }
+    }
+
+    const finalHasExplicitError =
+      !!res?.error ||
+      res?.ok === false ||
+      res?.success === false ||
+      (typeof res?.status === "number" && res.status >= 400) ||
+      responseStatus >= 400;
+
+    const finalSuccess =
+      responseOk &&
+      (typeof res === "string" ||
+        res == null ||
+        (typeof res === "object" && !finalHasExplicitError));
+
+    setTxRes(res);
+    setRawTxRes(rawResponse);
+
     const executionResult: ActionFinishResult = {
       actionId,
-      success: isSuccess,
+      success: finalSuccess,
       result: res,
     };
 
-    const key = isSuccess ? "onSuccess" : "onError";
+    const key = finalSuccess ? "onSuccess" : "onError";
     const t = resolveToastFromManifest(action, key as any, templatingCtx, res);
 
     if (t) {
@@ -500,7 +551,7 @@ export default function ActionRunner({
       }
 
       toast.fromResult({
-        result: typeof res === "string" ? res : { ...res, ok: isSuccess },
+        result: typeof res === "string" ? res : { ...res, ok: finalSuccess },
         ctx: templatingCtx,
         map: (r, c) => mapper(r, c),
         fallback: {
@@ -519,7 +570,7 @@ export default function ActionRunner({
     if (fin) toast.info(fin);
     setTxPassword("");
 
-    if (!isSuccess) {
+    if (!finalSuccess) {
       setInlineError({
         status: responseStatus,
         statusText: responseStatusText,
@@ -557,7 +608,7 @@ export default function ActionRunner({
         setStepIdx(0);
       }
     }, 500);
-  }, [isReady, requiresAuth, txPassword, host, action, payload, actionId, onFinish, templatingCtx, toast]);
+  }, [isReady, requiresAuth, txPassword, host, queryHost, action, payload, actionId, onFinish, templatingCtx, toast]);
 
   const onContinue = React.useCallback(() => {
     if (formHasErrors) {
@@ -1010,7 +1061,7 @@ export default function ActionRunner({
                     Processing Transaction...
                   </h3>
                   <p className="text-sm text-muted-foreground">
-                    Please wait while your transaction is being processed
+                    {executingMessage}
                   </p>
                 </div>
               </motion.div>

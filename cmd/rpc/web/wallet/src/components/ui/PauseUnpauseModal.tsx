@@ -5,6 +5,7 @@ import { useDSFetcher } from "@/core/dsFetch";
 import { useConfig } from "@/app/providers/ConfigProvider";
 import { useAccounts } from "@/app/providers/AccountsProvider";
 import { useDenom } from "@/hooks/useDenom";
+import { extractTxHash, waitForTransactionCommit } from "@/core/txConfirmation";
 import { AlertModal } from "./AlertModal";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -55,6 +56,7 @@ export const PauseUnpauseModal: React.FC<PauseUnpauseModalProps> = ({
     }
   }, [validatorNickname]);
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState("Processing...");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [selectedValidators, setSelectedValidators] = useState<string[]>([]);
@@ -129,6 +131,7 @@ export const PauseUnpauseModal: React.FC<PauseUnpauseModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setLoadingMessage("Broadcasting transaction...");
     setError(null);
 
     try {
@@ -194,11 +197,28 @@ export const PauseUnpauseModal: React.FC<PauseUnpauseModalProps> = ({
             },
           );
 
+          const rawResponse = await response.text();
+          let parsedResponse: unknown = rawResponse;
+          try {
+            parsedResponse = rawResponse ? JSON.parse(rawResponse) : null;
+          } catch {
+            parsedResponse = rawResponse;
+          }
+
           if (!response.ok) {
             throw new Error(`Transaction failed: ${response.status}`);
           }
 
-          return await response.json();
+          const txHash = extractTxHash(parsedResponse);
+          if (txHash) {
+            setLoadingMessage("Transaction accepted. Waiting for block confirmation...");
+            const confirmation = await waitForTransactionCommit({ rpcBase: chain?.rpc?.base || "", txHash });
+            if (confirmation.status !== "confirmed") {
+              throw new Error(`Transaction ${txHash} was accepted, but it was not committed before the confirmation timeout.`);
+            }
+          }
+
+          return parsedResponse;
         } catch (error) {
           console.error(`Error executing ${action} transaction:`, error);
           throw error;
@@ -481,7 +501,7 @@ export const PauseUnpauseModal: React.FC<PauseUnpauseModalProps> = ({
                   {isLoading ? (
                     <>
                       <i className="fa-solid fa-spinner fa-spin"></i>
-                      Processing...
+                      {loadingMessage}
                     </>
                   ) : (
                     <>
