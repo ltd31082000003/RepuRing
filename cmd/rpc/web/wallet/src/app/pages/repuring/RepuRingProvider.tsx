@@ -335,11 +335,18 @@ export function RepuRingProvider({ children }: { children: React.ReactNode }): J
     }
     submitInFlightRef.current = kind;
     setSubmittingKind(kind);
+    const confirmation = buildTxConfirmation(kind, fields, currentAddress, circleId, contributions);
     try {
       validateSubmit(kind, fields, currentAddress, password);
       setStatus(actionCopy[kind].progress);
+      if (kind === 'joinCircle' && await isTxConfirmed(confirmation)) {
+        await refreshStateRef.current();
+        setStatus(actionCopy[kind].success);
+        setLastTx('Current wallet is already confirmed as a community member.');
+        return { ok: true };
+      }
       const signer = await getSigner(currentAddress, password);
-      const confirmation = buildTxConfirmation(kind, fields, signer.address, circleId, contributions);
+      confirmation.senderAddress = cleanHex(signer.address);
       const response = await submitWithRetry(kind, fields, signer);
       setLastTx('Last action accepted by the local RepuRing network. Waiting for onchain confirmation...');
       setStatus(`Confirming ${actionCopy[kind].failureStep} onchain...`);
@@ -356,6 +363,12 @@ export function RepuRingProvider({ children }: { children: React.ReactNode }): J
       setLastTx('Last action confirmed onchain.');
       return { ok: true, hash: response };
     } catch (e) {
+      if (kind === 'joinCircle' && await isTxConfirmed(confirmation)) {
+        await refreshStateRef.current();
+        setStatus(actionCopy[kind].success);
+        setLastTx('Community membership is already confirmed onchain.');
+        return { ok: true };
+      }
       const error = formatSubmitFailure(kind, e);
       setStatus(error);
       return { ok: false, error };
