@@ -30,6 +30,11 @@ export default function RepuRingAdmin(): JSX.Element {
   const [slashConfirmOpen, setSlashConfirmOpen] = React.useState(false);
   const claimableRole = roleForReputation(profile?.reputation || 0);
   const activeCircleId = circle?.circleId || circleId;
+  const adminCircles = React.useMemo(
+    () => getAdminCircles(currentAddress, circles, circle),
+    [currentAddress, circles, circle],
+  );
+  const canAccessAdmin = adminCircles.length > 0;
   const creatorSelected = Boolean(currentAddress && circle?.creatorAddress && cleanHex(currentAddress) === cleanHex(circle.creatorAddress));
   const isMember = Boolean(currentAddress && circle?.members?.some((address) => cleanHex(address) === cleanHex(currentAddress)));
   const selectedReview = endorsements.find((item) => item.endorsementId === endorsementId) || null;
@@ -54,6 +59,14 @@ export default function RepuRingAdmin(): JSX.Element {
   React.useEffect(() => {
     setSlashConfirmOpen(false);
   }, [endorsementId, slashReason, currentAddress]);
+
+  if (!canAccessAdmin) {
+    return (
+      <RepuRingPage>
+        <AdminAccessDenied currentAddress={currentAddress} onRefresh={refreshState} />
+      </RepuRingPage>
+    );
+  }
 
   return (
     <RepuRingPage>
@@ -115,7 +128,7 @@ export default function RepuRingAdmin(): JSX.Element {
           circleName={circle?.name || 'No community selected'}
           circleDescription={circle?.description}
           circleCount={circles.length}
-          adminCount={creatorSelected ? 1 : 0}
+          adminCount={adminCircles.length}
           memberCount={memberCount}
         />
         <RecentActivityPanel
@@ -162,6 +175,47 @@ function AdminCard({ children, className = '' }: { children: React.ReactNode; cl
   return (
     <section className={`rounded-[16px] border border-[#54f3b3]/10 bg-[#071f19]/80 p-6 shadow-[0_22px_70px_rgba(0,0,0,0.24)] ${className}`}>
       {children}
+    </section>
+  );
+}
+
+function AdminAccessDenied({ currentAddress, onRefresh }: { currentAddress: string; onRefresh: () => Promise<void> }) {
+  return (
+    <section className="rounded-[28px] border border-[#ff5576]/20 bg-[#2a1016]/80 p-6 shadow-[0_28px_90px_rgba(0,0,0,0.34)] sm:p-8 lg:p-10" role="alert">
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+        <div className="min-w-0 max-w-3xl">
+          <div className="inline-flex items-center gap-2 rounded-full border border-[#ff5576]/20 bg-[#3a0b1b] px-4 py-2 text-[11px] font-black uppercase tracking-[0.3em] text-[#ff8aa0]">
+            <TriangleAlert size={14} strokeWidth={2.6} />
+            Access denied
+          </div>
+          <h1 className="mt-6 break-words text-4xl font-black leading-tight text-white sm:text-5xl">
+            Admin page is restricted
+          </h1>
+          <p className="mt-5 max-w-2xl text-base font-semibold leading-7 text-[#f0b9b9]">
+            Only wallets that are admin/creator of at least one community circle can access this page. The selected wallet does not currently administer any group.
+          </p>
+          <p className="mt-5 break-all rounded-[14px] border border-[#ff5576]/14 bg-black/20 px-4 py-3 font-mono text-xs text-[#d8b6b6]">
+            {currentAddress || 'No wallet selected'}
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-3 lg:flex-col">
+          <Button to="/repuring/circles" variant="secondary" className="!rounded-[12px] !px-5 !py-3">
+            Open Circles
+          </Button>
+          <Button to="/key-management" variant="secondary" className="!rounded-[12px] !px-5 !py-3">
+            Switch Wallet
+          </Button>
+          <Button onClick={onRefresh} className="!rounded-[12px] !px-5 !py-3">
+            Refresh Access
+          </Button>
+        </div>
+      </div>
+      <div className="mt-8">
+        <EmptyState
+          title="No admin community found"
+          copy="Create a new community circle or switch to a wallet that created one. Member-only wallets cannot open moderation tools."
+        />
+      </div>
     </section>
   );
 }
@@ -551,4 +605,20 @@ function formatNumber(value: number) {
 function formatShort(value: number) {
   if (value >= 1000) return `${(value / 1000).toFixed(value >= 10000 ? 0 : 1)}k`;
   return formatNumber(value);
+}
+
+function getAdminCircles(
+  currentAddress: string,
+  circles: Array<{ circleId?: string; creatorAddress?: string }>,
+  activeCircle: { circleId?: string; creatorAddress?: string } | null,
+) {
+  const normalizedAddress = cleanHex(currentAddress);
+  if (!normalizedAddress) return [];
+
+  const byId = new Map<string, { circleId?: string; creatorAddress?: string }>();
+  [...circles, activeCircle].forEach((item) => {
+    if (!item?.creatorAddress || cleanHex(item.creatorAddress) !== normalizedAddress) return;
+    byId.set(item.circleId || item.creatorAddress, item);
+  });
+  return Array.from(byId.values());
 }

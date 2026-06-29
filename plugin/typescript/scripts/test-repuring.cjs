@@ -56,6 +56,7 @@ const txs = [
   ['updateProfile', 'MessageUpdateProfile'],
   ['createCircle', 'MessageCreateCircle'],
   ['joinCircle', 'MessageJoinCircle'],
+  ['leaveCircle', 'MessageLeaveCircle'],
   ['createContribution', 'MessageCreateContribution'],
   ['endorseUser', 'MessageEndorseUser'],
   ['endorseContribution', 'MessageEndorseContribution'],
@@ -184,6 +185,14 @@ assertIncludes(joinCircle, [
   "if (member[1]) return { error: ErrRepuRing('sender is already a circle member') }",
   '...(circleData.members || [])',
 ], 'JoinCircleTx');
+
+const leaveCircle = deliverBlock('DeliverMessageLeaveCircle');
+assertIncludes(leaveCircle, [
+  "if (!profile[0]) return { error: ErrRepuRing('sender must create a profile first') }",
+  "if (!member[1]) return { error: ErrRepuRing('sender is not a circle member') }",
+  "return { error: ErrRepuRing('circle creator cannot leave their own circle') }",
+  'KeyForRole(circleId, sender)',
+], 'LeaveCircleTx');
 
 // Contribution creation behavior.
 const createContribution = deliverBlock('DeliverMessageCreateContribution');

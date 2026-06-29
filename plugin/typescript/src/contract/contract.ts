@@ -26,6 +26,7 @@ export const ContractConfig: any = {
         'updateProfile',
         'createCircle',
         'joinCircle',
+        'leaveCircle',
         'createContribution',
         'endorseUser',
         'endorseContribution',
@@ -37,6 +38,7 @@ export const ContractConfig: any = {
         'type.googleapis.com/types.MessageUpdateProfile',
         'type.googleapis.com/types.MessageCreateCircle',
         'type.googleapis.com/types.MessageJoinCircle',
+        'type.googleapis.com/types.MessageLeaveCircle',
         'type.googleapis.com/types.MessageCreateContribution',
         'type.googleapis.com/types.MessageEndorseUser',
         'type.googleapis.com/types.MessageEndorseContribution',
@@ -101,6 +103,13 @@ export class Contract {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     CheckMessageJoinCircle(msg: any): any {
+        if (!isAddress(msg.senderAddress)) return { error: ErrInvalidAddress() };
+        if (!clean(msg.circleId)) return { error: ErrRepuRing('circle_id must not be empty') };
+        return signerResponse(msg.senderAddress);
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    CheckMessageLeaveCircle(msg: any): any {
         if (!isAddress(msg.senderAddress)) return { error: ErrInvalidAddress() };
         if (!clean(msg.circleId)) return { error: ErrRepuRing('circle_id must not be empty') };
         return signerResponse(msg.senderAddress);
@@ -174,6 +183,8 @@ export class ContractAsync {
                 return contract.CheckMessageCreateCircle(msg);
             case 'MessageJoinCircle':
                 return contract.CheckMessageJoinCircle(msg);
+            case 'MessageLeaveCircle':
+                return contract.CheckMessageLeaveCircle(msg);
             case 'MessageCreateContribution':
                 return contract.CheckMessageCreateContribution(msg);
             case 'MessageEndorseUser':
@@ -205,6 +216,8 @@ export class ContractAsync {
                 return ContractAsync.DeliverMessageCreateCircle(contract, msg);
             case 'MessageJoinCircle':
                 return ContractAsync.DeliverMessageJoinCircle(contract, msg);
+            case 'MessageLeaveCircle':
+                return ContractAsync.DeliverMessageLeaveCircle(contract, msg);
             case 'MessageCreateContribution':
                 return ContractAsync.DeliverMessageCreateContribution(contract, msg);
             case 'MessageEndorseUser':
@@ -325,6 +338,37 @@ export class ContractAsync {
         return write(contract, [
             { key: KeyForCircle(circleId), value: updatedCircle },
             { key: KeyForMember(circleId, sender), value: oneByte() }
+        ]);
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    static async DeliverMessageLeaveCircle(contract: Contract, msg: any): Promise<any> {
+        const sender = msg.senderAddress as Uint8Array;
+        const circleId = clean(msg.circleId);
+        const [reads, err] = await readMany(contract, [
+            [KeyForProfile(sender), types.Profile],
+            [KeyForCircle(circleId), types.Circle],
+            [KeyForMember(circleId, sender), null]
+        ]);
+        if (err) return { error: err };
+        const [profile, circle, member] = reads;
+        if (!profile[0]) return { error: ErrRepuRing('sender must create a profile first') };
+        const circleData = circle[0] as any | null;
+        if (!circleData) return { error: ErrRepuRing('circle does not exist') };
+        if (!member[1]) return { error: ErrRepuRing('sender is not a circle member') };
+        if (bytesEqual(sender, circleData.creatorAddress)) {
+            return { error: ErrRepuRing('circle creator cannot leave their own circle') };
+        }
+
+        const members = (circleData.members || []).filter((memberAddress: Uint8Array) => !bytesEqual(memberAddress, sender));
+        const updatedCircle = types.Circle.encode(
+            types.Circle.create({ ...circleData, members })
+        ).finish();
+        return write(contract, [
+            { key: KeyForCircle(circleId), value: updatedCircle }
+        ], [
+            KeyForMember(circleId, sender),
+            KeyForRole(circleId, sender)
         ]);
     }
 
@@ -772,9 +816,10 @@ async function readMany(
 
 async function write(
     contract: Contract,
-    sets: Array<{ key: Uint8Array; value: Uint8Array }>
+    sets: Array<{ key: Uint8Array; value: Uint8Array }>,
+    deletes: Uint8Array[] = []
 ): Promise<any> {
-    const [writeResp, writeErr] = await contract.plugin.StateWrite(contract, { sets });
+    const [writeResp, writeErr] = await contract.plugin.StateWrite(contract, { sets, deletes });
     if (writeErr) return { error: writeErr };
     if (writeResp?.error) return { error: writeResp.error };
     return {};

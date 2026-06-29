@@ -423,6 +423,9 @@ export function FromAny(any: any): [any | null, string | null, IPluginError | nu
         if (typeUrl.includes('MessageJoinCircle')) {
             return [types.MessageJoinCircle.decode(any.value), 'MessageJoinCircle', null];
         }
+        if (typeUrl.includes('MessageLeaveCircle')) {
+            return [types.MessageLeaveCircle.decode(any.value), 'MessageLeaveCircle', null];
+        }
         if (typeUrl.includes('MessageCreateContribution')) {
             return [types.MessageCreateContribution.decode(any.value), 'MessageCreateContribution', null];
         }

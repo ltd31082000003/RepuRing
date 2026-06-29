@@ -5,6 +5,7 @@ export type TxKind =
   | 'updateProfile'
   | 'createCircle'
   | 'joinCircle'
+  | 'leaveCircle'
   | 'createContribution'
   | 'endorseUser'
   | 'endorseContribution'

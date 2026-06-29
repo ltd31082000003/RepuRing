@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircle2, Lock, Users } from 'lucide-react';
+import { CheckCircle2, Lock, LogOut, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Badge, Button, EmptyState, Input, RepuRingPage, StatusPill, TxStatusCard, roleBadge, roleForReputation, shortAddress } from './components';
 import { cleanHex } from './RepuRingProvider';
@@ -40,6 +40,8 @@ export default function RepuRingCommunity(): JSX.Element {
   const [reviewNotice, setReviewNotice] = React.useState('');
   const [postModalOpen, setPostModalOpen] = React.useState(false);
   const [postNotice, setPostNotice] = React.useState('');
+  const [leaveConfirmOpen, setLeaveConfirmOpen] = React.useState(false);
+  const [leaveNotice, setLeaveNotice] = React.useState('');
   const [localEndorsed, setLocalEndorsed] = React.useState<Record<string, boolean>>({});
   const [localReviewed, setLocalReviewed] = React.useState<Record<string, boolean>>({});
   const navigate = useNavigate();
@@ -168,6 +170,19 @@ export default function RepuRingCommunity(): JSX.Element {
     setPostNotice(failureNoticeForStatus(result.error || ''));
   }
 
+  async function leaveCommunity() {
+    if (!community) return;
+    setLeaveNotice('');
+    const result = await submit('leaveCircle', { circleId: community.circleId });
+    if (result.ok) {
+      setLeaveConfirmOpen(false);
+      setContextNotice('Leave request submitted. This wallet is no longer shown as a member while community data refreshes.');
+      void refreshState();
+      return;
+    }
+    setLeaveNotice(result.error || 'Could not leave this community. Check your wallet password and membership status, then try again.');
+  }
+
   if (!community) {
     return (
       <RepuRingPage>
@@ -222,7 +237,24 @@ export default function RepuRingCommunity(): JSX.Element {
       />
 
       <section className="grid gap-6 xl:grid-cols-[0.94fr_1.06fr]">
-        <MemberPreview community={community} currentAddress={currentAddress} />
+        <MemberPreview
+          community={community}
+          currentAddress={currentAddress}
+          password={password}
+          setPassword={setPassword}
+          leaveConfirmOpen={leaveConfirmOpen}
+          leaveNotice={leaveNotice}
+          submittingLeave={submittingKind === 'leaveCircle'}
+          onOpenLeave={() => {
+            setLeaveNotice('');
+            setLeaveConfirmOpen(true);
+          }}
+          onCancelLeave={() => {
+            setLeaveConfirmOpen(false);
+            setLeaveNotice('');
+          }}
+          onLeave={() => void leaveCommunity()}
+        />
         <RoleProgressCard
           reputation={profile?.reputation || 0}
           currentRole={currentRole}
@@ -956,8 +988,33 @@ function ReviewModal({
   );
 }
 
-function MemberPreview({ community, currentAddress }: { community: CircleView; currentAddress: string }) {
+function MemberPreview({
+  community,
+  currentAddress,
+  password,
+  setPassword,
+  leaveConfirmOpen,
+  leaveNotice,
+  submittingLeave,
+  onOpenLeave,
+  onCancelLeave,
+  onLeave,
+}: {
+  community: CircleView;
+  currentAddress: string;
+  password: string;
+  setPassword: (value: string) => void;
+  leaveConfirmOpen: boolean;
+  leaveNotice: string;
+  submittingLeave: boolean;
+  onOpenLeave: () => void;
+  onCancelLeave: () => void;
+  onLeave: () => void;
+}) {
   const preview = (community.members || []).slice(0, 5);
+  const currentIsMember = isCircleMember(community, currentAddress);
+  const currentIsCreator = Boolean(currentAddress && cleanHex(community.creatorAddress) === cleanHex(currentAddress));
+  const canLeave = currentIsMember && !currentIsCreator;
   return (
     <section className="rounded-[32px] border border-[#54f3b3]/12 bg-[#041612] p-7 shadow-[0_24px_90px_rgba(0,0,0,0.24)]">
       <div className="flex items-center justify-between gap-4">
@@ -965,8 +1022,42 @@ function MemberPreview({ community, currentAddress }: { community: CircleView; c
           <p className="text-[11px] font-black uppercase tracking-[0.28em] text-[#54f3b3]">Members</p>
           <h2 className="mt-4 text-3xl font-black text-white">{community.members?.length || 0} members</h2>
         </div>
-        <Users className="h-6 w-6 text-[#54f3b3]" />
+        <div className="flex items-center gap-3">
+          {canLeave ? (
+            <button
+              type="button"
+              onClick={onOpenLeave}
+              className="group flex items-center gap-2 rounded-[18px] border border-[#ff5576]/18 bg-[#2a1016] px-4 py-3 text-sm font-black text-[#ff8aa0] shadow-[0_16px_42px_rgba(0,0,0,0.22)] transition hover:-translate-y-0.5 hover:border-[#ff5576]/35 hover:bg-[#3a0b1b] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff5576]/50"
+            >
+              <LogOut className="h-4 w-4 transition group-hover:translate-x-0.5" />
+              Leave
+            </button>
+          ) : null}
+          <Users className="h-6 w-6 text-[#54f3b3]" />
+        </div>
       </div>
+      {leaveConfirmOpen && canLeave ? (
+        <div className="mt-5 rounded-[22px] border border-[#ff5576]/18 bg-[#2a1016]/70 p-4">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div className="min-w-0 flex-1">
+              <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#ff8aa0]">Leave community</p>
+              <p className="mt-2 text-sm font-semibold leading-6 text-[#f0b9b9]">
+                This wallet will leave {community.name || 'this community'} and lose member-only posting/review access.
+              </p>
+              <div className="mt-4">
+                <Input label="Wallet password" type="password" value={password} onChange={setPassword} placeholder="Required to leave this community" />
+              </div>
+              {leaveNotice ? <p className="mt-3 break-words text-sm font-semibold leading-6 text-[#ffb2c0]">{leaveNotice}</p> : null}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="danger" disabled={submittingLeave || !password} onClick={onLeave}>
+                {submittingLeave ? 'Leaving...' : 'Confirm leave'}
+              </Button>
+              <Button variant="secondary" onClick={onCancelLeave}>Cancel</Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
       {preview.length === 0 ? (
         <p className="mt-6 text-sm font-semibold leading-7 text-[#9db9af]">Members appear here after wallets join this community.</p>
       ) : (

@@ -41,6 +41,11 @@ message MessageJoinCircle {
   string circle_id = 2; // @gotags: json:"circleId"
 }
 
+message MessageLeaveCircle {
+  bytes sender_address = 1; // @gotags: json:"senderAddress"
+  string circle_id = 2; // @gotags: json:"circleId"
+}
+
 message MessageEndorseUser {
   bytes sender_address = 1; // @gotags: json:"senderAddress"
   string circle_id = 2; // @gotags: json:"circleId"

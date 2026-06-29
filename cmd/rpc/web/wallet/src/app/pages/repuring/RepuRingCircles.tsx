@@ -2,7 +2,7 @@ import React from 'react';
 import { ArrowUpRight, Check, Compass, Plus, RefreshCw } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Badge, Button, Input, RepuRingPage, StatusPill, TxStatusCard, shortAddress } from './components';
-import { cleanHex } from './RepuRingProvider';
+import { QUERY_RPC, cleanHex } from './RepuRingProvider';
 import { CircleView, useRepuRing } from './useRepuRing';
 
 type WalletCircleStatus = 'Creator' | 'Joined' | 'Not joined' | 'No wallet selected' | 'Profile required';
@@ -138,8 +138,18 @@ export default function RepuRingCircles(): JSX.Element {
     setJoinError(null);
     const joined = await submit('joinCircle', { circleId: targetCircleId });
     if (joined.ok) {
+      setContextNotice('Join submitted. Waiting for the local chain to confirm membership...');
+      const confirmed = await waitForCircleMembership(targetCircleId, currentAddress);
+      await refreshState();
+      if (!confirmed) {
+        setJoinError({
+          title: 'Join is still pending',
+          detail: 'The transaction was accepted, but this wallet is not in the member list yet. Wait for the next block, then refresh membership.',
+        });
+        return;
+      }
       setCircleId(targetCircleId);
-      setContextNotice('Joined and opened. You can now post and review work in this community.');
+      setContextNotice('Joined and confirmed. You can now post and review work in this community.');
       setJoinCircleId('');
       navigate('/repuring/community');
       return;
@@ -159,8 +169,18 @@ export default function RepuRingCircles(): JSX.Element {
     setJoinError(null);
     const joined = await submit('joinCircle', { circleId });
     if (joined.ok) {
+      setContextNotice('Join submitted. Waiting for the local chain to confirm membership...');
+      const confirmed = await waitForCircleMembership(circleId, currentAddress);
+      await refreshState();
+      if (!confirmed) {
+        setJoinError({
+          title: 'Join is still pending',
+          detail: 'The transaction was accepted, but this wallet is not in the member list yet. Wait for the next block, then refresh membership.',
+        });
+        return;
+      }
       setCircleId(circleId);
-      setContextNotice('Joined and opened. You can now post and review work in this community.');
+      setContextNotice('Joined and confirmed. You can now post and review work in this community.');
       setJoinCircleId('');
       navigate('/repuring/community');
       return;
@@ -731,6 +751,40 @@ function FlowStep({ active, index, title, copy }: { active: boolean; index: stri
       </div>
     </div>
   );
+}
+
+async function waitForCircleMembership(circleId: string, currentAddress: string) {
+  const normalizedAddress = cleanHex(currentAddress);
+  const targetCircleId = circleId.trim();
+  if (!targetCircleId || !normalizedAddress) return false;
+
+  const startedAt = Date.now();
+  while (Date.now() - startedAt < 18000) {
+    const circle = await queryCircle(targetCircleId);
+    if (circle?.members?.some((address) => cleanHex(address) === normalizedAddress)) return true;
+    await sleep(1200);
+  }
+  return false;
+}
+
+async function queryCircle(circleId: string): Promise<CircleView | null> {
+  try {
+    const response = await fetch(`${QUERY_RPC}/v1/query/repuring/circle`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ circleId }),
+    });
+    if (!response.ok) return null;
+    return await response.json() as CircleView;
+  } catch {
+    return null;
+  }
+}
+
+function sleep(ms: number) {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, ms);
+  });
 }
 
 function isCircleMember(circle: CircleView | null, currentAddress: string) {

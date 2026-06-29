@@ -9611,6 +9611,244 @@ $root.types = (function() {
         return MessageJoinCircle;
     })();
 
+    types.MessageLeaveCircle = (function() {
+
+        /**
+         * Properties of a MessageLeaveCircle.
+         * @memberof types
+         * @interface IMessageLeaveCircle
+         * @property {Uint8Array|null} [senderAddress] MessageLeaveCircle senderAddress
+         * @property {string|null} [circleId] MessageLeaveCircle circleId
+         */
+
+        /**
+         * Constructs a new MessageLeaveCircle.
+         * @memberof types
+         * @classdesc Represents a MessageLeaveCircle.
+         * @implements IMessageLeaveCircle
+         * @constructor
+         * @param {types.IMessageLeaveCircle=} [properties] Properties to set
+         */
+        function MessageLeaveCircle(properties) {
+            if (properties)
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * MessageLeaveCircle senderAddress.
+         * @member {Uint8Array} senderAddress
+         * @memberof types.MessageLeaveCircle
+         * @instance
+         */
+        MessageLeaveCircle.prototype.senderAddress = $util.newBuffer([]);
+
+        /**
+         * MessageLeaveCircle circleId.
+         * @member {string} circleId
+         * @memberof types.MessageLeaveCircle
+         * @instance
+         */
+        MessageLeaveCircle.prototype.circleId = "";
+
+        /**
+         * Creates a new MessageLeaveCircle instance using the specified properties.
+         * @function create
+         * @memberof types.MessageLeaveCircle
+         * @static
+         * @param {types.IMessageLeaveCircle=} [properties] Properties to set
+         * @returns {types.MessageLeaveCircle} MessageLeaveCircle instance
+         */
+        MessageLeaveCircle.create = function create(properties) {
+            return new MessageLeaveCircle(properties);
+        };
+
+        /**
+         * Encodes the specified MessageLeaveCircle message. Does not implicitly {@link types.MessageLeaveCircle.verify|verify} messages.
+         * @function encode
+         * @memberof types.MessageLeaveCircle
+         * @static
+         * @param {types.IMessageLeaveCircle} message MessageLeaveCircle message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        MessageLeaveCircle.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.senderAddress != null && Object.hasOwnProperty.call(message, "senderAddress"))
+                writer.uint32(/* id 1, wireType 2 =*/10).bytes(message.senderAddress);
+            if (message.circleId != null && Object.hasOwnProperty.call(message, "circleId"))
+                writer.uint32(/* id 2, wireType 2 =*/18).string(message.circleId);
+            return writer;
+        };
+
+        /**
+         * Encodes the specified MessageLeaveCircle message, length delimited. Does not implicitly {@link types.MessageLeaveCircle.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof types.MessageLeaveCircle
+         * @static
+         * @param {types.IMessageLeaveCircle} message MessageLeaveCircle message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        MessageLeaveCircle.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a MessageLeaveCircle message from the specified reader or buffer.
+         * @function decode
+         * @memberof types.MessageLeaveCircle
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {types.MessageLeaveCircle} MessageLeaveCircle
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        MessageLeaveCircle.decode = function decode(reader, length, error) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.types.MessageLeaveCircle();
+            while (reader.pos < end) {
+                var tag = reader.uint32();
+                if (tag === error)
+                    break;
+                switch (tag >>> 3) {
+                case 1: {
+                        message.senderAddress = reader.bytes();
+                        break;
+                    }
+                case 2: {
+                        message.circleId = reader.string();
+                        break;
+                    }
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a MessageLeaveCircle message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof types.MessageLeaveCircle
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {types.MessageLeaveCircle} MessageLeaveCircle
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        MessageLeaveCircle.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a MessageLeaveCircle message.
+         * @function verify
+         * @memberof types.MessageLeaveCircle
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        MessageLeaveCircle.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.senderAddress != null && message.hasOwnProperty("senderAddress"))
+                if (!(message.senderAddress && typeof message.senderAddress.length === "number" || $util.isString(message.senderAddress)))
+                    return "senderAddress: buffer expected";
+            if (message.circleId != null && message.hasOwnProperty("circleId"))
+                if (!$util.isString(message.circleId))
+                    return "circleId: string expected";
+            return null;
+        };
+
+        /**
+         * Creates a MessageLeaveCircle message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof types.MessageLeaveCircle
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {types.MessageLeaveCircle} MessageLeaveCircle
+         */
+        MessageLeaveCircle.fromObject = function fromObject(object) {
+            if (object instanceof $root.types.MessageLeaveCircle)
+                return object;
+            var message = new $root.types.MessageLeaveCircle();
+            if (object.senderAddress != null)
+                if (typeof object.senderAddress === "string")
+                    $util.base64.decode(object.senderAddress, message.senderAddress = $util.newBuffer($util.base64.length(object.senderAddress)), 0);
+                else if (object.senderAddress.length >= 0)
+                    message.senderAddress = object.senderAddress;
+            if (object.circleId != null)
+                message.circleId = String(object.circleId);
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a MessageLeaveCircle message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof types.MessageLeaveCircle
+         * @static
+         * @param {types.MessageLeaveCircle} message MessageLeaveCircle
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        MessageLeaveCircle.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            var object = {};
+            if (options.defaults) {
+                if (options.bytes === String)
+                    object.senderAddress = "";
+                else {
+                    object.senderAddress = [];
+                    if (options.bytes !== Array)
+                        object.senderAddress = $util.newBuffer(object.senderAddress);
+                }
+                object.circleId = "";
+            }
+            if (message.senderAddress != null && message.hasOwnProperty("senderAddress"))
+                object.senderAddress = options.bytes === String ? $util.base64.encode(message.senderAddress, 0, message.senderAddress.length) : options.bytes === Array ? Array.prototype.slice.call(message.senderAddress) : message.senderAddress;
+            if (message.circleId != null && message.hasOwnProperty("circleId"))
+                object.circleId = message.circleId;
+            return object;
+        };
+
+        /**
+         * Converts this MessageLeaveCircle to JSON.
+         * @function toJSON
+         * @memberof types.MessageLeaveCircle
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        MessageLeaveCircle.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for MessageLeaveCircle
+         * @function getTypeUrl
+         * @memberof types.MessageLeaveCircle
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        MessageLeaveCircle.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/types.MessageLeaveCircle";
+        };
+
+        return MessageLeaveCircle;
+    })();
+
     types.MessageEndorseUser = (function() {
 
         /**

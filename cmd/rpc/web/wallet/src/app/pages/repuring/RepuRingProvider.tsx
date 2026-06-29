@@ -26,6 +26,7 @@ const txMeta: Record<TxKind, { typeUrl: string; message: string }> = {
   updateProfile: { typeUrl: 'type.googleapis.com/types.MessageUpdateProfile', message: 'MessageUpdateProfile' },
   createCircle: { typeUrl: 'type.googleapis.com/types.MessageCreateCircle', message: 'MessageCreateCircle' },
   joinCircle: { typeUrl: 'type.googleapis.com/types.MessageJoinCircle', message: 'MessageJoinCircle' },
+  leaveCircle: { typeUrl: 'type.googleapis.com/types.MessageLeaveCircle', message: 'MessageLeaveCircle' },
   createContribution: { typeUrl: 'type.googleapis.com/types.MessageCreateContribution', message: 'MessageCreateContribution' },
   endorseUser: { typeUrl: 'type.googleapis.com/types.MessageEndorseUser', message: 'MessageEndorseUser' },
   endorseContribution: { typeUrl: 'type.googleapis.com/types.MessageEndorseContribution', message: 'MessageEndorseContribution' },
@@ -64,6 +65,11 @@ const actionCopy: Record<TxKind, { progress: string; success: string; failureSte
     progress: 'Joining community...',
     success: 'Join request submitted. Membership will appear after the next refresh.',
     failureStep: 'community join',
+  },
+  leaveCircle: {
+    progress: 'Leaving community...',
+    success: 'Leave request submitted. Membership will update after the next refresh.',
+    failureStep: 'community leave',
   },
   createContribution: {
     progress: 'Posting proof-of-work...',
@@ -259,6 +265,18 @@ export function RepuRingProvider({ children }: { children: React.ReactNode }): J
         setCircles((current) => current.map((item) => item.circleId === targetCircleId ? withMember(item) : item));
         return;
       }
+      case 'leaveCircle': {
+        const targetCircleId = String(fields.circleId || '').trim();
+        if (!targetCircleId) return;
+        const withoutMember = (item: CircleView): CircleView => ({
+          ...item,
+          members: (item.members || []).filter((member) => cleanHex(member) !== sender),
+        });
+        setCircle((current) => current?.circleId === targetCircleId ? withoutMember(current) : current);
+        setCircles((current) => current.map((item) => item.circleId === targetCircleId ? withoutMember(item) : item));
+        setRole((current) => current?.circleId === targetCircleId ? null : current);
+        return;
+      }
       case 'createContribution': {
         const nextContribution: ContributionView = {
           contributionId: String(fields.contributionId || '').trim(),
@@ -384,7 +402,7 @@ function validateSubmit(kind: TxKind, fields: Record<string, unknown>, currentAd
   if (kind === 'createProfile' && !String(fields.username || '').trim()) throw new Error('Username is required.');
   if (kind === 'createCircle' && !String(fields.circleId || '').trim()) throw new Error('Community is required.');
   if (kind === 'createCircle' && !String(fields.name || '').trim()) throw new Error('Community name is required.');
-  if ((kind === 'joinCircle' || kind === 'claimRole') && !String(fields.circleId || '').trim()) throw new Error('Community is required.');
+  if ((kind === 'joinCircle' || kind === 'leaveCircle' || kind === 'claimRole') && !String(fields.circleId || '').trim()) throw new Error('Community is required.');
   if (kind === 'createContribution') {
     if (!String(fields.circleId || '').trim()) throw new Error('Community is required.');
     if (!String(fields.contributionId || '').trim()) throw new Error('Proof identifier is required.');
@@ -462,6 +480,20 @@ function applyOptimisticSnapshot(
         ...snapshot,
         circle: snapshot.circle?.circleId === targetCircleId && snapshot.circle ? withMember(snapshot.circle) : snapshot.circle,
         circles: snapshot.circles.map((item) => item.circleId === targetCircleId ? withMember(item) : item),
+      };
+    }
+    case 'leaveCircle': {
+      const targetCircleId = String(fields.circleId || '').trim();
+      if (!targetCircleId) return snapshot;
+      const withoutMember = (item: CircleView): CircleView => ({
+        ...item,
+        members: (item.members || []).filter((member) => cleanHex(member) !== sender),
+      });
+      return {
+        ...snapshot,
+        role: snapshot.role?.circleId === targetCircleId ? null : snapshot.role,
+        circle: snapshot.circle?.circleId === targetCircleId && snapshot.circle ? withoutMember(snapshot.circle) : snapshot.circle,
+        circles: snapshot.circles.map((item) => item.circleId === targetCircleId ? withoutMember(item) : item),
       };
     }
     case 'createContribution': {
@@ -555,6 +587,7 @@ function actionFailureLabel(kind: string) {
     updateProfile: 'Profile update',
     createCircle: 'Community creation',
     joinCircle: 'Community join',
+    leaveCircle: 'Community leave',
     createContribution: 'Proof-of-work post',
     endorseUser: 'Member endorsement',
     endorseContribution: 'Peer review',
@@ -670,6 +703,8 @@ function encodeMessage(kind: TxKind, v: Record<string, unknown>): Uint8Array {
     case 'createCircle':
       return concat([fieldBytes(1, sender), fieldString(2, v.circleId), fieldString(3, v.name), fieldString(4, v.description)]);
     case 'joinCircle':
+      return concat([fieldBytes(1, sender), fieldString(2, v.circleId)]);
+    case 'leaveCircle':
       return concat([fieldBytes(1, sender), fieldString(2, v.circleId)]);
     case 'createContribution':
       return concat([fieldBytes(1, sender), fieldString(2, v.contributionId), fieldString(3, v.circleId), fieldString(4, v.title), fieldString(5, v.description), fieldString(6, v.proofUrl), fieldString(7, v.category)]);
