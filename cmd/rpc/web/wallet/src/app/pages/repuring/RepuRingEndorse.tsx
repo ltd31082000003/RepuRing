@@ -33,6 +33,7 @@ export default function RepuRingEndorse(): JSX.Element {
     endorsements,
     status,
     lastTx,
+    submittingKind,
     refreshState,
     submit,
   } = useRepuRing();
@@ -57,7 +58,7 @@ export default function RepuRingEndorse(): JSX.Element {
     : null;
   const alreadyEndorsed = Boolean(currentReviewerEndorsement);
   const selectedReviewState = selectedContribution ? contributionReviewState(selectedContribution, selectedAuthorIsSelf, alreadyEndorsed) : { label: 'No selection', tone: 'warning' as const };
-  const endorseDisabled = !currentAddress || !profile || !selectedContribution || !isMember || selectedAuthorIsSelf || Boolean(selectedContribution?.slashed) || alreadyEndorsed || !password || !endorse.tag.trim() || !endorse.message.trim();
+  const endorseDisabled = Boolean(submittingKind) || !currentAddress || !profile || !selectedContribution || !isMember || selectedAuthorIsSelf || Boolean(selectedContribution?.slashed) || alreadyEndorsed || !password || !endorse.tag.trim() || !endorse.message.trim();
   const endorseHelp = !selectedContribution
     ? 'Select a contribution first.'
     : !currentAddress
@@ -65,20 +66,20 @@ export default function RepuRingEndorse(): JSX.Element {
       : !profile
         ? 'Create a profile before reviewing contribution work.'
         : !isMember
-          ? 'Join the circle before endorsing.'
+          ? 'Join the circle before reviewing.'
           : selectedAuthorIsSelf
-            ? 'Switch to another member wallet to endorse this contribution.'
+            ? 'Switch to another member wallet to review this contribution.'
             : selectedContribution.slashed
               ? 'This contribution is slashed and cannot be endorsed.'
               : alreadyEndorsed
-                ? 'You already endorsed this contribution. Onchain endorsements cannot be self-cancelled in this protocol; a circle creator can moderate bad endorsements.'
+                ? 'You already reviewed this contribution. Reviews cannot be self-cancelled; a circle creator can moderate invalid reviews.'
                 : !password
-                  ? 'Enter the selected wallet password to sign EndorseContributionTx.'
-                  : !endorse.tag.trim()
-                    ? 'Choose an endorsement tag.'
+                  ? 'Enter the selected wallet password to submit this review.'
+                : !endorse.tag.trim()
+                    ? 'Choose a review tag.'
                     : !endorse.message.trim()
                       ? 'Write a review message before continuing.'
-                      : 'Ready to review and confirm this endorsement.';
+                      : 'Ready to review and confirm.';
 
   async function confirmEndorsement() {
     if (!selectedContribution) return;
@@ -100,9 +101,7 @@ export default function RepuRingEndorse(): JSX.Element {
       setSubmittedReview(reviewCheck);
       setReviewCheckPending(true);
       setReviewNotice('Peer review submitted. Checking review visibility under this contribution...');
-      await refreshState();
-      await wait(reviewVisibilityDelayMs);
-      await refreshState();
+      window.setTimeout(() => { void refreshState(); }, reviewVisibilityDelayMs);
       setReviewCheckPending(false);
     }
   }
@@ -121,7 +120,7 @@ export default function RepuRingEndorse(): JSX.Element {
       setReviewCheckPending(false);
       setReviewNotice('Peer review submitted and visible under this contribution.');
     } else if (!reviewCheckPending) {
-      setReviewNotice('Peer review submitted, but it is not visible under this contribution yet. Refresh chain state and check transaction status.');
+      setReviewNotice('Peer review submitted, but it is not visible under this contribution yet. Refresh status and check again.');
     }
   }, [endorsements, submittedReview, reviewCheckPending]);
 
@@ -130,7 +129,7 @@ export default function RepuRingEndorse(): JSX.Element {
       <PageHeader
         eyebrow="Review Work"
         title="Review and endorse useful work"
-        copy="Inspect another community member's proof-of-work, write a peer review, and submit one onchain endorsement."
+        copy="Inspect another community member's proof-of-work, write a peer review, and submit it for reputation."
         actions={<Button variant="secondary" onClick={refreshState}>Refresh work</Button>}
       />
 
@@ -155,27 +154,27 @@ export default function RepuRingEndorse(): JSX.Element {
           <Panel>
             <SectionHeader
               eyebrow="Selected contribution"
-              title={selectedContribution?.title || 'Choose work to endorse'}
-              copy="A valid peer endorsement gives +1 global reputation to the contribution author after Canopy state refresh."
+              title={selectedContribution?.title || 'Choose work to review'}
+              copy="A valid peer review gives +1 global reputation to the contribution author after refresh."
               actions={<StatusPill tone={selectedReviewState.tone}>{selectedReviewState.label}</StatusPill>}
             />
             {selectedAuthorIsSelf && (
               <ActionGate
                 tone="warning"
                 title="You cannot review your own work"
-                copy="Switch to another community member wallet to endorse this contribution."
+                copy="Switch to another community member wallet to review this contribution."
                 actions={<Button to="/key-management" variant="secondary">Switch wallet</Button>}
               />
             )}
             {alreadyEndorsed && currentReviewerEndorsement && (
               <ActionGate
                 title="You already endorsed this work"
-                copy="Your review is visible below. Endorsements cannot be self-cancelled in the MVP protocol."
+                copy="Your review is visible below. Reviews cannot be self-cancelled."
               >
                 <div className="mt-3 grid gap-2 rounded-2xl border border-white/10 bg-black/20 p-3 text-xs text-zinc-300">
                   <div>Tag <span className="font-semibold text-white">{currentReviewerEndorsement.tag || 'Not tagged'}</span></div>
                   <div>Message <span className="break-words text-white">{currentReviewerEndorsement.message || 'No message'}</span></div>
-                  <div>Endorsement ID <span className="break-all font-mono text-white">{currentReviewerEndorsement.endorsementId}</span></div>
+                  <div>Review reference <span className="break-all font-mono text-white">{currentReviewerEndorsement.endorsementId}</span></div>
                   <div>Status <StatusPill tone={currentReviewerEndorsement.slashed ? 'danger' : 'success'}>{currentReviewerEndorsement.slashed ? 'Slashed' : 'Active'}</StatusPill></div>
                 </div>
               </ActionGate>
@@ -184,13 +183,13 @@ export default function RepuRingEndorse(): JSX.Element {
               <ContributionCard
                 contribution={selectedContribution}
                 selected
-                reviews={<ContributionReviews endorsements={selectedReviews} emptyCopy="No reviews yet. Endorse this contribution from another member account to add the first review/comment." />}
+                reviews={<ContributionReviews endorsements={selectedReviews} emptyCopy="No reviews yet. Review this contribution from another member account to add the first comment." />}
               />
             ) : (
               <EmptyState
                 title="No contribution selected"
-                copy="Choose a proof below or open the proof-of-work feed. Endorsements must come from another circle member, not the contribution author."
-                actions={<Button to="/repuring/contributions" variant="secondary">Browse proof-of-work feed</Button>}
+                copy="Choose a proof below or open the community workspace. Reviews must come from another circle member, not the contribution author."
+                actions={<Button to="/repuring/community" variant="secondary">Open community</Button>}
               />
             )}
           </Panel>
@@ -198,11 +197,11 @@ export default function RepuRingEndorse(): JSX.Element {
           <Panel>
             <SectionHeader
               eyebrow="Peer validation"
-              title="Write a contribution endorsement"
+              title="Write a contribution review"
               copy="Use another community member wallet, enter its signing password, then explain why this work helps the community."
-              actions={<Badge tone="zinc">EndorseContributionTx</Badge>}
+              actions={<Badge tone="zinc">Peer review</Badge>}
             />
-            <Input label="Signing key password" type="password" value={password} onChange={setPassword} placeholder="Required for BLS signing" />
+            <Input label="Wallet password" type="password" value={password} onChange={setPassword} placeholder="Required to submit a review" />
             <div>
               <p className="mb-2 text-sm font-medium text-zinc-300">Tag</p>
               <div className="flex flex-wrap gap-2">
@@ -224,28 +223,30 @@ export default function RepuRingEndorse(): JSX.Element {
               <Button disabled={endorseDisabled} className="w-full sm:w-auto" onClick={() => { if (endorseDisabled) return; setReviewNotice(''); setSubmittedReview(null); setConfirmOpen(true); }}>
                 Submit peer review
               </Button>
-              <Badge tone="zinc">EndorseContributionTx</Badge>
+              <Badge tone="zinc">Peer review</Badge>
             </div>
             <p className="text-sm text-zinc-500">{endorseHelp}</p>
             <PostVisibilityNotice message={reviewNotice} />
             {confirmOpen && selectedContribution && (
               <ConfirmationPanel
-                eyebrow="Confirm endorsement"
+                eyebrow="Confirm review"
                 title="Confirm peer review"
-                copy="This endorsement is an onchain attestation. After confirmation, you cannot self-cancel it in the current MVP protocol. Only the circle creator/admin can moderate invalid endorsements."
+                copy="After confirmation, you cannot self-cancel this review. Only the circle creator/admin can moderate invalid reviews."
                 actions={(
                   <>
-                    <Button onClick={confirmEndorsement}>Confirm endorsement</Button>
+                    <Button disabled={submittingKind === 'endorseContribution'} onClick={confirmEndorsement}>
+                      {submittingKind === 'endorseContribution' ? 'Submitting...' : 'Confirm endorsement'}
+                    </Button>
                     <Button variant="secondary" onClick={() => setConfirmOpen(false)}>Cancel</Button>
                   </>
                 )}
               >
                 <div className="grid gap-3 text-sm md:grid-cols-2">
                   <ConfirmRow label="Contribution" value={selectedContribution.title || selectedContribution.contributionId} />
-                  <ConfirmRow label="Contribution ID" value={selectedContribution.contributionId} mono />
+                  <ConfirmRow label="Proof reference" value={selectedContribution.contributionId} mono />
                   <ConfirmRow label="Author" value={selectedContribution.authorUsername || shortAddress(selectedContribution.authorAddress) || selectedContribution.authorAddress} />
                   <ConfirmRow label="Community" value={circle?.name || selectedContribution.circleId} />
-                  <ConfirmRow label="Circle ID" value={circle?.circleId || selectedContribution.circleId || circleId} mono />
+                  <ConfirmRow label="Community reference" value={circle?.circleId || selectedContribution.circleId || circleId} mono />
                   <ConfirmRow label="Tag" value={endorse.tag} />
                   <ConfirmRow label="Reviewer wallet" value={shortAddress(currentAddress) || currentAddress} mono />
                   <div className="md:col-span-2">
@@ -260,7 +261,7 @@ export default function RepuRingEndorse(): JSX.Element {
 
         <div className="space-y-5">
           <Panel>
-            <SectionHeader eyebrow="Endorsement readiness" title="Onchain validation checklist" copy="The selected wallet must be another active circle member, and the contribution must be active." />
+            <SectionHeader eyebrow="Review readiness" title="Validation checklist" copy="The selected wallet must be another active circle member, and the contribution must be active." />
             <div className="grid gap-3">
               <ReadinessRule checked={isMember} text="Selected endorser wallet is a member of this circle." />
               <ReadinessRule checked={Boolean(selectedContribution)} text="A contribution proof exists and is selected for review." />
@@ -279,15 +280,15 @@ export default function RepuRingEndorse(): JSX.Element {
             />
             <div className="mb-4 grid gap-3 sm:grid-cols-2">
               <MetricCard label="Community" value={circle?.name || 'No community selected'} detail={circle?.description || 'Open a joined community before reviewing work.'} tone="cyan" />
-              <MetricCard label="Circle ID" value={circle?.circleId || circleId || 'Not selected'} detail="Current community context for contribution reviews." />
+              <MetricCard label="Community reference" value={circle?.circleId || circleId || 'Not selected'} detail="Current community for contribution reviews." />
               <MetricCard label="Members" value={String(circle?.members?.length || 0)} detail="Joined wallets in this community." tone="emerald" />
               <MetricCard label="Wallet status" value={isMember ? 'Joined' : currentAddress ? 'Not joined' : 'No wallet'} detail={isMember ? 'Current wallet can review eligible work.' : 'Change or join a community before reviewing.'} />
             </div>
             {contributions.length === 0 ? (
               <EmptyState
                 title="No contribution proofs loaded"
-                copy="Post the first proof-of-work in this circle, then return with another member wallet to endorse it."
-                actions={<Button to="/repuring/contributions" variant="secondary">Post proof-of-work</Button>}
+                copy="Open the community workspace after a member posts the first proof-of-work, then return with another member wallet to endorse it."
+                actions={<Button to="/repuring/community" variant="secondary">Open community</Button>}
               />
             ) : (
               <div className="grid gap-3">
@@ -327,12 +328,12 @@ export default function RepuRingEndorse(): JSX.Element {
       </section>
 
       <Panel>
-        <SectionHeader eyebrow="Plugin state" title="Recent endorsements" copy="Records returned for the selected circle or current profile, including active and slashed status." />
+        <SectionHeader eyebrow="Recent activity" title="Recent reviews" copy="Reviews loaded for the selected community or current profile, including active and moderated status." />
         {endorsements.length === 0 ? (
           <EmptyState
-            title="No endorsements yet"
-            copy="Select a contribution and endorse it from another circle member account. Self-endorsement is rejected onchain."
-            actions={<Button to="/repuring/contributions" variant="secondary">Choose contribution</Button>}
+            title="No reviews yet"
+            copy="Select a contribution and review it from another circle member account. Self-review is rejected."
+            actions={<Button to="/repuring/community" variant="secondary">Open community</Button>}
           />
         ) : (
           <div className="grid gap-3 lg:grid-cols-2">
@@ -354,7 +355,7 @@ export default function RepuRingEndorse(): JSX.Element {
           <div className="space-y-4 rounded-3xl border border-white/10 bg-black/20 p-4">
             <Input label="Target address" value={targetAddress} onChange={setTargetAddress} placeholder="Hex address of another circle member" />
             <StatusPill tone={targetIsMember ? 'success' : 'neutral'}>{targetIsMember ? 'Target is member' : 'Membership not confirmed'}</StatusPill>
-            <div className="flex flex-wrap items-center gap-3"><Button variant="secondary" onClick={() => { void submit('endorseUser', { circleId, targetAddress, ...endorse }); }}>Endorse member (legacy)</Button><Badge tone="zinc">EndorseUserTx</Badge></div>
+            <div className="flex flex-wrap items-center gap-3"><Button variant="secondary" disabled={Boolean(submittingKind)} onClick={() => { void submit('endorseUser', { circleId, targetAddress, ...endorse }); }}>{submittingKind === 'endorseUser' ? 'Submitting...' : 'Endorse member (legacy)'}</Button><Badge tone="zinc">Legacy endorsement</Badge></div>
           </div>
         )}
       </Panel>

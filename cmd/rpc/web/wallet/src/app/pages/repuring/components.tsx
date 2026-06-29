@@ -5,10 +5,8 @@ import { cleanHex } from './RepuRingProvider';
 
 const repuNavItems = [
   { name: 'Overview', to: '/repuring' },
-  { name: 'Circles', to: '/repuring/circles' },
+  { name: 'Community circles', to: '/repuring/circles' },
   { name: 'Community', to: '/repuring/community' },
-  { name: 'Post Work', to: '/repuring/contributions' },
-  { name: 'Review Work', to: '/repuring/endorse' },
   { name: 'Leaderboard', to: '/repuring/leaderboard' },
   { name: 'Admin', to: '/repuring/admin' },
   { name: 'My Account', to: '/key-management' },
@@ -33,6 +31,7 @@ function MiniLogo() {
 export function DashboardPreview({
   currentAddress,
   profileName,
+  avatarUrl,
   hasProfile,
   communityState,
   reputation,
@@ -40,6 +39,7 @@ export function DashboardPreview({
 }: {
   currentAddress: string;
   profileName: string;
+  avatarUrl?: string;
   hasProfile: boolean;
   communityState: OverviewCommunityState;
   reputation: number;
@@ -56,8 +56,8 @@ export function DashboardPreview({
       <div className="min-w-0">
           <div className="flex items-center justify-between border-b border-[rgba(115,255,198,0.1)] px-5 py-4 sm:px-8 lg:px-10">
             <div className="flex flex-wrap gap-2">
-              <Badge tone="cyan">RPC 50002 / 50003</Badge>
-              <Badge tone={chainOnline ? 'emerald' : 'red'}>{chainOnline ? `chain #${blockHeight.height.toLocaleString()}` : 'chain offline'}</Badge>
+              <Badge tone="cyan">Local network</Badge>
+              <Badge tone={chainOnline ? 'emerald' : 'red'}>{chainOnline ? 'Connected' : 'Offline'}</Badge>
             </div>
             <Button to="/key-management" variant="secondary" className="!px-4 !py-2 text-xs">My Account</Button>
           </div>
@@ -74,14 +74,14 @@ export function DashboardPreview({
               <div className="flex flex-col gap-3 lg:min-w-[220px]">
                 <Button to="/repuring/community">Open Community</Button>
                 <Button to="/key-management" variant="secondary">{hasProfile ? 'Profile created' : 'Create Profile'}</Button>
-                <Button to="/repuring/circles" variant="secondary">Discover Circles</Button>
+                <Button to="/repuring/circles" variant="secondary">Community circles</Button>
               </div>
             </section>
 
             <section className="rounded-[24px] border border-[rgba(115,255,198,0.12)] bg-[#071c17] p-5 sm:p-7">
               <div className="flex items-center justify-between gap-4">
                 <div className="flex min-w-0 items-center gap-4">
-                  <AvatarFallback label={profileName || currentAddress} />
+                  <AvatarFallback label={profileName || currentAddress} src={avatarUrl} />
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-[#9db9af]">Current profile</p>
                     <h2 className="truncate text-2xl font-extrabold text-[#f2fff8]">{profileName || 'Profile not created'}</h2>
@@ -127,7 +127,7 @@ export function DashboardPreview({
 
 export function WorkspaceMapSection() {
   const cards = [
-    ['Circles', 'Discover, create, or open builder circles and organize work around shared standards.'],
+    ['Community circles', 'Discover, create, or open builder circles and organize work around shared standards.'],
     ['Leaderboard', 'Rank contributors by earned reputation, endorsed proof-of-work, and community status.'],
     ['Admin', 'Claim roles, validate community actions, and manage the lightweight trust layer.'],
   ];
@@ -141,12 +141,12 @@ export function WorkspaceMapSection() {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <ActionCard title="Post Work" copy="Submit proof-of-work with context, evidence, and circle alignment." to="/repuring/contributions" highlight />
-        <ActionCard title="Review Work" copy="Endorse contribution without burying reviewers in noise." to="/repuring/endorse" />
+        <ActionCard title="Community workspace" copy="View members, contribution proofs, reviews, and circle activity in one place." to="/repuring/community" highlight />
+        <ActionCard title="Leaderboard" copy="Track reputation gained from peer-reviewed proof-of-work." to="/repuring/leaderboard" />
       </div>
       <div className="grid gap-4 md:grid-cols-3">
         {cards.map(([title, copy]) => (
-          <ActionCard key={title} title={title} copy={copy} to={title === 'Circles' ? '/repuring/circles' : title === 'Admin' ? '/repuring/admin' : '/repuring/leaderboard'} />
+          <ActionCard key={title} title={title} copy={copy} to={title === 'Community circles' ? '/repuring/circles' : title === 'Admin' ? '/repuring/admin' : '/repuring/leaderboard'} />
         ))}
       </div>
     </section>
@@ -158,7 +158,7 @@ export function ActionCard({ title, copy, to, highlight = false }: { title: stri
     <Link to={to} className={`group relative block min-h-[170px] rounded-[24px] border p-6 transition hover:-translate-y-1 hover:border-[rgba(115,255,198,0.28)] ${highlight ? 'border-[rgba(115,255,198,0.16)] bg-[#103d31]' : 'border-[rgba(115,255,198,0.12)] bg-[#071c17]'}`}>
       {highlight && <span className="absolute right-6 top-6 flex h-10 w-10 items-center justify-center rounded-[16px] bg-[#54f3b3] text-lg font-extrabold text-[#03120f]">↗</span>}
       <p className="text-sm font-extrabold text-[#54f3b3]">{title}</p>
-      <h3 className="mt-4 max-w-md text-2xl font-extrabold leading-tight text-[#f2fff8]">{title === 'Post Work' ? 'Submit proof-of-work with context, evidence, and circle alignment.' : title === 'Review Work' ? 'Endorse contribution without burying reviewers in noise.' : title}</h3>
+      <h3 className="mt-4 max-w-md text-2xl font-extrabold leading-tight text-[#f2fff8]">{title}</h3>
       <p className="mt-5 max-w-lg text-sm font-medium leading-6 text-[#9db9af]">{copy}</p>
     </Link>
   );
@@ -261,10 +261,10 @@ export function RepuRingFooter() {
       <div>
         <p className="text-[11px] font-extrabold uppercase tracking-[0.32em] text-[#68867b]">Network</p>
         <div className="mt-5 space-y-3">
-          <div className="flex items-center justify-between rounded-[18px] border border-[rgba(115,255,198,0.12)] bg-[#071c17] px-5 py-3 text-sm font-bold text-[#9db9af]"><span>RPC</span><span className="text-[#54f3b3]">50002 / 50003</span></div>
+          <div className="flex items-center justify-between rounded-[18px] border border-[rgba(115,255,198,0.12)] bg-[#071c17] px-5 py-3 text-sm font-bold text-[#9db9af]"><span>Local services</span><span className="text-[#54f3b3]">{chainOnline ? 'Ready' : 'Offline'}</span></div>
           <div className={`flex items-center justify-between rounded-[18px] border px-5 py-3 text-sm font-bold ${chainOnline ? 'border-[rgba(115,255,198,0.18)] bg-[#103d31] text-[#54f3b3]' : 'border-[#3b2525] bg-[#3b2525] text-[#d8b6b6]'}`}>
-            <span>Chain</span>
-            <span>{chainOnline ? `#${blockHeight.height.toLocaleString()}` : 'offline'}</span>
+            <span>Status</span>
+            <span>{chainOnline ? 'Connected' : 'Offline'}</span>
           </div>
         </div>
       </div>
@@ -386,11 +386,25 @@ export function Metric({ label, value }: { label: string; value: string }) {
   );
 }
 
-export function AvatarFallback({ label, src }: { label?: string; src?: string }) {
+export function AvatarFallback({ label, src, className = '' }: { label?: string; src?: string; className?: string }) {
+  const [imageFailed, setImageFailed] = React.useState(false);
   const initial = (label || 'R').trim().slice(0, 1).toUpperCase() || 'R';
+  const avatarSrc = String(src || '').trim();
+
+  React.useEffect(() => {
+    setImageFailed(false);
+  }, [avatarSrc]);
+
   return (
-    <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-emerald-300/20 bg-gradient-to-br from-emerald-300/20 to-cyan-300/10 text-sm font-bold text-emerald-100">
-      {src ? <img src={src} alt={label || 'avatar'} className="h-full w-full object-cover" /> : initial}
+    <div className={`flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-emerald-300/20 bg-gradient-to-br from-emerald-300/20 to-cyan-300/10 text-sm font-bold text-emerald-100 ${className}`}>
+      {avatarSrc && !imageFailed ? (
+        <img
+          src={avatarSrc}
+          alt={label || 'avatar'}
+          className="h-full w-full object-cover"
+          onError={() => setImageFailed(true)}
+        />
+      ) : initial}
     </div>
   );
 }
@@ -484,17 +498,17 @@ export function SocialFiJourney({
     : index === firstPending
       ? 'current'
       : 'blocked';
-  const steps: Array<{ title: string; copy: string; status: JourneyStatus; to: string; tx?: string }> = [
-    { title: 'Wallet selected', copy: 'Select a local signing key before submitting Social-Fi transactions.', status: statusFor(0), to: '/key-management' },
-    { title: 'Profile created', copy: 'Store your contributor identity in RepuRing plugin state.', status: statusFor(1), to: '/key-management', tx: 'CreateProfileTx' },
-    { title: 'Community circle loaded', copy: 'Create or load the community used by the remaining flow.', status: statusFor(2), to: '/repuring/circles', tx: 'CreateCircleTx' },
-    { title: 'Member ready', copy: 'Join the current community before posting work.', status: statusFor(3), to: '/repuring/circles', tx: 'JoinCircleTx' },
+  const steps: Array<{ title: string; copy: string; status: JourneyStatus; to: string; tag?: string }> = [
+    { title: 'Wallet selected', copy: 'Select a local wallet before submitting Social-Fi actions.', status: statusFor(0), to: '/key-management' },
+    { title: 'Profile created', copy: 'Create the contributor identity used across RepuRing.', status: statusFor(1), to: '/key-management', tag: 'Profile' },
+    { title: 'Community circle loaded', copy: 'Create or load the community used by the remaining flow.', status: statusFor(2), to: '/repuring/circles', tag: 'Community' },
+    { title: 'Member ready', copy: 'Join the current community before posting work.', status: statusFor(3), to: '/repuring/circles', tag: 'Membership' },
     { title: 'Community workspace', copy: 'Open the joined community to view members, contributions, reviews, leaderboard, and role actions.', status: statusFor(4), to: '/repuring/community' },
-    { title: 'Proof-of-work posted', copy: 'Publish a contribution proof into the current community.', status: statusFor(5), to: '/repuring/contributions', tx: 'CreateContributionTx' },
-    { title: 'Contribution review ready', copy: 'Select useful work and switch to another member account to endorse it.', status: statusFor(6), to: '/repuring/endorse', tx: 'EndorseContributionTx' },
+    { title: 'Proof-of-work posted', copy: 'Publish a contribution proof into the current community.', status: statusFor(5), to: '/repuring/community', tag: 'Proof' },
+    { title: 'Contribution review ready', copy: 'Select useful work and switch to another member account to review it from the community workspace.', status: statusFor(6), to: '/repuring/community', tag: 'Review' },
     { title: 'Reputation visible', copy: 'Peer-endorsed contribution proofs increase profile reputation.', status: statusFor(7), to: '/repuring/leaderboard' },
-    { title: 'Role claimed', copy: 'Store a role for this circle based on current profile reputation.', status: statusFor(8), to: '/repuring/admin', tx: 'ClaimRoleTx' },
-    { title: 'Moderation ready', copy: 'The circle creator/admin can review and slash invalid endorsements.', status: endorsements.length > 0 ? 'done' : 'optional', to: '/repuring/admin', tx: 'SlashEndorsementTx' },
+    { title: 'Role claimed', copy: 'Claim a role for this community based on current profile reputation.', status: statusFor(8), to: '/repuring/admin', tag: 'Role' },
+    { title: 'Moderation ready', copy: 'The circle creator/admin can review and moderate invalid endorsements.', status: endorsements.length > 0 ? 'done' : 'optional', to: '/repuring/admin', tag: 'Moderation' },
   ];
   const statusStyles: Record<JourneyStatus, string> = {
     done: 'border-emerald-300/30 bg-emerald-300/10',
@@ -512,9 +526,9 @@ export function SocialFiJourney({
   return (
     <Panel>
       <SectionHeader
-        eyebrow="Demo journey"
+        eyebrow="User journey"
         title="Follow the live Social-Fi state transition"
-        copy="Each completed step is backed by a signed custom transaction or a RepuRing RPC query."
+        copy="Each completed step reflects the current wallet, community, and reputation state."
       />
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {steps.map((step, index) => (
@@ -533,12 +547,12 @@ export function SocialFiJourney({
                 {statusLabels[step.status]}
               </StatusPill>
             </div>
-            {step.tx && <div className="mt-3 pl-11"><Badge tone="zinc">{step.tx}</Badge></div>}
+            {step.tag && <div className="mt-3 pl-11"><Badge tone="zinc">{step.tag}</Badge></div>}
           </Link>
         ))}
       </div>
       <div className="rounded-2xl border border-cyan-300/20 bg-cyan-300/[0.06] p-4 text-sm leading-6 text-cyan-100/80">
-        Demo setup: run local RPC on <span className="font-mono text-cyan-100">50002</span> and admin keystore RPC on <span className="font-mono text-cyan-100">50003</span>. Select a wallet, then enter its password when signing. Contribution endorsement requires a second circle member account.
+        Select a wallet, then enter its password only when submitting an action. Contribution reviews require a second community member account.
       </div>
     </Panel>
   );
@@ -566,7 +580,7 @@ export function DemoReadinessCard({
   onRefresh: () => Promise<void>;
 }) {
   const normalizedStatus = status.toLowerCase();
-  const rpcReady = normalizedStatus.includes('refreshed') &&
+  const servicesReady = normalizedStatus.includes('refreshed') &&
     !normalizedStatus.includes('failed') &&
     !normalizedStatus.includes('start local');
   const memberCount = circle?.members?.length || 0;
@@ -574,9 +588,9 @@ export function DemoReadinessCard({
     currentAddress && circle?.creatorAddress && cleanHex(currentAddress) === cleanHex(circle.creatorAddress),
   );
   const items = [
-    { label: 'Local RPC', ready: rpcReady, detail: rpcReady ? 'Chain state refreshed.' : 'Start both local RPC services.' },
+    { label: 'Local services', ready: servicesReady, detail: servicesReady ? 'RepuRing data refreshed.' : 'Start the local RepuRing services.' },
     { label: 'Signing wallet', ready: Boolean(currentAddress), detail: currentAddress ? shortAddress(currentAddress) : 'Select a local wallet in My Account.' },
-    { label: 'Onchain profile', ready: Boolean(profile), detail: profile ? 'Contributor identity active.' : 'Create a profile before joining or posting.' },
+    { label: 'Profile', ready: Boolean(profile), detail: profile ? 'Contributor identity active.' : 'Create a profile before joining or posting.' },
     { label: 'Community circle', ready: Boolean(circle), detail: circle?.name || circleId || 'Create or load a community circle.' },
     { label: 'Contribution proof', ready: contributions.length > 0, detail: contributions.length > 0 ? String(contributions.length) + ' proof(s) loaded.' : 'Post proof-of-work as a circle member.' },
     { label: 'Peer endorsement', ready: contributions.length > 0 && memberCount > 1, detail: memberCount > 1 ? 'A second member can review work.' : 'Add a second circle member; self-endorsement is blocked.' },
@@ -586,10 +600,10 @@ export function DemoReadinessCard({
   return (
     <Panel>
       <SectionHeader
-        eyebrow="Demo readiness"
-        title="Canopy RPC and signing readiness"
-        copy="Verify local services and transaction prerequisites before running the end-to-end flow. Passwords are used only for local wallet signing."
-        actions={<StatusPill tone={rpcReady ? 'success' : 'warning'}>{rpcReady ? 'RPC connected' : 'Setup required'}</StatusPill>}
+        eyebrow="Readiness"
+        title="Wallet and community readiness"
+        copy="Verify the required profile, wallet, community, and member state before running the end-to-end flow. Passwords are used only to unlock your selected wallet."
+        actions={<StatusPill tone={servicesReady ? 'success' : 'warning'}>{servicesReady ? 'Connected' : 'Setup required'}</StatusPill>}
       />
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {items.map((item) => (
@@ -602,21 +616,11 @@ export function DemoReadinessCard({
           </div>
         ))}
       </div>
-      <div className="grid gap-3 rounded-2xl border border-cyan-300/20 bg-cyan-300/[0.06] p-4 text-sm md:grid-cols-2">
-        <div>
-          <p className="text-xs uppercase text-cyan-200/70">Query and transaction RPC</p>
-          <p className="mt-1 break-all font-mono text-cyan-100">http://localhost:50002</p>
-        </div>
-        <div>
-          <p className="text-xs uppercase text-cyan-200/70">Admin and keystore RPC</p>
-          <p className="mt-1 break-all font-mono text-cyan-100">http://localhost:50003</p>
-        </div>
-      </div>
       <div className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-black/20 p-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <p className="text-xs uppercase text-zinc-500">Live status</p>
+          <p className="text-xs uppercase text-zinc-500">Current status</p>
           <p className="mt-1 text-sm text-zinc-300">{status}</p>
-          <p className="mt-1 break-all font-mono text-xs text-zinc-600">{lastTx || 'No transaction submitted yet'}</p>
+          <p className="mt-1 text-xs text-zinc-600">{lastTx || 'No action submitted yet'}</p>
         </div>
         <Button variant="secondary" onClick={onRefresh}>Refresh readiness</Button>
       </div>
@@ -681,19 +685,19 @@ export function DangerPanel({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function Input({ label, value, onChange, type = 'text', placeholder, multiline = false }: { label: string; value: string; onChange: (v: string) => void; type?: string; placeholder?: string; multiline?: boolean }) {
+export const Input = React.forwardRef<HTMLInputElement | HTMLTextAreaElement, { label: string; value: string; onChange: (v: string) => void; type?: string; placeholder?: string; multiline?: boolean }>(function Input({ label, value, onChange, type = 'text', placeholder, multiline = false }, ref) {
   const inputClass = 'min-w-0 w-full rounded-xl border border-white/10 bg-black/35 px-3 py-2.5 text-sm leading-5 text-white outline-none transition placeholder:text-zinc-600 focus:border-emerald-300/60 focus:ring-2 focus:ring-emerald-400/20 sm:rounded-2xl sm:px-4 sm:py-3';
   return (
     <label className="block">
       <span className="mb-2 block text-sm font-medium text-zinc-300">{label}</span>
       {multiline ? (
-        <textarea className={`${inputClass} min-h-24 resize-y`} value={value} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} />
+        <textarea ref={ref as React.Ref<HTMLTextAreaElement>} className={`${inputClass} min-h-24 resize-y`} value={value} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} />
       ) : (
-        <input className={inputClass} type={type} value={value} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} />
+        <input ref={ref as React.Ref<HTMLInputElement>} className={inputClass} type={type} value={value} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} />
       )}
     </label>
   );
-}
+});
 
 export function Button({ children, onClick, variant = 'primary', to, className = '', disabled = false }: { children: React.ReactNode; onClick?: () => Promise<void> | void; variant?: 'primary' | 'secondary' | 'danger'; to?: string; className?: string; disabled?: boolean }) {
   const variants = {
@@ -711,7 +715,7 @@ export function Button({ children, onClick, variant = 'primary', to, className =
 }
 
 export function AddressList({ values }: { values: string[] }) {
-  if (values.length === 0) return <EmptyState title="No members loaded" copy="Circle members will appear after CreateCircleTx or JoinCircleTx is committed." />;
+  if (values.length === 0) return <EmptyState title="No members loaded" copy="Members will appear after a community is created or joined." />;
   return (
     <div className="mt-4 grid gap-2">
       {values.map((value) => (
@@ -725,7 +729,7 @@ export function AddressList({ values }: { values: string[] }) {
 }
 
 export function MemberList({ values, currentAddress, creatorAddress }: { values: string[]; currentAddress: string; creatorAddress: string }) {
-  if (values.length === 0) return <EmptyState title="No members loaded" copy="Circle members will appear after CreateCircleTx or JoinCircleTx is committed." />;
+  if (values.length === 0) return <EmptyState title="No members loaded" copy="Members will appear after a community is created or joined." />;
   return (
     <div className="grid gap-3 sm:grid-cols-2">
       {values.map((value) => {
@@ -775,8 +779,8 @@ export function ActiveWalletBanner({
           </div>
           <p className="mt-2 break-words text-sm leading-6 text-zinc-400">
             {currentAddress
-              ? 'This wallet signs transactions for ' + (circleName || 'the current circle') + '. Confirm the active wallet before submitting.'
-              : 'Select a local account in My Account before submitting RepuRing transactions.'}
+              ? 'This wallet confirms actions for ' + (circleName || 'the current community') + '. Check the active wallet before submitting.'
+              : 'Select an account in My Account before submitting RepuRing actions.'}
           </p>
         </div>
         <Button to="/key-management" variant="secondary" className="w-full md:w-auto">Open My Account</Button>
@@ -849,7 +853,7 @@ export function CommunityContextCard({
             {circle?.description || 'Circle-scoped actions use this selected community. Open or join a community before posting, reviewing, ranking, or claiming a role.'}
           </p>
           <div className="mt-3 flex flex-wrap gap-1.5 sm:gap-2">
-            <Badge tone="cyan">Onchain community ID: {circle?.circleId || circleId || 'none'}</Badge>
+            <Badge tone="cyan">Community reference: {circle?.circleId || circleId || 'none'}</Badge>
             <Badge tone={isMember ? 'emerald' : 'zinc'}>{isMember ? 'Member' : 'Not joined'}</Badge>
             {isCreator && <Badge>Creator/admin</Badge>}
             <Badge tone="zinc">{circle?.members?.length || 0} member{(circle?.members?.length || 0) === 1 ? '' : 's'}</Badge>
@@ -937,9 +941,9 @@ export function GeneratedRecordIdBlock({
     <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-sm font-semibold text-white">Onchain record ID</p>
+          <p className="text-sm font-semibold text-white">Proof reference</p>
           <p className="mt-1 break-all font-mono text-xs text-zinc-400">{value || 'Generated before submit'}</p>
-          <p className="mt-2 text-xs text-zinc-500">This ID is generated for the onchain contribution record.</p>
+          <p className="mt-2 text-xs text-zinc-500">This reference is generated for the proof-of-work post.</p>
         </div>
         <Button variant="secondary" onClick={onRegenerate}>Regenerate ID</Button>
       </div>
@@ -1047,7 +1051,7 @@ export function ContributionCard({
           <Badge>{contribution.endorsementCount}</Badge>
         </div>
         <div className="flex min-w-0 flex-wrap justify-between gap-2">
-          <span className="shrink-0 text-zinc-500">Onchain record ID</span>
+          <span className="shrink-0 text-zinc-500">Proof reference</span>
           <span className="min-w-0 break-all font-mono text-xs text-zinc-300">{contribution.contributionId}</span>
         </div>
       </div>
@@ -1093,7 +1097,7 @@ export function ReviewCard({
         {review.contributionId && <div>Contribution <span className="break-all font-mono text-zinc-300">{review.contributionId}</span></div>}
         <div>Target <span className="font-mono text-zinc-300">{shortAddress(review.targetAddress)}</span></div>
         <details>
-          <summary className="cursor-pointer text-zinc-400">Technical metadata</summary>
+          <summary className="cursor-pointer text-zinc-400">Review reference</summary>
           <p className="mt-2 break-all font-mono text-zinc-500">{review.endorsementId}</p>
         </details>
       </div>
@@ -1108,7 +1112,7 @@ export function ContributionReviews({ endorsements, emptyCopy }: { endorsements:
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <p className="font-semibold text-white">Reviews / comments</p>
-          <p className="mt-1 text-xs text-zinc-500">Peer review messages attached to EndorseContributionTx.</p>
+          <p className="mt-1 text-xs text-zinc-500">Peer review messages attached to this proof-of-work.</p>
         </div>
         <Badge tone="zinc">{endorsements.length} review{endorsements.length === 1 ? '' : 's'}</Badge>
       </div>
@@ -1141,11 +1145,11 @@ export function TxStatusCard({ status, lastTx, onRefresh }: { status: string; la
   return (
     <Panel className="grid gap-4 md:grid-cols-[1fr_auto] md:items-center">
       <div className="min-w-0" aria-live="polite">
-        <p className="text-xs uppercase text-zinc-500">RPC status</p>
+        <p className="text-xs uppercase text-zinc-500">Action status</p>
         <p className="mt-2 break-words text-sm text-zinc-300">{status}</p>
-        <p className="mt-2 break-all font-mono text-xs text-zinc-500">{lastTx || 'No transaction submitted yet'}</p>
+        <p className="mt-2 text-xs text-zinc-500">{lastTx || 'No action submitted yet'}</p>
       </div>
-      <Button variant="secondary" className="self-start md:self-auto" onClick={onRefresh}>Refresh chain state</Button>
+      <Button variant="secondary" className="self-start md:self-auto" onClick={onRefresh}>Refresh status</Button>
     </Panel>
   );
 }

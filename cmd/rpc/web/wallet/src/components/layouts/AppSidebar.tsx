@@ -6,8 +6,6 @@ import {
     BadgeCheck,
     Users,
     PanelsTopLeft,
-    ClipboardCheck,
-    HeartHandshake,
     Trophy,
     ShieldCheck,
     ChevronLeft,
@@ -18,12 +16,10 @@ import {
 
 const navItems = [
     { name: 'Overview', path: '/repuring', icon: BadgeCheck },
-    { name: 'Circles', path: '/repuring/circles', icon: Users },
+    { name: 'Community circles', path: '/repuring/circles', icon: Users },
     { name: 'Community', path: '/repuring/community', icon: PanelsTopLeft },
-    { name: 'Post Work', path: '/repuring/contributions', icon: ClipboardCheck },
-    { name: 'Review Work', path: '/repuring/endorse', icon: HeartHandshake },
     { name: 'Leaderboard', path: '/repuring/leaderboard', icon: Trophy },
-    { name: 'Admin', path: '/repuring/admin', icon: ShieldCheck },
+    { name: 'Admin Community', path: '/repuring/admin', icon: ShieldCheck },
     { name: 'My Account', path: '/key-management', icon: UserCircle },
 ];
 

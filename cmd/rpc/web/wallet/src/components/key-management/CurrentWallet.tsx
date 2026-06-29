@@ -14,10 +14,10 @@ import {
   Pencil,
   PlusCircle,
   Trash2,
-  UserCircle,
   WalletCards,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { AvatarFallback } from "@/app/pages/repuring/components";
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 import { useToast } from "@/toast/ToastContext";
 import { useAccounts } from "@/app/providers/AccountsProvider";
@@ -28,6 +28,8 @@ import { useQueryClient } from "@tanstack/react-query";
 
 type CurrentWalletProps = {
   embedded?: boolean;
+  avatarLabel?: string;
+  avatarUrl?: string;
   onDownloadFullKeystore?: () => void;
   onOpenCreate?: () => void;
   onOpenImport?: () => void;
@@ -35,6 +37,8 @@ type CurrentWalletProps = {
 
 export const CurrentWallet = ({
   embedded = false,
+  avatarLabel,
+  avatarUrl,
   onDownloadFullKeystore,
   onOpenCreate,
   onOpenImport,
@@ -346,9 +350,11 @@ export const CurrentWallet = ({
         <section className="rounded-2xl border border-white/10 bg-white/[0.045] p-4 shadow-[0_18px_48px_rgba(0,0,0,0.22)] sm:p-5">
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex items-start gap-3">
-              <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-primary/25 bg-primary/10 text-primary sm:h-11 sm:w-11 sm:rounded-2xl">
-                <UserCircle className="h-5 w-5" />
-              </span>
+              <AvatarFallback
+                label={avatarLabel || selectedKeyEntry?.keyNickname || selectedAccount?.nickname || selectedAccount?.address}
+                src={selectedAccount ? avatarUrl : undefined}
+                className="h-10 w-10 rounded-xl border-primary/25 bg-primary/10 text-sm text-primary sm:h-11 sm:w-11 sm:rounded-2xl"
+              />
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Connected Account</p>
                 <h2 className="mt-1 text-lg font-semibold text-foreground sm:text-xl">
@@ -468,44 +474,46 @@ export const CurrentWallet = ({
           )}
         </section>
 
-        <section className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
-          <div className="rounded-2xl border border-primary/15 bg-primary/[0.06] p-4 sm:p-5">
-            <div className="flex items-start gap-3">
-              <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-primary/25 bg-primary/10 text-primary">
-                <WalletCards className="h-5 w-5" />
-              </span>
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">RepuRing Identity</p>
-                <h3 className="mt-1 text-lg font-semibold text-foreground">Social-Fi signing context</h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                  Use this account to create profiles, join community circles, post proof-of-work, and submit peer reviews.
-                </p>
-                <p className="mt-3 break-all rounded-xl border border-white/10 bg-black/20 px-3 py-2 font-mono text-xs text-foreground/80">
-                  {selectedAccount?.address || "No selected account address"}
-                </p>
+        {!selectedAccount && (
+          <section className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
+            <div className="rounded-2xl border border-primary/15 bg-primary/[0.06] p-4 sm:p-5">
+              <div className="flex items-start gap-3">
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-primary/25 bg-primary/10 text-primary">
+                  <WalletCards className="h-5 w-5" />
+                </span>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">RepuRing Identity</p>
+                  <h3 className="mt-1 text-lg font-semibold text-foreground">Social-Fi signing context</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                    Use this account to create profiles, join community circles, post proof-of-work, and submit peer reviews.
+                  </p>
+                  <p className="mt-3 break-all rounded-xl border border-white/10 bg-black/20 px-3 py-2 font-mono text-xs text-foreground/80">
+                    No selected account address
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="rounded-2xl border border-white/10 bg-white/[0.045] p-4 sm:p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Local Demo Wallet Tools</p>
-            <h3 className="mt-1 text-lg font-semibold text-foreground">Create or bring an identity</h3>
-            <div className="mt-4 grid gap-2 sm:grid-cols-3 xl:grid-cols-1">
-              <Button type="button" className="h-11 w-full justify-start" onClick={onOpenCreate}>
-                <PlusCircle className="h-4 w-4" />
-                Create New Key
-              </Button>
-              <Button type="button" variant="secondary" className="h-11 w-full justify-start" onClick={onOpenImport}>
-                <Import className="h-4 w-4" />
-                Import Wallet
-              </Button>
-              <Button type="button" variant="outline" className="h-11 w-full justify-start" onClick={handleDownloadKeyfile} disabled={!selectedAccount}>
-                <Download className="h-4 w-4" />
-                Download Keyfile
-              </Button>
+            <div className="rounded-2xl border border-white/10 bg-white/[0.045] p-4 sm:p-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Local Demo Wallet Tools</p>
+              <h3 className="mt-1 text-lg font-semibold text-foreground">Create or bring an identity</h3>
+              <div className="mt-4 grid gap-2 sm:grid-cols-3 xl:grid-cols-1">
+                <Button type="button" className="h-11 w-full justify-start" onClick={onOpenCreate}>
+                  <PlusCircle className="h-4 w-4" />
+                  Create New Key
+                </Button>
+                <Button type="button" variant="secondary" className="h-11 w-full justify-start" onClick={onOpenImport}>
+                  <Import className="h-4 w-4" />
+                  Import Wallet
+                </Button>
+                <Button type="button" variant="outline" className="h-11 w-full justify-start" onClick={handleDownloadKeyfile} disabled>
+                  <Download className="h-4 w-4" />
+                  Download Keyfile
+                </Button>
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
 
         <section className="rounded-2xl border border-[#ff1845]/25 bg-[#ff1845]/[0.045] p-4 sm:p-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">

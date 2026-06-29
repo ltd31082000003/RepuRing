@@ -24,6 +24,7 @@ export default function RepuRingContributions(): JSX.Element {
     setSelectedContributionId,
     status,
     lastTx,
+    submittingKind,
     refreshState,
     submit,
   } = useRepuRing();
@@ -39,7 +40,7 @@ export default function RepuRingContributions(): JSX.Element {
   const visibleContributions = filteredContributions.slice(0, visibleLimit);
   const hasMoreContributions = visibleContributions.length < filteredContributions.length;
   const circleMismatch = Boolean(circle && circleId && circle.circleId !== circleId);
-  const postDisabled = !currentAddress || !profile || !circle || !isMember || !password || !contributionForm.title.trim();
+  const postDisabled = Boolean(submittingKind) || !currentAddress || !profile || !circle || !isMember || !password || !contributionForm.title.trim();
   const postHelp = !currentAddress
     ? 'Select a wallet in My Account.'
       : !profile
@@ -49,10 +50,10 @@ export default function RepuRingContributions(): JSX.Element {
         : !isMember
           ? 'Join the current community before posting.'
           : !password
-            ? 'Enter the selected wallet password to sign CreateContributionTx.'
+            ? 'Enter the selected wallet password to post.'
             : !contributionForm.title.trim()
-              ? 'Enter a title for this proof-of-work. Contribution ID will be generated automatically.'
-              : 'Ready to post proof-of-work. Contribution ID will be generated automatically.';
+              ? 'Enter a title for this proof-of-work. A proof reference will be generated automatically.'
+              : 'Ready to post proof-of-work. A proof reference will be generated automatically.';
 
   React.useEffect(() => {
     if (!composerOpen || !circle?.circleId || !contributionForm.title.trim() || contributionForm.contributionId.trim()) return;
@@ -70,7 +71,7 @@ export default function RepuRingContributions(): JSX.Element {
       setRecentlySubmittedContributionId('');
       return;
     }
-    setPostNotice('Contribution submitted, but it is not visible in the feed yet. Refresh again or check transaction status.');
+    setPostNotice('Contribution submitted, but it is not visible in the feed yet. Refresh again or check the current status.');
   }, [contributions, postCheckPending, recentlySubmittedContributionId]);
 
   React.useEffect(() => {
@@ -102,7 +103,6 @@ export default function RepuRingContributions(): JSX.Element {
       setRecentlySubmittedContributionId(contributionId);
       setPostCheckPending(true);
       setPostNotice('Contribution submitted. Checking the feed for the new post...');
-      await refreshState();
       setPostCheckPending(false);
       setComposerOpen(false);
       setContributionForm({ ...contributionForm, contributionId: '' });
@@ -155,7 +155,7 @@ export default function RepuRingContributions(): JSX.Element {
         className="w-full sm:w-auto"
         onClick={() => {
           setSelectedContributionId(item.contributionId);
-          navigate('/repuring/endorse');
+          navigate('/repuring/community');
         }}
       >
         Review this work
@@ -205,7 +205,7 @@ export default function RepuRingContributions(): JSX.Element {
             />
             <div className="grid gap-3 sm:grid-cols-2">
               <MetricCard label="Community" value={circle?.name || 'No community selected'} detail={circle?.description || 'Open or join a community from Discover communities.'} tone="cyan" />
-              <MetricCard label="Circle ID" value={circle?.circleId || circleId || 'Not selected'} detail="Current community context for new contribution proofs." />
+              <MetricCard label="Community reference" value={circle?.circleId || circleId || 'Not selected'} detail="Current community for new contribution proofs." />
               <MetricCard label="Members" value={String(circle?.members?.length || 0)} detail="Joined wallets in this community." tone="emerald" />
               <MetricCard label="Posting status" value={postingStatus(currentAddress, Boolean(profile), Boolean(circle), isMember)} detail={postHelp} tone={isMember ? 'emerald' : 'neutral'} />
             </div>
@@ -217,7 +217,7 @@ export default function RepuRingContributions(): JSX.Element {
             <PostVisibilityNotice message={postNotice} />
             {composerOpen && (
               <div className="space-y-4 rounded-2xl border border-white/10 bg-black/20 p-4 lg:rounded-3xl">
-                <Input label="Signing key password" type="password" value={password} onChange={setPassword} placeholder="Required for BLS signing" />
+                <Input label="Wallet password" type="password" value={password} onChange={setPassword} placeholder="Required to post proof-of-work" />
                 <Input label="Title" value={contributionForm.title} onChange={(title) => setContributionForm({ ...contributionForm, title })} placeholder="Wrote Pharos testnet guide" />
                 <Input label="Description" value={contributionForm.description} onChange={(description) => setContributionForm({ ...contributionForm, description })} multiline />
                 <Input label="Proof URL" value={contributionForm.proofUrl} onChange={(proofUrl) => setContributionForm({ ...contributionForm, proofUrl })} placeholder="https://..." />
@@ -229,17 +229,19 @@ export default function RepuRingContributions(): JSX.Element {
                 </label>
                 <GeneratedRecordIdBlock value={contributionForm.contributionId} onRegenerate={regenerateContributionId} />
                 <details className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                  <summary className="cursor-pointer text-sm font-semibold text-zinc-200">Advanced: custom contribution ID</summary>
-                  <p className="mt-3 text-sm text-zinc-500">Only use this for demos or debugging. IDs must be unique in the current chain state.</p>
+                  <summary className="cursor-pointer text-sm font-semibold text-zinc-200">Optional: custom proof reference</summary>
+                  <p className="mt-3 text-sm text-zinc-500">Use this only when you need a specific reference. It must be unique.</p>
                   <div className="mt-4 space-y-3">
-                    <Input label="Custom contribution ID" value={customContributionId} onChange={setCustomContributionId} placeholder="pharos-guide-v1" />
-                    <Button variant="secondary" disabled={!customContributionId.trim()} onClick={useCustomContributionId}>Use custom ID</Button>
+                    <Input label="Custom proof reference" value={customContributionId} onChange={setCustomContributionId} placeholder="pharos-guide-v1" />
+                    <Button variant="secondary" disabled={!customContributionId.trim()} onClick={useCustomContributionId}>Use custom reference</Button>
                   </div>
                 </details>
                 <div className="flex flex-wrap items-center gap-3">
-                  <Button disabled={postDisabled} onClick={postContribution}>Post proof-of-work</Button>
+                  <Button disabled={postDisabled} onClick={postContribution}>
+                    {submittingKind === 'createContribution' ? 'Posting...' : 'Post proof-of-work'}
+                  </Button>
                   <Button to="/repuring/circles" variant="secondary">Change community</Button>
-                  <Badge tone="zinc">CreateContributionTx</Badge>
+                  <Badge tone="zinc">Post proof</Badge>
                 </div>
                 <p className="text-sm text-zinc-500">{postHelp}</p>
               </div>
@@ -268,7 +270,7 @@ export default function RepuRingContributions(): JSX.Element {
           <SectionHeader
             eyebrow={circleId || 'Select a circle'}
             title="Contribution feed"
-            copy="Each card reflects contribution state returned by RPC: author, proof, category, endorsement count, and active/slashed status."
+            copy="Each card shows author, proof, category, review count, and active or moderated status."
           />
           {contributions.length > 0 && (
             <div className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-zinc-300 sm:flex-row sm:items-center sm:justify-between">
@@ -346,11 +348,11 @@ function generateContributionId(circleId: string, title: string): string {
 function failureNoticeForStatus(status: string): string {
   const value = status.toLowerCase();
   if (value.includes('contribution') && value.includes('exists')) {
-    return 'This contribution record ID already exists. Regenerate ID and try again.';
+    return 'This proof reference already exists. Regenerate it and try again.';
   }
   if (value.includes('member')) return 'Join this community before posting.';
   if (value.includes('circle') && (value.includes('not found') || value.includes('does not exist'))) {
     return 'Current community could not be found. Reopen it from Community or Circles.';
   }
-  return 'Contribution could not be submitted. Check transaction status below. If the record ID already exists, regenerate ID and try again.';
+  return 'Contribution could not be submitted. Check the status below. If the proof reference already exists, regenerate it and try again.';
 }

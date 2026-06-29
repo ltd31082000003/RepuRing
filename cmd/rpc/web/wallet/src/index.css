@@ -323,3 +323,27 @@ html {
   width: 0;
   height: 0;
 }
+
+.admin-grid-primary,
+.admin-grid-secondary {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.admin-card-tall {
+  min-height: 278px;
+}
+
+.admin-card-context {
+  min-height: 365px;
+}
+
+@media (min-width: 1024px) {
+  .admin-grid-primary {
+    grid-template-columns: minmax(0, 2.05fr) minmax(320px, 1fr);
+  }
+
+  .admin-grid-secondary {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}

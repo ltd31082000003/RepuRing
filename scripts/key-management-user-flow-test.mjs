@@ -177,13 +177,13 @@ async function main() {
 
     const home = await evalValue(cdp, `({
       title: document.querySelector('h1')?.textContent?.trim() || '',
-      hasSidebar: ['Overview','My Account','Circles','Community','Post Work','Review Work','Leaderboard','Admin'].every((text) => document.body.innerText.includes(text)),
+      hasSidebar: ['Overview','My Account','Community circles','Community','Post Work','Review Work','Leaderboard','Admin'].every((text) => document.body.innerText.includes(text)),
       bodyText: document.body.innerText.slice(0, 1200),
     })`);
     checks.push(["home route renders", home.title.length > 0 && home.bodyText.includes("RepuRing"), home.title]);
     checks.push(["sidebar nav items visible", home.hasSidebar, String(home.hasSidebar)]);
 
-    for (const [label, hash] of [["Circles", "#circles"], ["Review Work", "#endorse"], ["Leaderboard", "#leaderboard"], ["Admin", "#admin"]]) {
+    for (const [label, hash] of [["Community circles", "#circles"], ["Review Work", "#endorse"], ["Leaderboard", "#leaderboard"], ["Admin", "#admin"]]) {
       checks.push([`click sidebar ${label}`, await clickText(cdp, label), ""]);
       await wait(500);
       const hashState = await evalValue(cdp, `({ hash: location.hash, hasTarget: !!document.querySelector(${JSON.stringify(hash)}) })`);
@@ -192,7 +192,7 @@ async function main() {
 
     checks.push(["collapse sidebar button works", await clickText(cdp, "Collapse"), ""]);
     await wait(500);
-    const collapsed = await evalValue(cdp, `!Array.from(document.querySelectorAll('aside nav span')).some((span) => span.textContent?.trim() === 'Circles')`);
+    const collapsed = await evalValue(cdp, `!Array.from(document.querySelectorAll('aside nav span')).some((span) => span.textContent?.trim() === 'Community circles')`);
     checks.push(["sidebar collapsed hides labels", collapsed, String(collapsed)]);
 
     await navigate(cdp, url, `document.readyState === 'complete' && !!document.querySelector('h1')`);

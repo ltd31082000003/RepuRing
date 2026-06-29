@@ -17,6 +17,9 @@ export const ADMIN_RPC = 'http://localhost:50003';
 const NETWORK_ID = 1;
 const CHAIN_ID = 1;
 const FEE = 0;
+const SUBMIT_RETRY_DELAYS_MS = [0, 350, 900];
+const REFRESH_AFTER_COMMIT_DELAYS_MS = [900, 1800, 3200, 5200, 8000];
+const OPTIMISTIC_ACTION_TTL_MS = 20000;
 
 const txMeta: Record<TxKind, { typeUrl: string; message: string }> = {
   createProfile: { typeUrl: 'type.googleapis.com/types.MessageCreateProfile', message: 'MessageCreateProfile' },
@@ -30,16 +33,63 @@ const txMeta: Record<TxKind, { typeUrl: string; message: string }> = {
   claimRole: { typeUrl: 'type.googleapis.com/types.MessageClaimRole', message: 'MessageClaimRole' },
 };
 
-const submittedStatus: Record<TxKind, string> = {
-  createProfile: 'Create profile submitted. Contributor identity will appear after commit. Technical: CreateProfileTx.',
-  updateProfile: 'Update profile submitted. Bio and avatar will refresh; username and reputation remain unchanged. Technical: UpdateProfileTx.',
-  createCircle: 'Create community circle submitted. Community state will refresh after commit. Technical: CreateCircleTx.',
-  joinCircle: 'Join community submitted. Membership will appear after commit. Technical: JoinCircleTx.',
-  createContribution: 'Post proof-of-work submitted. Checking feed visibility after commit. Technical: CreateContributionTx.',
-  endorseContribution: 'Peer review submitted. Author reputation and endorsement count will refresh. Technical: EndorseContributionTx.',
-  endorseUser: 'Legacy member endorsement submitted. Technical: EndorseUserTx.',
-  claimRole: 'Claim role submitted. Community role will refresh after commit. Technical: ClaimRoleTx.',
-  slashEndorsement: 'Slash invalid review submitted. Review status and target reputation will refresh. Technical: SlashEndorsementTx.',
+type Signer = { address: string; publicKey: string; privateKey: string };
+type OptimisticAction = { kind: TxKind; fields: Record<string, unknown>; senderAddress: string; expiresAt: number };
+type RepuRingSnapshot = {
+  profile: ProfileView | null;
+  role: RoleView | null;
+  circle: CircleView | null;
+  circles: CircleView[];
+  contributions: ContributionView[];
+  endorsements: EndorsementView[];
+};
+
+const actionCopy: Record<TxKind, { progress: string; success: string; failureStep: string }> = {
+  createProfile: {
+    progress: 'Creating your profile...',
+    success: 'Profile submitted. Your contributor identity will appear after the next refresh.',
+    failureStep: 'profile creation',
+  },
+  updateProfile: {
+    progress: 'Saving profile changes...',
+    success: 'Profile update submitted. Your bio and avatar will refresh shortly.',
+    failureStep: 'profile update',
+  },
+  createCircle: {
+    progress: 'Creating community...',
+    success: 'Community submitted. It will appear after the next refresh.',
+    failureStep: 'community creation',
+  },
+  joinCircle: {
+    progress: 'Joining community...',
+    success: 'Join request submitted. Membership will appear after the next refresh.',
+    failureStep: 'community join',
+  },
+  createContribution: {
+    progress: 'Posting proof-of-work...',
+    success: 'Proof-of-work submitted. Checking the feed after refresh.',
+    failureStep: 'proof-of-work post',
+  },
+  endorseContribution: {
+    progress: 'Submitting peer review...',
+    success: 'Peer review submitted. Reputation and review counts will refresh shortly.',
+    failureStep: 'peer review',
+  },
+  endorseUser: {
+    progress: 'Submitting member endorsement...',
+    success: 'Member endorsement submitted.',
+    failureStep: 'member endorsement',
+  },
+  claimRole: {
+    progress: 'Claiming role...',
+    success: 'Role claim submitted. Your role will refresh shortly.',
+    failureStep: 'role claim',
+  },
+  slashEndorsement: {
+    progress: 'Submitting moderation action...',
+    success: 'Moderation submitted. Review status and reputation will refresh shortly.',
+    failureStep: 'moderation',
+  },
 };
 
 export function RepuRingProvider({ children }: { children: React.ReactNode }): JSX.Element {
@@ -49,15 +99,16 @@ export function RepuRingProvider({ children }: { children: React.ReactNode }): J
   const [targetAddress, setTargetAddress] = React.useState('');
   const [endorsementId, setEndorsementId] = React.useState('');
   const [selectedContributionId, setSelectedContributionId] = React.useState('');
-  const [status, setStatus] = React.useState('Start local Canopy RPC on 50002 / 50003, then refresh state.');
+  const [status, setStatus] = React.useState('Start the local RepuRing services, then refresh.');
+  const [submittingKind, setSubmittingKind] = React.useState<TxKind | null>(null);
   const [profileForm, setProfileForm] = React.useState({ username: '', bio: '', avatarUrl: '' });
   const [circleForm, setCircleForm] = React.useState({ name: 'Pharos Builders', description: 'Community for contributors helping the Pharos ecosystem.' });
   const [contributionForm, setContributionForm] = React.useState({
     contributionId: '',
-    title: 'Wrote Pharos testnet guide',
-    description: 'Created a guide to help new users test the Pharos ecosystem.',
-    proofUrl: 'https://example.com/pharos-guide',
-    category: 'educator',
+    title: '',
+    description: '',
+    proofUrl: '',
+    category: 'builder',
   });
   const [endorse, setEndorse] = React.useState({ tag: 'builder', message: 'Useful contribution for this community.' });
   const [slashReason, setSlashReason] = React.useState('invalid endorsement');
@@ -69,6 +120,9 @@ export function RepuRingProvider({ children }: { children: React.ReactNode }): J
   const [contributions, setContributions] = React.useState<ContributionView[]>([]);
   const [endorsements, setEndorsements] = React.useState<EndorsementView[]>([]);
   const [leaderboard, setLeaderboard] = React.useState<LeaderboardRow[]>([]);
+  const submitInFlightRef = React.useRef<TxKind | null>(null);
+  const refreshStateRef = React.useRef<() => Promise<void>>(async () => undefined);
+  const optimisticActionsRef = React.useRef<OptimisticAction[]>([]);
 
   const currentAddress = selectedAccount?.address ? cleanHex(selectedAccount.address) : '';
 
@@ -97,19 +151,36 @@ export function RepuRingProvider({ children }: { children: React.ReactNode }): J
         ? await queryMaybe<ContributionView[]>('/v1/query/repuring/contributions-in-circle', { circleId })
         : [];
 
-      setProfile(nextProfile);
-      setRole(nextRole);
-      setCircle(nextCircle);
-      setCircles(nextCircles || []);
-      setContributions(nextContributions || []);
+      optimisticActionsRef.current = optimisticActionsRef.current.filter((action) => action.expiresAt > Date.now());
+      const optimisticSnapshot = optimisticActionsRef.current.reduce(
+        (snapshot, action) => applyOptimisticSnapshot(snapshot, action.kind, action.fields, action.senderAddress),
+        {
+          profile: nextProfile,
+          role: nextRole,
+          circle: nextCircle,
+          circles: nextCircles || [],
+          contributions: nextContributions || [],
+          endorsements: mergeEndorsements(byUser || [], inCircle || []),
+        } satisfies RepuRingSnapshot,
+      );
+
+      setProfile(optimisticSnapshot.profile);
+      setRole(optimisticSnapshot.role);
+      setCircle(optimisticSnapshot.circle);
+      setCircles(optimisticSnapshot.circles);
+      setContributions(optimisticSnapshot.contributions);
       setLeaderboard(nextLeaderboard || []);
-      setEndorsements(mergeEndorsements(byUser || [], inCircle || []));
-      setStatus(`State refreshed from ${QUERY_RPC}`);
+      setEndorsements(optimisticSnapshot.endorsements);
+      setStatus('RepuRing data refreshed.');
     } catch (e) {
       setCircles([]);
-      setStatus(`RPC query failed: ${e instanceof Error ? e.message : String(e)}`);
+      setStatus(`Could not refresh RepuRing data: ${formatUserError(e, 'Check that the local RepuRing services are running, then refresh again.')}`);
     }
   }, [circleId, currentAddress]);
+
+  React.useEffect(() => {
+    refreshStateRef.current = refreshState;
+  }, [refreshState]);
 
   React.useEffect(() => {
     void refreshState();
@@ -132,46 +203,134 @@ export function RepuRingProvider({ children }: { children: React.ReactNode }): J
     }
   }, [contributions, currentAddress, selectedContributionId]);
 
+  function applyOptimisticAction(kind: TxKind, fields: Record<string, unknown>, senderAddress: string) {
+    const sender = cleanHex(senderAddress);
+    if (!sender) return;
+    optimisticActionsRef.current = [
+      ...optimisticActionsRef.current.filter((action) => action.expiresAt > Date.now()),
+      { kind, fields, senderAddress: sender, expiresAt: Date.now() + OPTIMISTIC_ACTION_TTL_MS },
+    ];
+
+    switch (kind) {
+      case 'createProfile': {
+        setProfile({
+          address: sender,
+          username: String(fields.username || '').trim(),
+          bio: String(fields.bio || ''),
+          avatarUrl: String(fields.avatarUrl || ''),
+          reputation: profile?.reputation || 0,
+        });
+        return;
+      }
+      case 'updateProfile': {
+        setProfile((current) => current
+          ? { ...current, bio: String(fields.bio || ''), avatarUrl: String(fields.avatarUrl || '') }
+          : current);
+        return;
+      }
+      case 'createCircle': {
+        const nextCircle: CircleView = {
+          circleId: String(fields.circleId || '').trim(),
+          name: String(fields.name || '').trim(),
+          description: String(fields.description || ''),
+          creatorAddress: sender,
+          members: [sender],
+        };
+        if (!nextCircle.circleId) return;
+        setCircle(nextCircle);
+        setCircles((current) => {
+          const exists = current.some((item) => item.circleId === nextCircle.circleId);
+          return exists
+            ? current.map((item) => item.circleId === nextCircle.circleId ? { ...item, ...nextCircle } : item)
+            : [nextCircle, ...current];
+        });
+        return;
+      }
+      case 'joinCircle': {
+        const targetCircleId = String(fields.circleId || '').trim();
+        if (!targetCircleId) return;
+        const withMember = (item: CircleView): CircleView => ({
+          ...item,
+          members: item.members?.some((member) => cleanHex(member) === sender)
+            ? item.members
+            : [...(item.members || []), sender],
+        });
+        setCircle((current) => current?.circleId === targetCircleId ? withMember(current) : current);
+        setCircles((current) => current.map((item) => item.circleId === targetCircleId ? withMember(item) : item));
+        return;
+      }
+      case 'createContribution': {
+        const nextContribution: ContributionView = {
+          contributionId: String(fields.contributionId || '').trim(),
+          circleId: String(fields.circleId || circleId).trim(),
+          authorAddress: sender,
+          authorUsername: profile?.username || shortHex(sender),
+          title: String(fields.title || '').trim(),
+          description: String(fields.description || ''),
+          proofUrl: String(fields.proofUrl || ''),
+          category: String(fields.category || ''),
+          endorsementCount: 0,
+          slashed: false,
+        };
+        if (!nextContribution.contributionId) return;
+        setContributions((current) => {
+          const exists = current.some((item) => item.contributionId === nextContribution.contributionId);
+          return exists
+            ? current.map((item) => item.contributionId === nextContribution.contributionId ? { ...item, ...nextContribution } : item)
+            : [nextContribution, ...current];
+        });
+        return;
+      }
+      case 'endorseContribution': {
+        const contributionId = String(fields.contributionId || '').trim();
+        if (!contributionId) return;
+        setContributions((current) => current.map((item) => item.contributionId === contributionId
+          ? { ...item, endorsementCount: item.endorsementCount + 1 }
+          : item));
+        return;
+      }
+      case 'slashEndorsement': {
+        const endorsementId = String(fields.endorsementId || '').trim();
+        if (!endorsementId) return;
+        setEndorsements((current) => current.map((item) => item.endorsementId === endorsementId
+          ? { ...item, slashed: true, slashReason: String(fields.reason || item.slashReason || 'Moderated') }
+          : item));
+        return;
+      }
+      case 'claimRole': {
+        setRole((current) => current ? { ...current, claimedRole: true } : current);
+        return;
+      }
+      case 'endorseUser':
+        return;
+    }
+  }
+
   async function submit(kind: TxKind, fields: Record<string, unknown>) {
+    if (submitInFlightRef.current) {
+      const error = 'Another action is already being submitted. Wait for it to finish, then try again.';
+      setStatus(error);
+      return { ok: false, error };
+    }
+    submitInFlightRef.current = kind;
+    setSubmittingKind(kind);
     try {
       validateSubmit(kind, fields, currentAddress, password);
-      setStatus(`Submitting ${kind} through ${QUERY_RPC}/v1/tx...`);
+      setStatus(actionCopy[kind].progress);
       const signer = await getSigner(currentAddress, password);
-      const height = await getHeight();
-      const msgBytes = encodeMessage(kind, { senderAddress: signer.address, ...fields });
-      const time = Date.now() * 1000;
-      const signBytes = encodeTransaction({
-        messageType: kind,
-        typeUrl: txMeta[kind].typeUrl,
-        msgBytes,
-        createdHeight: height,
-        time,
-        fee: FEE,
-        networkID: NETWORK_ID,
-        chainID: CHAIN_ID,
-      });
-      const signature = signBLS(signer.privateKey, signBytes);
-      const tx = {
-        type: kind,
-        msgTypeUrl: txMeta[kind].typeUrl,
-        msgBytes: bytesToHex(msgBytes),
-        signature: { publicKey: cleanHex(signer.publicKey), signature: bytesToHex(signature) },
-        time,
-        createdHeight: height,
-        fee: FEE,
-        memo: '',
-        networkID: NETWORK_ID,
-        chainID: CHAIN_ID,
-      };
-      const response = await postJSON(`${QUERY_RPC}/v1/tx`, tx);
-      setLastTx(typeof response === 'string' ? response : JSON.stringify(response));
-      setStatus(submittedStatus[kind]);
-      await refreshAfterCommit(refreshState);
-      return { ok: true };
+      const response = await submitWithRetry(kind, fields, signer);
+      setLastTx('Last action accepted by the local RepuRing network.');
+      setStatus(actionCopy[kind].success);
+      applyOptimisticAction(kind, fields, signer.address);
+      void refreshAfterCommit(() => refreshStateRef.current());
+      return { ok: true, hash: response };
     } catch (e) {
-      const error = e instanceof Error ? e.message : String(e);
-      setStatus(`${kind} failed: ${error}`);
+      const error = formatSubmitFailure(kind, e);
+      setStatus(error);
       return { ok: false, error };
+    } finally {
+      submitInFlightRef.current = null;
+      setSubmittingKind(null);
     }
   }
 
@@ -202,6 +361,7 @@ export function RepuRingProvider({ children }: { children: React.ReactNode }): J
         setSlashReason,
         lastTx,
         status,
+        submittingKind,
         profile,
         role,
         circle,
@@ -219,25 +379,25 @@ export function RepuRingProvider({ children }: { children: React.ReactNode }): J
 }
 
 function validateSubmit(kind: TxKind, fields: Record<string, unknown>, currentAddress: string, password: string) {
-  if (!currentAddress) throw new Error('Select an account first.');
-  if (!password) throw new Error('Enter wallet password for signing.');
+  if (!currentAddress) throw new Error('Select a wallet first.');
+  if (!password) throw new Error('Enter the selected wallet password.');
   if (kind === 'createProfile' && !String(fields.username || '').trim()) throw new Error('Username is required.');
-  if (kind === 'createCircle' && !String(fields.circleId || '').trim()) throw new Error('Circle ID is required.');
-  if (kind === 'createCircle' && !String(fields.name || '').trim()) throw new Error('Circle name is required.');
-  if ((kind === 'joinCircle' || kind === 'claimRole') && !String(fields.circleId || '').trim()) throw new Error('Circle ID is required.');
+  if (kind === 'createCircle' && !String(fields.circleId || '').trim()) throw new Error('Community is required.');
+  if (kind === 'createCircle' && !String(fields.name || '').trim()) throw new Error('Community name is required.');
+  if ((kind === 'joinCircle' || kind === 'claimRole') && !String(fields.circleId || '').trim()) throw new Error('Community is required.');
   if (kind === 'createContribution') {
-    if (!String(fields.circleId || '').trim()) throw new Error('Circle ID is required.');
-    if (!String(fields.contributionId || '').trim()) throw new Error('Contribution ID is required.');
-    if (!String(fields.title || '').trim()) throw new Error('Contribution title is required.');
-    if (!String(fields.category || '').trim()) throw new Error('Contribution category is required.');
+    if (!String(fields.circleId || '').trim()) throw new Error('Community is required.');
+    if (!String(fields.contributionId || '').trim()) throw new Error('Proof identifier is required.');
+    if (!String(fields.title || '').trim()) throw new Error('Proof title is required.');
+    if (!String(fields.category || '').trim()) throw new Error('Proof category is required.');
   }
   if (kind === 'endorseUser') {
-    if (!String(fields.circleId || '').trim()) throw new Error('Circle ID is required.');
-    if (!String(fields.targetAddress || '').trim()) throw new Error('Target address is required.');
+    if (!String(fields.circleId || '').trim()) throw new Error('Community is required.');
+    if (!String(fields.targetAddress || '').trim()) throw new Error('Target contributor is required.');
   }
-  if (kind === 'endorseContribution' && !String(fields.contributionId || '').trim()) throw new Error('Contribution ID is required.');
-  if (kind === 'slashEndorsement' && !String(fields.endorsementId || '').trim()) throw new Error('Endorsement ID is required.');
-  if (kind === 'slashEndorsement' && !String(fields.reason || '').trim()) throw new Error('Slash reason is required.');
+  if (kind === 'endorseContribution' && !String(fields.contributionId || '').trim()) throw new Error('Select proof-of-work to review.');
+  if (kind === 'slashEndorsement' && !String(fields.endorsementId || '').trim()) throw new Error('Select a review to moderate.');
+  if (kind === 'slashEndorsement' && !String(fields.reason || '').trim()) throw new Error('Moderation reason is required.');
 }
 
 function mergeEndorsements(a: EndorsementView[], b: EndorsementView[]) {
@@ -246,17 +406,186 @@ function mergeEndorsements(a: EndorsementView[], b: EndorsementView[]) {
   return [...map.values()];
 }
 
+function applyOptimisticSnapshot(
+  snapshot: RepuRingSnapshot,
+  kind: TxKind,
+  fields: Record<string, unknown>,
+  senderAddress: string,
+): RepuRingSnapshot {
+  const sender = cleanHex(senderAddress);
+  if (!sender) return snapshot;
+
+  switch (kind) {
+    case 'createProfile':
+      return {
+        ...snapshot,
+        profile: {
+          address: sender,
+          username: String(fields.username || '').trim(),
+          bio: String(fields.bio || ''),
+          avatarUrl: String(fields.avatarUrl || ''),
+          reputation: snapshot.profile?.reputation || 0,
+        },
+      };
+    case 'updateProfile':
+      return snapshot.profile
+        ? { ...snapshot, profile: { ...snapshot.profile, bio: String(fields.bio || ''), avatarUrl: String(fields.avatarUrl || '') } }
+        : snapshot;
+    case 'createCircle': {
+      const nextCircle: CircleView = {
+        circleId: String(fields.circleId || '').trim(),
+        name: String(fields.name || '').trim(),
+        description: String(fields.description || ''),
+        creatorAddress: sender,
+        members: [sender],
+      };
+      if (!nextCircle.circleId) return snapshot;
+      const circles = snapshot.circles.some((item) => item.circleId === nextCircle.circleId)
+        ? snapshot.circles.map((item) => item.circleId === nextCircle.circleId ? { ...item, ...nextCircle } : item)
+        : [nextCircle, ...snapshot.circles];
+      return {
+        ...snapshot,
+        circle: snapshot.circle?.circleId === nextCircle.circleId || !snapshot.circle ? nextCircle : snapshot.circle,
+        circles,
+      };
+    }
+    case 'joinCircle': {
+      const targetCircleId = String(fields.circleId || '').trim();
+      if (!targetCircleId) return snapshot;
+      const withMember = (item: CircleView): CircleView => ({
+        ...item,
+        members: item.members?.some((member) => cleanHex(member) === sender)
+          ? item.members
+          : [...(item.members || []), sender],
+      });
+      return {
+        ...snapshot,
+        circle: snapshot.circle?.circleId === targetCircleId && snapshot.circle ? withMember(snapshot.circle) : snapshot.circle,
+        circles: snapshot.circles.map((item) => item.circleId === targetCircleId ? withMember(item) : item),
+      };
+    }
+    case 'createContribution': {
+      const nextContribution: ContributionView = {
+        contributionId: String(fields.contributionId || '').trim(),
+        circleId: String(fields.circleId || '').trim(),
+        authorAddress: sender,
+        authorUsername: snapshot.profile?.username || shortHex(sender),
+        title: String(fields.title || '').trim(),
+        description: String(fields.description || ''),
+        proofUrl: String(fields.proofUrl || ''),
+        category: String(fields.category || ''),
+        endorsementCount: 0,
+        slashed: false,
+      };
+      if (!nextContribution.contributionId) return snapshot;
+      const contributions = snapshot.contributions.some((item) => item.contributionId === nextContribution.contributionId)
+        ? snapshot.contributions.map((item) => item.contributionId === nextContribution.contributionId ? { ...item, ...nextContribution } : item)
+        : [nextContribution, ...snapshot.contributions];
+      return { ...snapshot, contributions };
+    }
+    case 'endorseContribution': {
+      const contributionId = String(fields.contributionId || '').trim();
+      if (!contributionId) return snapshot;
+      return {
+        ...snapshot,
+        contributions: snapshot.contributions.map((item) => item.contributionId === contributionId
+          ? { ...item, endorsementCount: item.endorsementCount + 1 }
+          : item),
+      };
+    }
+    case 'slashEndorsement': {
+      const endorsementId = String(fields.endorsementId || '').trim();
+      if (!endorsementId) return snapshot;
+      return {
+        ...snapshot,
+        endorsements: snapshot.endorsements.map((item) => item.endorsementId === endorsementId
+          ? { ...item, slashed: true, slashReason: String(fields.reason || item.slashReason || 'Moderated') }
+          : item),
+      };
+    }
+    case 'claimRole':
+      return snapshot.role ? { ...snapshot, role: { ...snapshot.role, claimedRole: true } } : snapshot;
+    case 'endorseUser':
+      return snapshot;
+  }
+}
+
+function formatSubmitFailure(kind: TxKind, error: unknown) {
+  const message = formatUserError(error, 'The local node did not provide details. Check the wallet, required fields, and community state, then try again.');
+  const lower = message.toLowerCase();
+  const step = lower.includes('wallet') || lower.includes('password') || lower.includes('unlock')
+    ? 'wallet check'
+    : lower.includes('community') || lower.includes('circle')
+      ? 'community check'
+      : lower.includes('proof') || lower.includes('contribution')
+        ? 'proof-of-work check'
+        : lower.includes('review') || lower.includes('endorsement')
+          ? 'review check'
+          : 'submission check';
+  return `Could not complete ${actionCopy[kind].failureStep} at ${step}: ${message}`;
+}
+
+function formatUserError(error: unknown, fallback: string) {
+  const raw = error instanceof Error ? error.message : String(error || '');
+  return cleanUserError(raw, fallback);
+}
+
+function cleanUserError(raw: string, fallback: string) {
+  const value = String(raw || '').trim();
+  if (!value || value === '{}' || value === '[]' || value === 'null' || value === 'undefined') return fallback;
+  const emptyStatusFailure = value.match(/^Status\s+([A-Za-z]+)\s+failed:\s*(\{\}|\[\]|null|undefined)?$/i);
+  if (emptyStatusFailure) {
+    return `${actionFailureLabel(emptyStatusFailure[1])} failed, but the local node did not provide details. Check the selected wallet, required fields, and current community state, then try again.`;
+  }
+  if (value.toLowerCase().includes('failed to fetch')) {
+    return 'Cannot connect to the local services. Start the app, then try again.';
+  }
+  return value
+    .split('RPC').join('service')
+    .split('Tx').join('action')
+    .split('Circle ID').join('Community reference')
+    .split('circle ID').join('community')
+    .split('Contribution ID').join('Proof reference')
+    .split('Endorsement ID').join('Review reference');
+}
+
+function actionFailureLabel(kind: string) {
+  const labels: Record<string, string> = {
+    createProfile: 'Profile creation',
+    updateProfile: 'Profile update',
+    createCircle: 'Community creation',
+    joinCircle: 'Community join',
+    createContribution: 'Proof-of-work post',
+    endorseUser: 'Member endorsement',
+    endorseContribution: 'Peer review',
+    slashEndorsement: 'Review moderation',
+    claimRole: 'Role claim',
+  };
+  return labels[kind] || 'Action';
+}
+
+function errorFromResponse(parsed: unknown, fallback: string) {
+  if (typeof parsed === 'string') return cleanUserError(parsed, fallback);
+  if (parsed && typeof parsed === 'object') {
+    const record = parsed as Record<string, unknown>;
+    for (const key of ['error', 'message', 'detail', 'details']) {
+      if (typeof record[key] === 'string' && record[key]) return cleanUserError(record[key], fallback);
+    }
+  }
+  return fallback;
+}
+
 async function queryMaybe<T>(path: string, body: unknown): Promise<T | null> {
   const res = await fetch(`${QUERY_RPC}${path}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
   if (res.status === 404) return null;
   const text = await res.text();
   const parsed = text ? JSON.parse(text) : null;
-  if (!res.ok) throw new Error(typeof parsed === 'string' ? parsed : parsed?.error || JSON.stringify(parsed));
+  if (!res.ok) throw new Error(errorFromResponse(parsed, 'Could not load RepuRing data from the local services.'));
   return parsed as T;
 }
 
 async function getSigner(address: string, password: string) {
-  const parsed = await postJSON(`${ADMIN_RPC}/v1/admin/keystore-get`, { address, password });
+  const parsed = await postJSON(`${ADMIN_RPC}/v1/admin/keystore-get`, { address, password }, 'Could not unlock the selected wallet. Check the wallet password and try again.');
   return {
     address: cleanHex(parsed.address || parsed.Address || address),
     publicKey: cleanHex(parsed.publicKey || parsed.PublicKey || parsed.public_key),
@@ -265,15 +594,69 @@ async function getSigner(address: string, password: string) {
 }
 
 async function getHeight(): Promise<number> {
-  const result = await postJSON(`${QUERY_RPC}/v1/query/height`, {});
+  const result = await postJSON(`${QUERY_RPC}/v1/query/height`, {}, 'Could not reach the local RepuRing node. Start the node and try again.');
   return Number(result.height || 0);
 }
 
-async function postJSON(url: string, body: unknown) {
+async function submitWithRetry(kind: TxKind, fields: Record<string, unknown>, signer: Signer): Promise<string> {
+  let lastError: unknown = null;
+  for (let attempt = 0; attempt < SUBMIT_RETRY_DELAYS_MS.length; attempt += 1) {
+    const delay = SUBMIT_RETRY_DELAYS_MS[attempt];
+    if (delay > 0) await sleep(delay);
+    try {
+      const height = await getHeight();
+      const tx = buildTransaction(kind, fields, signer, height);
+      const response = await postJSON(`${QUERY_RPC}/v1/tx`, tx, 'The local node rejected the action but did not explain why. Check the required fields and wallet password, then try again.');
+      return typeof response === 'string' ? response : JSON.stringify(response);
+    } catch (error) {
+      lastError = error;
+      if (!shouldRetrySubmit(error)) break;
+    }
+  }
+  throw lastError;
+}
+
+function shouldRetrySubmit(error: unknown) {
+  const message = formatUserError(error, '').toLowerCase();
+  if (!message) return true;
+  if (message.includes('password') || message.includes('unlock') || message.includes('unauthorized')) return false;
+  if (message.includes('required') || message.includes('already') || message.includes('exists') || message.includes('not a member')) return false;
+  return true;
+}
+
+function buildTransaction(kind: TxKind, fields: Record<string, unknown>, signer: Signer, height: number) {
+  const msgBytes = encodeMessage(kind, { senderAddress: signer.address, ...fields });
+  const time = Date.now() * 1000;
+  const signBytes = encodeTransaction({
+    messageType: kind,
+    typeUrl: txMeta[kind].typeUrl,
+    msgBytes,
+    createdHeight: height,
+    time,
+    fee: FEE,
+    networkID: NETWORK_ID,
+    chainID: CHAIN_ID,
+  });
+  const signature = signBLS(signer.privateKey, signBytes);
+  return {
+    type: kind,
+    msgTypeUrl: txMeta[kind].typeUrl,
+    msgBytes: bytesToHex(msgBytes),
+    signature: { publicKey: cleanHex(signer.publicKey), signature: bytesToHex(signature) },
+    time,
+    createdHeight: height,
+    fee: FEE,
+    memo: '',
+    networkID: NETWORK_ID,
+    chainID: CHAIN_ID,
+  };
+}
+
+async function postJSON(url: string, body: unknown, fallback: string) {
   const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
   const text = await res.text();
   const parsed = text ? JSON.parse(text) : null;
-  if (!res.ok) throw new Error(typeof parsed === 'string' ? parsed : parsed?.error || JSON.stringify(parsed));
+  if (!res.ok) throw new Error(errorFromResponse(parsed, fallback));
   return parsed;
 }
 
@@ -337,6 +720,10 @@ function concat(parts: Uint8Array[]) {
   return out;
 }
 export function cleanHex(v: string) { return String(v || '').trim().replace(/^0x/, '').toLowerCase(); }
+function shortHex(v: string) {
+  const clean = cleanHex(v);
+  return clean ? `${clean.slice(0, 6)}...${clean.slice(-6)}` : '';
+}
 function hexToBytes(hex: string) {
   const clean = cleanHex(hex);
   const out = new Uint8Array(clean.length / 2);
@@ -346,8 +733,8 @@ function hexToBytes(hex: string) {
 function bytesToHex(bytes: Uint8Array) { return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join(''); }
 function sleep(ms: number) { return new Promise((resolve) => setTimeout(resolve, ms)); }
 async function refreshAfterCommit(refresh: () => Promise<void>) {
-  await sleep(1800);
-  await refresh();
-  await sleep(2500);
-  await refresh();
+  for (const delay of REFRESH_AFTER_COMMIT_DELAYS_MS) {
+    await sleep(delay);
+    await refresh();
+  }
 }

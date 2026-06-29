@@ -28,7 +28,7 @@ export type ContributionView = {
 };
 export type EndorsementView = { endorsementId: string; circleId: string; fromAddress: string; targetAddress: string; contributionId: string; tag: string; message: string; slashed: boolean; slashReason: string };
 export type LeaderboardRow = { address: string; username: string; reputation: number; role: string };
-export type SubmitResult = { ok: boolean; error?: string };
+export type SubmitResult = { ok: boolean; error?: string; hash?: string };
 
 export type RepuRingContextValue = {
   selectedAccount: { address?: string } | null | undefined;
@@ -55,6 +55,7 @@ export type RepuRingContextValue = {
   setSlashReason: React.Dispatch<React.SetStateAction<string>>;
   lastTx: string;
   status: string;
+  submittingKind: TxKind | null;
   profile: ProfileView | null;
   role: RoleView | null;
   circle: CircleView | null;

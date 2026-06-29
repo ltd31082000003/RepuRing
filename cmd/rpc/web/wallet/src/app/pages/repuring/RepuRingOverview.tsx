@@ -57,7 +57,7 @@ export default function RepuRingOverview(): JSX.Element {
             value: 'Not joined yet',
             countLabel: '',
             helper: 'Join or create a community circle to start contributing.',
-            ctaLabel: 'Discover Circles',
+            ctaLabel: 'Community circles',
             ctaTo: '/repuring/circles',
             active: false,
           };
@@ -67,6 +67,7 @@ export default function RepuRingOverview(): JSX.Element {
       <DashboardPreview
         currentAddress={currentAddress}
         profileName={profile?.username || ''}
+        avatarUrl={profile?.avatarUrl || ''}
         hasProfile={Boolean(profile)}
         communityState={communityState}
         reputation={profile?.reputation || 0}

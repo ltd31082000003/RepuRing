@@ -6,11 +6,10 @@ import { useDS } from '@/core/useDs';
 
 const navItems = [
     { name: 'Overview', path: '/repuring', end: true },
-    { name: 'Circles', path: '/repuring/circles' },
+    { name: 'Community circles', path: '/repuring/circles' },
     { name: 'Community', path: '/repuring/community' },
-    { name: 'Post Work', path: '/repuring/contributions' },
-    { name: 'Review Work', path: '/repuring/endorse' },
     { name: 'Leaderboard', path: '/repuring/leaderboard' },
+    { name: 'Admin Community', path: '/repuring/admin' },
 ];
 
 const pillBase = 'inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-[18px] border px-3 text-xs font-semibold transition';
@@ -64,7 +63,7 @@ export const TopBar = (): JSX.Element => {
                 <div className="flex items-center gap-2">
                     <div className={`${pillBase} hidden border-[rgba(115,255,198,0.12)] bg-[#0a211b] text-[#9db9af] xl:flex`}>
                         <RadioTower className="h-4 w-4 text-[#54f3b3]" />
-                        <span>RPC 50002 / 50003</span>
+                        <span>Local services</span>
                     </div>
 
                     <div className={chainPillClass}>
