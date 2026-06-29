@@ -414,12 +414,16 @@ export default function ActionRunner({
   }, [chain]);
 
   const doExecute = React.useCallback(async () => {
-    if (!isReady) return;
+    if (!isReady) {
+      setTxPassword("");
+      return;
+    }
     if (requiresAuth && !txPassword) {
       setPendingExecutionAfterUnlock(true);
       setUnlockOpen(true);
       return;
     }
+    try {
     const before = resolveToastFromManifest(
       action,
       "onBeforeSubmit",
@@ -608,6 +612,9 @@ export default function ActionRunner({
         setStepIdx(0);
       }
     }, 500);
+    } finally {
+      setTxPassword("");
+    }
   }, [isReady, requiresAuth, txPassword, host, queryHost, action, payload, actionId, onFinish, templatingCtx, toast]);
 
   const onContinue = React.useCallback(() => {

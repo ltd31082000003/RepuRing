@@ -83,16 +83,19 @@ export default function WizardRunner({ action }: { action: Action }) {
       return;
     }
     setStage("executing");
-    const res = await fetch(host + action.rpc?.path, {
-      method: action.rpc?.method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    })
-      .then((r) => r.json())
-      .catch(() => ({ hash: "0xDEMO" }));
-    setTxPassword("");
-    setTxRes(res);
-    setStage("result");
+    try {
+      const res = await fetch(host + action.rpc?.path, {
+        method: action.rpc?.method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      })
+        .then((r) => r.json())
+        .catch(() => ({ hash: "0xDEMO" }));
+      setTxRes(res);
+      setStage("result");
+    } finally {
+      setTxPassword("");
+    }
   }, [
     requiresAuth,
     txPassword,

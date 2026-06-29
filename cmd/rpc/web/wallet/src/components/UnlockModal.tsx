@@ -54,6 +54,8 @@ export default function UnlockModal({ open, onClose, onUnlock }: UnlockModalProp
         // Success path is handled by onUnlock callback.
         // onClose should represent cancel/dismiss only.
         onUnlock(pwd)
+        setPwd('')
+        setShowPassword(false)
     }
 
     return (

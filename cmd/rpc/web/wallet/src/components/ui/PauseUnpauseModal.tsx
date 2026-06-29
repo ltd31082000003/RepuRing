@@ -252,6 +252,7 @@ export const PauseUnpauseModal: React.FC<PauseUnpauseModalProps> = ({
         type: "error",
       });
     } finally {
+      setFormData((prev) => ({ ...prev, password: "" }));
       setIsLoading(false);
     }
   };

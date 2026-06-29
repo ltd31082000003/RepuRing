@@ -360,6 +360,7 @@ export function RepuRingProvider({ children }: { children: React.ReactNode }): J
       setStatus(error);
       return { ok: false, error };
     } finally {
+      setPassword('');
       submitInFlightRef.current = null;
       setSubmittingKind(null);
     }
