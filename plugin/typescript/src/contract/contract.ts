@@ -819,7 +819,10 @@ async function write(
     sets: Array<{ key: Uint8Array; value: Uint8Array }>,
     deletes: Uint8Array[] = []
 ): Promise<any> {
-    const [writeResp, writeErr] = await contract.plugin.StateWrite(contract, { sets, deletes });
+    const [writeResp, writeErr] = await contract.plugin.StateWrite(contract, {
+        sets,
+        deletes: deletes.map((key) => ({ key }))
+    });
     if (writeErr) return { error: writeErr };
     if (writeResp?.error) return { error: writeResp.error };
     return {};
