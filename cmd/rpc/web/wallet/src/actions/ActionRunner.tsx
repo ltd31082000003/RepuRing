@@ -496,8 +496,20 @@ export default function ActionRunner({
       const txHash = extractTxHash(res);
       if (txHash) {
         setExecutingMessage("Transaction accepted. Waiting for block confirmation...");
-        const confirmation = await waitForTransactionCommit({ rpcBase: queryHost, txHash });
-        if (confirmation.status !== "confirmed") {
+        const confirmation = await waitForTransactionCommit({ rpcBase: queryHost, txHash, senderAddress: selectedAccount?.address });
+        if (confirmation.status === "failed") {
+          responseOk = false;
+          responseStatus = 400;
+          responseStatusText = "Transaction Failed";
+          res = {
+            error: {
+              message: confirmation.error,
+            },
+            txHash,
+            failedTx: confirmation.failedTx,
+          };
+          rawResponse = JSON.stringify(res);
+        } else if (confirmation.status !== "confirmed") {
           responseOk = false;
           responseStatus = 408;
           responseStatusText = "Confirmation Timeout";

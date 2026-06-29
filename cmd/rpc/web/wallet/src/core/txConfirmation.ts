@@ -1,6 +1,7 @@
 export type TxConfirmationResult =
   | { status: "skipped"; reason: "no-hash" | "not-a-transaction" }
   | { status: "confirmed"; hash: string; tx: any }
+  | { status: "failed"; hash: string; failedTx: any; error: string }
   | { status: "timeout"; hash: string; lastTx: any | null };
 
 const DEFAULT_TIMEOUT_MS = 30000;
@@ -39,11 +40,13 @@ export function extractTxHash(response: unknown): string {
 export async function waitForTransactionCommit({
   rpcBase,
   txHash,
+  senderAddress,
   timeoutMs = DEFAULT_TIMEOUT_MS,
   pollMs = DEFAULT_POLL_MS,
 }: {
   rpcBase: string;
   txHash: string;
+  senderAddress?: string;
   timeoutMs?: number;
   pollMs?: number;
 }): Promise<TxConfirmationResult> {
@@ -58,6 +61,10 @@ export async function waitForTransactionCommit({
     if (tx) {
       lastTx = tx;
       if (isCommittedTx(tx)) return { status: "confirmed", hash, tx };
+    }
+    const failedTx = senderAddress ? await queryFailedTxByHash(rpcBase, senderAddress, hash) : null;
+    if (failedTx) {
+      return { status: "failed", hash, failedTx, error: extractFailedTxError(failedTx) };
     }
     await sleep(pollMs);
   }
@@ -82,6 +89,37 @@ async function queryTxByHash(rpcBase: string, hash: string) {
   } catch {
     return null;
   }
+}
+
+async function queryFailedTxByHash(rpcBase: string, senderAddress: string, hash: string) {
+  try {
+    const response = await fetch(`${rpcBase}/v1/query/failed-txs`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        address: senderAddress,
+        pageNumber: 1,
+        perPage: 50,
+      }),
+    });
+    if (!response.ok) return null;
+    const page = await response.json();
+    const results = Array.isArray(page?.results) ? page.results : [];
+    return results.find((item: any) => normalizeTxHashCandidate(String(item?.hash ?? item?.Hash ?? "")) === hash) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function extractFailedTxError(failedTx: any) {
+  const raw = failedTx?.error ?? failedTx?.Error;
+  if (typeof raw === "string") return raw;
+  if (raw && typeof raw === "object") {
+    for (const key of ["message", "Message", "error", "Error", "msg", "Msg"]) {
+      if (typeof raw[key] === "string" && raw[key]) return raw[key];
+    }
+  }
+  return "The transaction was rejected while being applied to the block.";
 }
 
 function normalizeTxHashCandidate(value: string) {

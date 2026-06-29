@@ -350,7 +350,16 @@ export function RepuRingProvider({ children }: { children: React.ReactNode }): J
       const response = await submitWithRetry(kind, fields, signer);
       setLastTx('Last action accepted by the local RepuRing network. Waiting for onchain confirmation...');
       setStatus(`Confirming ${actionCopy[kind].failureStep} onchain...`);
-      const committed = await waitForTransactionCommit({ rpcBase: QUERY_RPC, txHash: response, timeoutMs: TX_CONFIRM_TIMEOUT_MS, pollMs: TX_CONFIRM_POLL_MS });
+      const committed = await waitForTransactionCommit({
+        rpcBase: QUERY_RPC,
+        txHash: response,
+        senderAddress: signer.address,
+        timeoutMs: TX_CONFIRM_TIMEOUT_MS,
+        pollMs: TX_CONFIRM_POLL_MS,
+      });
+      if (committed.status === 'failed') {
+        throw new Error(committed.error);
+      }
       if (committed.status !== 'confirmed') {
         throw new Error('The transaction was accepted, but it was not committed before the confirmation timeout. Keep the node running, then refresh and try again if the action is still missing.');
       }

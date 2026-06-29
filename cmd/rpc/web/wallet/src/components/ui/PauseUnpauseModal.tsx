@@ -212,7 +212,10 @@ export const PauseUnpauseModal: React.FC<PauseUnpauseModalProps> = ({
           const txHash = extractTxHash(parsedResponse);
           if (txHash) {
             setLoadingMessage("Transaction accepted. Waiting for block confirmation...");
-            const confirmation = await waitForTransactionCommit({ rpcBase: chain?.rpc?.base || "", txHash });
+            const confirmation = await waitForTransactionCommit({ rpcBase: chain?.rpc?.base || "", txHash, senderAddress: signer.address });
+            if (confirmation.status === "failed") {
+              throw new Error(confirmation.error);
+            }
             if (confirmation.status !== "confirmed") {
               throw new Error(`Transaction ${txHash} was accepted, but it was not committed before the confirmation timeout.`);
             }
