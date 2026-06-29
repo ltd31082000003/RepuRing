@@ -51,6 +51,8 @@ cmd/web/explorer/.idea
 
 rag
 node_modules
+.agents/
+skills-lock.json
 
 # Hardhat
 cache/solidity-files-cache.json
